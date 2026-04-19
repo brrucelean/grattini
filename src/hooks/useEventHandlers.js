@@ -48,6 +48,13 @@ export function useEventHandlers({
         break;
       }
       case "flee": {
+        // Impianto "baddie" (Macellaio): i ladri se ne innamorano, non ti rubano nulla
+        const hasBaddie = player.nails?.some(n => n.implant === "baddie" && (n.implantUses || 0) > 0);
+        if (hasBaddie) {
+          addLog("💋 Il ladro ti guarda l'unghia da Baddie... si innamora perdutamente! Si gira e se ne va senza toccarti.", C.magenta);
+          setScreen("map");
+          break;
+        }
         if (roll(0.5)) {
           addLog("Sei scappato!", C.green);
           setScreen("map");
@@ -317,6 +324,31 @@ export function useEventHandlers({
         setItemFoundModal({ emoji:"💀", name:"Gelosia dell'Anziana!", desc:"\"Che belle mani... troppo belle per un grattatore come te!\" Ti ha strappato 2 unghie!", subtitle:"Evento", buttonLabel:"No... →" });
         break;
       }
+      case "anzianaSacra": {
+        // Spec: l'Anziana trasforma un dito in Unghia Sacra (1 uso = vincita x5 garantita).
+        // Una sola volta per run (flag anzianaSacraGiven).
+        updatePlayer(p => {
+          const nails = [...p.nails];
+          const active = p.activeNail;
+          if (nails[active].state === "morta") {
+            // fallback: trova la prima viva
+            const alt = nails.findIndex(n => n.state !== "morta");
+            if (alt < 0) return p;
+            nails[alt] = {...nails[alt], state:"sana", implant:"sacra", implantUses:1, scratchCount:0};
+          } else {
+            nails[active] = {...nails[active], state:"sana", implant:"sacra", implantUses:1, scratchCount:0};
+          }
+          return {...p, money: p.money - 40, nails, anzianaSacraGiven: true, anzianaVisits: (p.anzianaVisits || 0) + 1};
+        });
+        addLog("👵✨ \"Che la Madonna ti accompagni, figliolo.\" Un calore antico ti invade il dito. UNGHIA SACRA impiantata!", C.gold);
+        setItemFoundModal({
+          emoji:"✨", name:"Unghia Sacra",
+          desc:"La tua unghia attiva è diventata SACRA.\nLa prossima grattata = vincita GARANTITA × 5.\nDopo, torna Sana.",
+          subtitle:"Benedizione dell'Anziana",
+          buttonLabel:"Grazie nonna 🙏",
+        });
+        break;
+      }
       case "anzianaRegala": {
         updatePlayer(p => {
           const nails = [...p.nails];
@@ -522,9 +554,9 @@ export function useEventHandlers({
         addLog('"Boring..." — lo streamer cambia canale.', C.dim);
         setScreen("map"); break;
       }
-      case "macellaio_velenosa":
-      case "macellaio_esplosiva":
-      case "macellaio_parassita": {
+      case "macellaio_neonato":
+      case "macellaio_marcione":
+      case "macellaio_baddie": {
         const implId = action.replace("macellaio_", "");
         const impl = MACELLAIO_IMPLANTS.find(x => x.id === implId);
         if (!impl || player.money < impl.cost) { setScreen("map"); break; }
@@ -540,10 +572,10 @@ export function useEventHandlers({
         } else {
           updatePlayer(p => {
             const nails = [...p.nails];
-            nails[p.activeNail] = {...nails[p.activeNail], implant: implId};
+            nails[p.activeNail] = {...nails[p.activeNail], state:"sana", implant: implId, implantUses: impl.uses, scratchCount: 0};
             return {...p, money: p.money - impl.cost, nails};
           });
-          addLog(`${impl.emoji} Impianto "${impl.name}" installato sull'unghia attiva!`, C.cyan);
+          addLog(`${impl.emoji} Impianto "${impl.name}" installato sull'unghia attiva! ${impl.uses} usi garantiti.`, C.cyan);
           setItemFoundModal({ emoji: impl.emoji, name: impl.name, desc: impl.desc, subtitle:"Chirurgo Macellaio" });
         }
         setScreen("map"); break;

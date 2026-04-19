@@ -46,13 +46,14 @@ export function _sum13WinnerNums(totalCells) {
   return shuffle([...p1, ...p2, ...fill]);
 }
 
-export function generateCard(typeId, fortune=0, relicBonus=0) {
+export function generateCard(typeId, fortune=0, relicBonus=0, forceWin=false) {
   const type = CARD_TYPES.find(t => t.id === typeId) || CARD_TYPES[0];
   const totalCells = type.rows * type.cols;
   const cardSymbols = CARD_SYMBOLS[type.id] || SYMBOLS;
   const cb = CARD_BALANCE[type.id];
   const baseWinChance = cb?.winChance ?? 0.18;
-  const isWinner = roll(baseWinChance + Math.min(fortune, 3) * 0.05 + relicBonus); // cap fortune + relic bonus
+  // forceWin = vincita garantita (usata da impianti come Unghia Sacra/Neonato/Marcia/Baddie)
+  const isWinner = forceWin || roll(baseWinChance + Math.min(fortune, 3) * 0.05 + relicBonus);
   // EV-calibrated prize roll — usa prizeMin/prizeMax di CARD_BALANCE (single source of truth).
   // Fallback a type.cost/type.maxPrize per eventuali carte senza balance entry.
   const pMin = cb?.prizeMin ?? type.cost;

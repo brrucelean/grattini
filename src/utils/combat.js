@@ -29,10 +29,10 @@ export function generateEnemyCombatCell(enemyName) {
 
 export function generateCombatCard(isSpecial = false, enemyName = null) {
   if (enemyName) {
-    // Il Croupier (e variante "Maledetto") ha 4 carte invece di 3
-    const isCroupierVariant = enemyName === "Il Croupier" || enemyName === "Il Croupier Maledetto";
-    const poolKey = isCroupierVariant ? "Il Croupier" : enemyName;
-    if (isCroupierVariant) {
+    // Il Napoletano ha 4 carte invece di 3 — "'na mano napoletana"
+    const isNapoletano = enemyName === "Il Napoletano";
+    const poolKey = enemyName;
+    if (isNapoletano) {
       const cells = [
         generateEnemyCombatCell(poolKey),
         generateEnemyCombatCell(poolKey),

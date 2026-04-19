@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { C, FONT } from "../data/theme.js";
 import { NAIL_INFO, NAIL_ORDER } from "../data/nails.js";
-import { GRATTATORE_DEFS, MACELLAIO_IMPLANTS } from "../data/items.js";
+import { GRATTATORE_DEFS, ALL_IMPLANTS_META } from "../data/items.js";
 import { makeNailCursor, NAIL_CURSOR } from "../utils/nail.js";
 import { Tooltip } from "./Tooltip.jsx";
 
@@ -55,7 +55,7 @@ export function NailSidebar({ nails, activeNail, onSelectNail, locked=false, gra
               if (n.cremaHP > 0) tipLines.push(`🧴 Crema: ${n.cremaHP} colpi extra`);
               if (n.smalto > 0) tipLines.push(`💅 Smalto: ${n.smalto} colpi protetti`);
               if (n.implant) {
-                const imp = MACELLAIO_IMPLANTS.find(im=>im.id===n.implant);
+                const imp = ALL_IMPLANTS_META.find(im=>im.id===n.implant);
                 if (imp) tipLines.push(`⚙ ${imp.name}: ${imp.desc}`);
               }
               const tipText = tipLines.join("\n");

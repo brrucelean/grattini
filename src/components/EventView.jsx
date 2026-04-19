@@ -180,6 +180,12 @@ export function EventView({ node, player, onChoice }) {
         text: `\"Figliolo mio... avvicina quelle mani. Le unghie non mentono mai — e le tue hanno cose da raccontare.\" (Visita ${visits+1}/3)`,
         choices: [
           { label: "Porgi le mani", action: "anzianaTocca" },
+          {
+            label: "🙏 Chiedi la benedizione dell'Unghia Sacra (€40)",
+            action: "anzianaSacra",
+            condition: !player.anzianaSacraGiven && player.money >= 40 && player.nails.some(n => n.state !== "morta"),
+            tooltip: "Una volta per run. Impianto sacro sull'unghia attiva: prossima grattata = vincita x5 GARANTITA.",
+          },
           { label: "No grazie nonna", action: "leave" },
         ],
       };

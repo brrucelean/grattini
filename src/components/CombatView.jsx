@@ -202,8 +202,10 @@ export function CombatView({ enemy, player, onEnd, onNailDamage, onCellScratch, 
 
   // Spec 3 — Boss unici
   const [brokerInvestment, setBrokerInvestment] = useState(0);
-  const [rouletteResult, setRouletteResult] = useState(null); // null or {number, isDouble, isRob}
-  const [reTauntUsed, setReTauntUsed] = useState(false); // Provocalo! usabile 1 volta contro il Re
+  // Il Romanaccio: Taxi (passivo) + Manomissione (cheat reversibile)
+  const [taxiGain, setTaxiGain] = useState(0); // € accumulati dal Romanaccio via taxi
+  const [manomissioneActive, setManomissioneActive] = useState(null); // null o {amount, reverted}
+  const [reTauntUsed, setReTauntUsed] = useState(false); // Provocalo! usabile 1 volta contro Il Napoletano
 
   // Spec 7 — Combat rework
   const [comboTracker, setComboTracker] = useState({}); // { effectType -> count } reset each combat
@@ -331,26 +333,33 @@ export function CombatView({ enemy, player, onEnd, onNailDamage, onCellScratch, 
     let playerNailKills = 0, playerNailDegrades = 0;
     let enemyNailKills = 0, enemyNailDegrades = 0;
 
-    // Croupier roulette: calcola prima del loop carte
+    // Il Romanaccio: Taxi (passivo +€) + Manomissione (cheat da denunciare)
     let effectiveRoundMult = roundMult;
-    let rouletteStepEntries = null;
-    const isCroupier = enemy.isBoss && (enemy.name === "Il Croupier" || enemy.name === "Il Croupier Maledetto");
-    if (isCroupier) {
-      const num = Math.floor(Math.random() * 37); // 0-36
-      const rangeStart = (round - 1) * 12 + 1;   // round1=1-12, round2=13-24, round3=25-36
-      const rangeEnd = rangeStart + 11;
-      const isDouble = num >= rangeStart && num <= rangeEnd;
-      const isRob = num === 0;
-      setRouletteResult({ num, isDouble, isRob });
-      if (isDouble) {
-        effectiveRoundMult = roundMult * 2;
-        rouletteStepEntries = [{ text: `🎰 ROULETTE: ${num}! DOPPIO — tutte le carte valgono x2 questo round!`, color: C.gold, pTotal: 0, eTotal: 0 }];
-      } else if (isRob) {
-        pMoney -= 50; pRunning -= 50;
-        rouletteStepEntries = [{ text: `🎰 ROULETTE: 0! Il Croupier ti ruba €50!`, color: C.red, pTotal: 0, eTotal: 0 }];
+    let romanaccioStepEntries = null;
+    const isRomanaccio = enemy.isBoss && enemy.name === "Il Romanaccio";
+    if (isRomanaccio) {
+      const romanaccioEntries = [];
+      // Taxi: il Romanaccio ti fa pagare la corsa ogni round, soldi sicuri in tasca sua
+      const taxiFee = 15 + (round - 1) * 5; // r1=15, r2=20, r3=25, r4=30
+      eMoney += taxiFee; eRunning += taxiFee;
+      setTaxiGain(prev => prev + taxiFee);
+      romanaccioEntries.push({ text: `🚕 TAXI — il Romanaccio ti porta al casinò con la strada lunga: +€${taxiFee} per lui`, color: C.orange, pTotal: 0, eTotal: 0 });
+      // Manomissione: 1 volta su 2 prova a truccare i dadi — se il player ha denunciato, reverti
+      if (roll(0.55)) {
+        const cheatAmount = 30 + (round - 1) * 10; // r1=30, r2=40, r3=50, r4=60
+        if (manomissioneActive && manomissioneActive.reverted) {
+          // Già denunciato: segnala che ci prova di nuovo ma stavolta lo beccheremo dopo
+          romanaccioEntries.push({ text: `🔧 MANOMISSIONE — prova a truccare le carte (+€${cheatAmount}) — DENUNCIA disponibile!`, color: C.red, pTotal: 0, eTotal: 0 });
+        } else {
+          romanaccioEntries.push({ text: `🔧 MANOMISSIONE — prova a truccare le carte (+€${cheatAmount}) — DENUNCIA disponibile!`, color: C.red, pTotal: 0, eTotal: 0 });
+        }
+        eMoney += cheatAmount; eRunning += cheatAmount;
+        setManomissioneActive({ amount: cheatAmount, reverted: false });
       } else {
-        rouletteStepEntries = [{ text: `🎰 ROULETTE: ${num}. Nessun effetto speciale.`, color: C.dim, pTotal: 0, eTotal: 0 }];
+        setManomissioneActive(null);
+        romanaccioEntries.push({ text: `🔧 Il Romanaccio ci prova ma stavolta gioca pulito... per ora.`, color: C.dim, pTotal: 0, eTotal: 0 });
       }
+      romanaccioStepEntries = romanaccioEntries;
     }
 
     const pBase = playerMoney;
@@ -365,9 +374,9 @@ export function CombatView({ enemy, player, onEnd, onNailDamage, onCellScratch, 
     const steps = [];
     const maxLen = Math.max(pCells.length, eCells.length);
 
-    // Inserisci step roulette all'inizio se Croupier
-    if (rouletteStepEntries) {
-      steps.push({ flipSide: null, flipIdx: -1, entries: rouletteStepEntries });
+    // Inserisci step Romanaccio (Taxi + Manomissione) all'inizio
+    if (romanaccioStepEntries) {
+      steps.push({ flipSide: null, flipIdx: -1, entries: romanaccioStepEntries });
     }
 
     for (let i = 0; i < maxLen; i++) {
@@ -556,8 +565,8 @@ export function CombatView({ enemy, player, onEnd, onNailDamage, onCellScratch, 
       }
     }
 
-    // Re dei Grattini: gratta una carta bonus dopo la risoluzione
-    if (enemy.isBoss && enemy.name === "Il Re dei Grattini") {
+    // Il Napoletano: gratta una carta bonus dopo la risoluzione
+    if (enemy.isBoss && enemy.name === "Il Napoletano") {
       const tiers = [1, 2, 3, 4];
       const tier = pick(tiers);
       const reTierCards = CARD_TYPES.filter(t => {
@@ -569,12 +578,12 @@ export function CombatView({ enemy, player, onEnd, onNailDamage, onCellScratch, 
       if (reCard.isWinner && reCard.prize > 0) {
         eMoney += reCard.prize; eRunning += reCard.prize;
         steps.push({ flipSide: null, flipIdx: -1, entries: [
-          { text: `👑 Il Re gratta "${reCardType.name}"... VINCE €${reCard.prize}! → suo €${eBase+eRunning}`, color: C.orange, pTotal: pBase+pRunning, eTotal: eBase+eRunning }
+          { text: `🎟 'O Napoletano gratta "${reCardType.name}"... TALE E QUALE! VINCE €${reCard.prize}! → suo €${eBase+eRunning}`, color: C.orange, pTotal: pBase+pRunning, eTotal: eBase+eRunning }
         ]});
       } else {
         enemyNailKills++;
         steps.push({ flipSide: null, flipIdx: -1, entries: [
-          { text: `👑 Il Re gratta "${reCardType.name}"... PERDE! Si strappa un'unghia! 💀`, color: C.green, pTotal: pBase+pRunning, eTotal: eBase+eRunning }
+          { text: `🎟 'O Napoletano gratta "${reCardType.name}"... PERDE! Se strappa 'n'ogna! 💀`, color: C.green, pTotal: pBase+pRunning, eTotal: eBase+eRunning }
         ]});
       }
     }
@@ -912,14 +921,14 @@ export function CombatView({ enemy, player, onEnd, onNailDamage, onCellScratch, 
     setPhase("draw");
   };
 
-  // Spec 3.3: Provocalo! — taunt per il Re dei Grattini (usabile 1 volta)
+  // Spec 3.3: Provocalo! — taunt per Il Napoletano (usabile 1 volta)
   const handleProvocaRe = () => {
     if (reTauntUsed) return;
     setReTauntUsed(true);
     setReTauntMsg(null);
-    // 85% autodanno al Re, 15% vince €500
+    // 85% autodanno al Napoletano, 15% vince €500
     if (roll(0.85)) {
-      // autodanno: il Re si strappa un'unghia per la rabbia
+      // autodanno: 'O Napoletano si strappa un'unghia per la rabbia
       setEnemyNails(prev => {
         const nails = prev.map(n => ({...n}));
         const alive = nails.findIndex(n => n.state !== "morta");
@@ -927,14 +936,22 @@ export function CombatView({ enemy, player, onEnd, onNailDamage, onCellScratch, 
         return nails;
       });
       setEnemyMoney(m => Math.max(0, m - 70));
-      setReTauntMsg({ text: "😈 Il Re si INFURIA e si strappa un'unghia da solo! −€70 e unghia morta!", isGood: true });
+      setReTauntMsg({ text: "😈 'O Napoletano s'ncazza e se strappa 'na ogna 'a sulo! −€70 e ogna morta!", isGood: true });
     } else {
-      // Il Re vince €500 extra — cattivo esito
+      // 'O Napoletano vince €500 extra — cattivo esito
       setEnemyMoney(m => m + 500);
-      setReTauntMsg({ text: "😱 Il Re ride e GRATTA un biglietto da €500! +€500 al Re!", isGood: false });
+      setReTauntMsg({ text: "😱 'O Napoletano ride e GRATTA 'o tagliando d'oro da €500! +€500!", isGood: false });
     }
     // Pulisci il messaggio dopo 3s
     setTimeout(() => setReTauntMsg(null), 3000);
+  };
+
+  // Romanaccio: Denuncia! — reverte la manomissione dell'ultimo round
+  const handleDenunciaRomanaccio = () => {
+    if (!manomissioneActive || manomissioneActive.reverted) return;
+    const refund = manomissioneActive.amount;
+    setEnemyMoney(m => Math.max(0, m - refund));
+    setManomissioneActive({ ...manomissioneActive, reverted: true });
   };
 
   const finish = () => {
@@ -1094,22 +1111,22 @@ export function CombatView({ enemy, player, onEnd, onNailDamage, onCellScratch, 
                     : playerWallet >= 50
                     ? `"Qualcosa c'è. Poco, ma c'è. Siediti — e non toccare niente sul tavolo."`
                     : `"${playerWallet}€. Sei venuto sin qui con ${playerWallet}€. Siediti lo stesso — fa pena lasciarti in piedi."`;
-                } else if (enemy.name === "Il Croupier Maledetto" || enemy.name === "Il Croupier") {
-                  bossLabel = enemy.name;
+                } else if (enemy.name === "Il Romanaccio") {
+                  bossLabel = "Il Romanaccio";
                   bossColor = C.magenta;
                   q = playerWallet >= 300
-                    ? `"Il banco si rispetta. E tu... vieni avanti. Ho un tavolo per te."`
+                    ? `"A' bello. Te sei portato pure li spicci. Mo te faccio vede' come se gioca a Roma."`
                     : playerWallet >= 100
-                    ? `"Qualcuno ha pagato l'entrata con meno. Di solito finiscono male — ma siediti."`
-                    : `"La roulette non perdona i poveri. Ma la fortuna a volte sì. Siediti, poveraccio."`;
-                } else if (enemy.name === "Il Re dei Grattini") {
-                  bossLabel = "Il Re dei Grattini";
+                    ? `"Aho, ce poi sta' pure co' du' spicci — ma er taxi lo paghi uguale, eh."`
+                    : `"Ma ndo vai co' 'sti quattro sghei? Daje, entra, che te frego lo stesso."`;
+                } else if (enemy.name === "Il Napoletano") {
+                  bossLabel = "Il Napoletano";
                   bossColor = C.gold;
                   q = playerWallet >= 500
-                    ? `"Un degno avversario. Finalmente. La corona attende — se riesci a toglierla."`
+                    ? `"Guagliò, tieni 'e sorde. Allora parliamo. Quattro carte, 'na mano sola — accomodati."`
                     : playerWallet >= 200
-                    ? `"Vieni a sfidare il Re con queste miserie? Coraggio o incoscienza — lo scopriremo."`
-                    : `"Grattini e spiccioli. Sei fortunato che mi annoio — altrimenti non ti avrei ricevuto."`;
+                    ? `"Staje 'mpucchiato? E vabbuò, jammo a vedé chi tene 'o core cchiù forte."`
+                    : `"Guè guagliò, sì venuto cu' 'e spiccicelle? 'A jettatura la tieni già 'ncuollo."`;
                 } else if (enemy.name === "Il Drago d'Oro") {
                   bossLabel = "Il Drago d'Oro 🐲";
                   bossColor = "#ff3333";
@@ -1246,22 +1263,22 @@ export function CombatView({ enemy, player, onEnd, onNailDamage, onCellScratch, 
             </div>
           )}
 
-          {/* Spec 3.3: Pulsante Provocalo! per il Re dei Grattini */}
-          {enemy.isBoss && enemy.name === "Il Re dei Grattini" && !reTauntUsed && scratchedHandIdxs.length < 3 && (
+          {/* Spec 3.3: Pulsante Provocalo! per Il Napoletano */}
+          {enemy.isBoss && enemy.name === "Il Napoletano" && !reTauntUsed && scratchedHandIdxs.length < 3 && (
             <div style={{marginTop:"10px"}}>
               <Btn
                 variant="danger"
                 onClick={handleProvocaRe}
                 style={{fontSize:"12px", padding:"6px 16px"}}
               >
-                😈 Provocalo! (85% autodanno Re / 15% +€500 al Re)
+                😈 Provocalo! (85% autodanno / 15% +€500 a 'O Napoletano)
               </Btn>
               <div style={{color:C.dim, fontSize:"10px", marginTop:"3px"}}>
                 Una volta sola per combattimento
               </div>
             </div>
           )}
-          {enemy.isBoss && enemy.name === "Il Re dei Grattini" && reTauntUsed && !reTauntMsg && (
+          {enemy.isBoss && enemy.name === "Il Napoletano" && reTauntUsed && !reTauntMsg && (
             <div style={{marginTop:"8px", color:C.dim, fontSize:"10px"}}>
               😈 Provocazione già usata questo scontro
             </div>
@@ -1442,9 +1459,25 @@ export function CombatView({ enemy, player, onEnd, onNailDamage, onCellScratch, 
                     💼 Investimento: €{brokerInvestment}
                   </div>
                 )}
-                {enemy.isBoss && (enemy.name === "Il Croupier" || enemy.name === "Il Croupier Maledetto") && rouletteResult && (
-                  <div style={{color: rouletteResult.isDouble ? C.gold : rouletteResult.isRob ? C.red : C.dim, fontSize:"11px", marginTop:"3px"}}>
-                    🎰 Roulette: {rouletteResult.num} {rouletteResult.isDouble ? "— DOPPIO!" : rouletteResult.isRob ? "— RAPINA!" : ""}
+                {enemy.isBoss && enemy.name === "Il Romanaccio" && taxiGain > 0 && (
+                  <div style={{color:C.orange, fontSize:"11px", marginTop:"3px"}}>
+                    🚕 Taxi: €{taxiGain}
+                  </div>
+                )}
+                {enemy.isBoss && enemy.name === "Il Romanaccio" && manomissioneActive && !manomissioneActive.reverted && (
+                  <div style={{marginTop:"4px"}}>
+                    <Btn
+                      variant="danger"
+                      onClick={handleDenunciaRomanaccio}
+                      style={{fontSize:"10px", padding:"3px 8px"}}
+                    >
+                      🚨 DENUNCIA! (−€{manomissioneActive.amount})
+                    </Btn>
+                  </div>
+                )}
+                {enemy.isBoss && enemy.name === "Il Romanaccio" && manomissioneActive && manomissioneActive.reverted && (
+                  <div style={{color:C.green, fontSize:"10px", marginTop:"3px"}}>
+                    ✅ Manomissione sventata!
                   </div>
                 )}
                 {enemyRageMode && enemy.name === "Mini Boss" && (

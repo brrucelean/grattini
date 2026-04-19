@@ -30,6 +30,40 @@ export function useScratchHandlers({
       if (totalScratch >= 50) unlockAchievement("scratcher");
     } catch {}
 
+    // ─── IMPIANTI A USI LIMITATI (Anziana: sacra | Macellaio: neonato/marcione/baddie) ───
+    // Consuma 1 uso per grattata. A esaurimento: sacra torna "sana"; gli altri muoiono.
+    {
+      const IMPLANT_ON_EXHAUST = { sacra: "sana", neonato: "morta", marcione: "morta", baddie: "morta" };
+      const active = player?.activeNail ?? 0;
+      const nail = player?.nails?.[active];
+      if (nail && IMPLANT_ON_EXHAUST[nail.implant] && (nail.implantUses || 0) > 0) {
+        updatePlayer(p => {
+          const nails = [...p.nails];
+          const n = {...nails[active]};
+          n.implantUses = (n.implantUses || 0) - 1;
+          if (n.implantUses <= 0) {
+            const exhaustState = IMPLANT_ON_EXHAUST[n.implant];
+            const implName = n.implant;
+            n.implant = null; n.implantUses = 0; n.state = exhaustState; n.scratchCount = 0;
+            addLog(
+              exhaustState === "sana"
+                ? `✨ L'Unghia Sacra si è consumata. L'unghia torna Sana.`
+                : `💀 L'impianto "${implName}" è esaurito — l'unghia muore.`,
+              exhaustState === "sana" ? C.gold : C.red
+            );
+          }
+          nails[active] = n;
+          // Se l'unghia attiva è morta, passa alla prossima viva
+          let newActive = active;
+          if (n.state === "morta") {
+            const next = nails.findIndex((x, i) => i !== active && x.state !== "morta");
+            if (next >= 0) newActive = next;
+          }
+          return {...p, nails, activeNail: newActive};
+        });
+      }
+    }
+
     // For intro cards: capture prize, don't add to budget yet (player will choose which to keep)
     if (returnScreen === "introScratch") {
       const prizeAmt = result.win && result.prize > 0 ? result.prize : 0;
