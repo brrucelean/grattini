@@ -30,20 +30,38 @@ export function EventView({ node, player, onChoice }) {
             { label: "Scappa! (50%)", action: "flee" },
           ],
     },
-    spacciatore: {
-      title: "Lo Spacciatore",
-      art: NPC_ART.spacciatore,
-      text: player.cappelloSbirroWorn
-        ? "\"Psst... ho roba buo— CAZZO UNO SBIRRO!! AIUTOOOOO!\" 💨 Sparisce in tre secondi. Non lascia nemmeno la ricevuta."
-        : "\"Psst. Aspetta. Ho roba buona. Sigarette particolari, grattini con la vincita già dentro... fidati.\"",
-      choices: player.cappelloSbirroWorn
-        ? [{ label: "🎩 Correre fa bene, amico. (cappello si consuma)", action: "cappelloVsLadro" }]
-        : [
-            { label: `Sigaretta con Erba (€8)`, action: "buyHerb", condition: player.money >= 8 },
-            { label: `Gratta Contrabbando (€25)`, action: "buyContra", condition: player.money >= 25 },
-            { label: "No grazie", action: "leave" },
+    spacciatore: (() => {
+      // Sprint 4: se hai fatto la spia col Poliziotto, lo spacciatore lo sa e ti attacca
+      if (player.snitchedOn) {
+        return {
+          title: "Lo Spacciatore — SA TUTTO",
+          art: NPC_ART.spacciatore,
+          text: "\"TU... TU SEI IL RATTO! Mi hai venduto ai gendarmi?! Ora ti strappo le unghie una a una.\"",
+          choices: [
+            { label: "⚔ Combatti! (ti ha scoperto)", action: "fight" },
+            { label: "🏃 Prova a scappare (50%)", action: "flee" },
           ],
-    },
+        };
+      }
+      return {
+        title: "Lo Spacciatore",
+        art: NPC_ART.spacciatore,
+        text: player.cappelloSbirroWorn
+          ? "\"Psst... ho roba buo— CAZZO UNO SBIRRO!! AIUTOOOOO!\" 💨 Sparisce in tre secondi. Non lascia nemmeno la ricevuta."
+          : player.bluffsBought > 0
+            ? `"Rieccoti, fratello. L'ultima volta... vabbè, sfiga eh. Stavolta è ROBA VERA, parola. Fidati.${player.bluffsBought >= 2 ? " (Lo hai già sentito.)" : ""}"`
+            : "\"Psst. Aspetta. Ho roba buona. Sigarette particolari, grattini con la vincita già dentro... fidati.\"",
+        choices: player.cappelloSbirroWorn
+          ? [{ label: "🎩 Correre fa bene, amico. (cappello si consuma)", action: "cappelloVsLadro" }]
+          : [
+              { label: `Sigaretta con Erba (€8)`, action: "buyHerb", condition: player.money >= 8 },
+              { label: `Gratta Contrabbando (€25)`, action: "buyContra", condition: player.money >= 25 },
+              { label: `🎫 Gratta VINCENTE GARANTITO (€15) — "fidati"`, action: "buyFalsoVincente", condition: player.money >= 15,
+                tooltip: "Lo Spacciatore giura che vince. Qualcosa ti dice di non fidarti al 100%." },
+              { label: "No grazie", action: "leave" },
+            ],
+      };
+    })(),
     chirurgo: {
       title: "Il Chirurgo Oscuro",
       art: NPC_ART.chirurgo,
@@ -131,11 +149,19 @@ export function EventView({ node, player, onChoice }) {
     poliziotto: {
       title: "🚔 Poliziotto della Lotteria",
       art: NPC_ART.poliziotto,
-      text: "\"Alt! Documenti! Cosa ci fa con tutti questi grattini? Lei non mi sembra un pensionato... né un tipo onesto.\"",
+      text: player.giornalettoRead
+        ? "\"Ma che... COSA HA IN TASCA?! Un GIORNALETTO?! Atti osceni in luogo pubblico! Multa raddoppiata e che vergogna, a lei!\""
+        : player.snitchedOn
+        ? "\"Bravo, informatore. Ma non ti ho detto ancora basta. Documenti?\""
+        : "\"Alt! Documenti! Cosa ci fa con tutti questi grattini? Lei non mi sembra un pensionato... né un tipo onesto.\"",
       choices: [
         { label: "🎩 Mostra il Cappello Sbirro", action: "useCappello", condition: player.cappelloSbirroWorn },
-        { label: "Paga la multa (€20)", action: "pagaMulta", condition: player.money >= 20 },
+        { label: player.giornalettoRead ? "Paga la multa DOPPIA (€40)" : "Paga la multa (€20)", action: "pagaMulta", condition: player.money >= (player.giornalettoRead ? 40 : 20) },
         { label: "🦴 Offri un'unghia invece di €20", action: "multaNail", condition: player.money < 20 && player.nails.filter(n=>n.state!=="morta").length > 1 },
+        // Sprint 4: Snitch — denuncia lo spacciatore per €30. Ti mette in pace col poliziotto,
+        // ma lo spacciatore scopre e ti attacca alla prossima visita.
+        { label: "🕵️ Fai la spia sullo spacciatore (+€30, addio sconti)", action: "snitchSpacciatore", condition: !player.snitchedOn,
+          tooltip: "Guadagni €30 + passi senza multa. Ma lo spacciatore ti vedrà come un ratto." },
         { label: "🏃 Prova a scappare (20%)", action: "fintotonto" },
         { label: "😰 Non ho i soldi... (manganellata)", action: "manganellata", condition: player.money < 20 && !player.cappelloSbirroWorn },
       ],

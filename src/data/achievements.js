@@ -11,6 +11,7 @@ export const ACHIEVEMENTS = [
   { id:"combo_master",   emoji:"⚡", name:"Re del Combo",          desc:"Attiva un combo in combattimento",                secret: false },
   { id:"scratcher",      emoji:"🖐️", name:"Grattatore Seriale",    desc:"Gratta 50 carte in totale",                      secret: false },
   { id:"broke",          emoji:"😭", name:"Al Verde",              desc:"Sei arrivato dal boss con troppi pochi soldi — ti ha sbattuto all'inizio",  secret: false },
+  { id:"vintage_collector", emoji:"🎨", name:"Collezionista Vintage", desc:"Scopri tutte e 5 le varianti carte in combat (FOIL/STRAPPATO/D'ORO/B&N/MULTI)", secret: false },
   // SECRET
   { id:"piede",          emoji:"🦶", name:"???",                   desc:"Scopri l'unghia segreta",                         secret: true  },
   { id:"triple7",        emoji:"7️⃣", name:"???",                   desc:"Fai jackpot 777 alla slot",                       secret: true  },

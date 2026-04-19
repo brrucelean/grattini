@@ -286,6 +286,27 @@ export function useItemHandlers({ player, updatePlayer, addLog }) {
         addLog("🎫 Tessera VIP attivata! Nuove zone segrete disponibili nei tabacchini!", C.gold);
         break;
       }
+      // Sprint 5: Giornaletto porno — fortune boost + tracking per Poliziotto
+      case "giornalettoPorno": {
+        updatePlayer(p => ({
+          ...p,
+          fortune: (p.fortune || 0) + 3,
+          fortuneTurns: Math.max(p.fortuneTurns || 0, 6),
+          giornalettoRead: true, // flag persiste fino a prossimo Poliziotto
+          giornalettoTicks: 6,
+        }));
+        used = true;
+        const quotes = [
+          "📖 Sfogli il giornaletto. +3 Fortuna — e qualche palpitazione.",
+          "📖 Pagina centrale pieghevole... +3 Fortuna per 6 grattate!",
+          "📖 \"Lettere dai lettori\" — roba forte. Fortuna sale.",
+          "📖 Ti nascondi dietro un chiosco... +3 Fortuna.",
+        ];
+        addLog(quotes[Math.floor(Math.random() * quotes.length)], C.magenta);
+        setStampOverlay({ text:"📖 ... 💭 ...", color: C.magenta });
+        setTimeout(() => setStampOverlay(null), 1800);
+        break;
+      }
       default:
         addLog(`${item.name} non può essere usato ora.`, C.dim);
     }

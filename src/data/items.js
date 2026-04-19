@@ -15,6 +15,8 @@ export const ITEM_DEFS = {
   clipVirale:  { name:"Clip Virale", desc:"La prossima vincita viene RIPRESA! Vincita x2!", cost:0, rarity:"rara", emoji:"🎬", global:true },
   manoProtesica:{ name:"Mano Protesica", desc:"Cura TUTTE le unghie vive → Sane", cost:100, rarity:"rara", emoji:"🦾", global:true },
   tesseraVIP:  { name:"Tessera VIP", desc:"Sblocca zona VIP nel tabaccaio", cost:30, rarity:"rara", emoji:"🎫", global:true },
+  // Sprint 5: item retro — "rivista scandalosa" da sottobanco del tabaccaio
+  giornalettoPorno:{ name:"Giornaletto", desc:"Rivista scandalosa dai primi anni '90. +3 Fortuna per 6 grattate. Attenzione: se un Poliziotto ti becca con questo... figuraccia + €15 di multa.", cost:8, rarity:"media", emoji:"📖", global:true },
 };
 
 // ─── IMPIANTI CHIRURGO MACELLAIO ────────────────────────────

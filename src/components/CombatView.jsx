@@ -6,7 +6,7 @@ import { NAIL_INFO } from "../data/nails.js";
 import { rng, roll, pick } from "../utils/random.js";
 import { degradeNail, makeNailCursor } from "../utils/nail.js";
 import { generateCard } from "../utils/card.js";
-import { generateCombatHand, generateCombatCard } from "../utils/combat.js";
+import { generateCombatHand, generateCombatCard, CARD_VARIANTS } from "../utils/combat.js";
 import { AudioEngine, ParticleSystem } from "../audio.js";
 import { S } from "../utils/styles.js";
 import { Btn } from "./Btn.jsx";
@@ -167,7 +167,7 @@ export function CombatCardScratch({ cell, onRevealed, catColors, disabled, nailS
 
 
 // ─── COMBAT COMPONENT ────────────────────────────────────────
-export function CombatView({ enemy, player, onEnd, onNailDamage, onCellScratch, playerWallet=0, onCombo }) {
+export function CombatView({ enemy, player, onEnd, onNailDamage, onCellScratch, playerWallet=0, onCombo, onVariantRevealed }) {
   const [round, setRound] = useState(1);
   const [maxRounds] = useState(enemy.isBoss ? 4 : 3);
   const [phase, setPhase] = useState("rules"); // rules, draw, select, resolve, end, bella
@@ -195,6 +195,11 @@ export function CombatView({ enemy, player, onEnd, onNailDamage, onCellScratch, 
   const [nailHitThisRound, setNailHitThisRound] = useState(0);
   const [tauntData, setTauntData] = useState(null); // { text, respond: {text, reward, risk}, ignore: {text} }
   const [dragoFireData, setDragoFireData] = useState(null); // { text, dmgType:"nail"|"money" }
+  // Sprint 4: Streamer donazioni dinamiche in combat
+  const [donationEvent, setDonationEvent] = useState(null); // { text, amount, type:"love"|"hate", emoji, subtitle }
+  // Sprint 5: Mini-boss 3-combo challenge — traccia combo distinti raggiunti
+  const [minibossCombosHit, setMinibossCombosHit] = useState([]); // array di nomi combo unici
+  const [minibossBonusShown, setMinibossBonusShown] = useState(false);
   // Unghie nemico: 5 vite proprio come il giocatore
   const [enemyNails, setEnemyNails] = useState(
     Array(5).fill(null).map(() => ({ state: "sana", scratchCount: 0 }))
@@ -255,6 +260,49 @@ export function CombatView({ enemy, player, onEnd, onNailDamage, onCellScratch, 
     setComboTracker({});
     setActiveCombo(null);
     setPhase("select");
+  }, [phase, round]);
+
+  // ─── SPRINT 4: Streamer donazioni dinamiche in combat ──────────
+  // Ogni round, se hai follower, chance di donazione (love) o hater-troll (hate).
+  // Più follower = più chance (cap 50%). Boss fight → amounts più alti.
+  useEffect(() => {
+    if (phase !== "select") return;
+    const followers = player?.streamerFollowers || 0;
+    if (followers <= 0) return;
+    const chance = Math.min(0.5, 0.12 + followers * 0.06);
+    if (Math.random() > chance) return;
+    // Se ho molti follower, più probabili le donazioni positive (60–75% love)
+    const loveChance = Math.min(0.75, 0.5 + followers * 0.02);
+    const isLove = Math.random() < loveChance;
+    const bossMult = enemy.isBoss ? 1.6 : 1;
+    if (isLove) {
+      const amount = Math.round((8 + Math.floor(Math.random() * 18)) * bossMult); // €8-26 (boss: 13-42)
+      const templates = [
+        `💸 "FORZA FRA' NON MOLLARE!" — +€${amount}`,
+        `💸 "QUESTO È IL MIO STREAMER!" — +€${amount}`,
+        `💸 "PRIME ACTIVATED!" — +€${amount}`,
+        `💸 "MAMMINA DONA PER IL FIGLIO!" — +€${amount}`,
+        `💸 "VAI COSÌ, LEGGENDA!" — +€${amount}`,
+      ];
+      const text = templates[Math.floor(Math.random() * templates.length)];
+      setPlayerMoney(m => m + amount);
+      setDonationEvent({ text, amount, type: "love", emoji: "💸", subtitle: `+€${amount} dalla chat!` });
+      setTimeout(() => setDonationEvent(null), 2200);
+    } else {
+      const amount = Math.round((4 + Math.floor(Math.random() * 10)) * bossMult); // €4-14 (boss: 6-22)
+      const templates = [
+        `🤬 "L1 ANDATE A LAVORARE!" — hater troll -€${amount}`,
+        `🤬 "STO STREAM FA CAGARE." — -€${amount} per pubblicità saltate`,
+        `🤬 "CHAT BOMBING!" — -€${amount} dai moderatori`,
+        `🤬 "UNBAN MI HA COSTATO." — -€${amount}`,
+        `🤬 "CHARGEBACK!" — donazione revocata -€${amount}`,
+      ];
+      const text = templates[Math.floor(Math.random() * templates.length)];
+      setPlayerMoney(m => Math.max(0, m - amount));
+      setDonationEvent({ text, amount, type: "hate", emoji: "🤬", subtitle: `-€${amount} hater troll` });
+      setTimeout(() => setDonationEvent(null), 2200);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, round]);
 
   // Reveal sequenziale: ogni step gira una carta + fa apparire il suo log
@@ -386,9 +434,15 @@ export function CombatView({ enemy, player, onEnd, onNailDamage, onCellScratch, 
         const entries = [];
         let step_eNailEffect = null; // danni alle unghie nemico applicati live durante reveal
         const E = (text, color) => entries.push({ text, color, pTotal: pBase + pRunning, eTotal: eBase + eRunning });
+        // Sprint 5: variant multiplier (FOIL/STRAPPATO/D'ORO/B&N/MULTI)
+        const variantMult = CARD_VARIANTS[c.variant]?.valueMult ?? 1;
+        if (c.variant) {
+          const v = CARD_VARIANTS[c.variant];
+          E(`${c.variant === "ORO" ? "✨" : c.variant === "FOIL" ? "🌈" : c.variant === "STRAPPATO" ? "🪶" : c.variant === "BN" ? "◼️" : "🎨"} ${v.label} — ${v.desc}`, v.color);
+        }
 
         if (c.effect === "money") {
-          const val = Math.round(c.value * effectiveRoundMult);
+          const val = Math.round(c.value * effectiveRoundMult * variantMult);
           pMoney += val; pRunning += val;
           E(`✅ ${c.emoji} ${c.name}${effectiveRoundMult>1?` ×${effectiveRoundMult.toFixed(1)}`:""}: +€${val} → €${pBase+pRunning}`, C.green);
         }
@@ -461,7 +515,7 @@ export function CombatView({ enemy, player, onEnd, onNailDamage, onCellScratch, 
           step_eNailEffect = { kills: 0, degrades: 1 };
         }
         if (c.effect === "stealMoney") {
-          const val = Math.round(c.value * effectiveRoundMult);
+          const val = Math.round(c.value * effectiveRoundMult * variantMult);
           sMoney += val; pRunning += val;
           E(`⚔️ ${c.emoji} ${c.name}: rubi €${val} al nemico → tue €${pBase+pRunning}`, C.gold);
         }
@@ -590,10 +644,27 @@ export function CombatView({ enemy, player, onEnd, onNailDamage, onCellScratch, 
     }
 
     // ── SPEC 7: Combo system ──────────────────────────────────────
-    // Player combo
+    // Player combo — Sprint 5: MULTI conta per tutte le categorie, BN ricompensa +€5
     const categoryCounts = {};
-    pCells.forEach(c => { categoryCounts[c.category] = (categoryCounts[c.category] || 0) + 1; });
-    const comboCategory = Object.keys(categoryCounts).find(k => categoryCounts[k] === 3);
+    pCells.forEach(c => {
+      if (c.variant === "MULTI") {
+        ["COMBATTIMENTO", "DIFESA", "DENARO"].forEach(cat => {
+          categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
+        });
+      } else {
+        categoryCounts[c.category] = (categoryCounts[c.category] || 0) + 1;
+      }
+    });
+    // B&N bonus: +€5 per ogni B&N grattata (effetto "fotografia vintage")
+    const bnCount = pCells.filter(c => c.variant === "BN").length;
+    if (bnCount > 0) {
+      const bnBonus = bnCount * 5;
+      pMoney += bnBonus; pRunning += bnBonus;
+      steps.push({ flipSide: null, flipIdx: -1, entries: [
+        { text: `◼️ B&N × ${bnCount} — bonus vintage +€${bnBonus}`, color: "#cccccc", pTotal: pBase+pRunning, eTotal: eBase+eRunning }
+      ]});
+    }
+    const comboCategory = Object.keys(categoryCounts).find(k => categoryCounts[k] >= 3);
     let comboBonus = 0;
     let comboText = null;
 
@@ -707,6 +778,20 @@ export function CombatView({ enemy, player, onEnd, onNailDamage, onCellScratch, 
         setActiveCombo(newComboName);
         setTimeout(() => setActiveCombo(null), 2200);
         if (onCombo) onCombo();
+      }
+
+      // Sprint 5: mini-boss 3-combo challenge — traccia tutti i combo unici (categoria + effetto)
+      if (enemy.isMiniboss) {
+        const hitNames = [];
+        if (comboCategory) hitNames.push(`CAT_${comboCategory}`);
+        if (newComboName) hitNames.push(newComboName);
+        if (hitNames.length > 0) {
+          setMinibossCombosHit(prev => {
+            const next = [...prev];
+            hitNames.forEach(n => { if (!next.includes(n)) next.push(n); });
+            return next;
+          });
+        }
       }
       // Update comboTracker for display
       setComboTracker(effectCounts);
@@ -958,15 +1043,25 @@ export function CombatView({ enemy, player, onEnd, onNailDamage, onCellScratch, 
   const finish = () => {
     const won = playerMoney > enemyMoney;
     const enemyAliveNails = enemyNails.filter(n => n.state !== "morta").length;
+    // Sprint 5: mini-boss 3-combo challenge bonus
+    // 2 combo distinti = +€40; 3+ = +€100 + bonus heal
+    let minibossBonus = 0;
+    let minibossHeal = 0;
+    if (enemy.isMiniboss && won) {
+      const n = minibossCombosHit.length;
+      if (n >= 3) { minibossBonus = 100; minibossHeal = 1; }
+      else if (n >= 2) { minibossBonus = 40; }
+    }
     onEnd({
-      won, playerMoney, enemyMoney,
+      won, playerMoney: playerMoney + minibossBonus, enemyMoney,
       nailDamage: 0, // già applicato durante il combattimento tramite onNailDamage
-      nailHeals: playerHealsTotal,
-      moneyGained: won ? playerMoney : -Math.abs(enemyMoney - playerMoney),
+      nailHeals: playerHealsTotal + minibossHeal,
+      moneyGained: won ? (playerMoney + minibossBonus) : -Math.abs(enemyMoney - playerMoney),
       stolenMoney,
       // Win: guadagni un'unghia (se il nemico ne ha ancora). Lose: perdi un'unghia
       winNail: won,
       loseNail: !won,
+      minibossBonus, minibossHeal, minibossCombos: minibossCombosHit.length,
     });
   };
 
@@ -1079,6 +1174,13 @@ export function CombatView({ enemy, player, onEnd, onNailDamage, onCellScratch, 
                 💰 Porti €{walletBonus} dal portafoglio (30% del tuo cash, max €150)
               </div>
             )}
+            {enemy.isMiniboss && (
+              <div style={{marginTop:"6px", background:"#1a0a1a", border:`1px solid ${C.magenta}66`, borderRadius:"0", padding:"8px 10px", fontSize:"11px", color:C.magenta}}>
+                💀 <strong>SFIDA 3-COMBO</strong> — i Mini-Boss amano le combo.<br/>
+                🎯 2 combo distinti durante il match → <span style={{color:C.gold}}>+€40</span><br/>
+                🔥 3+ combo distinti → <span style={{color:C.gold}}>+€100 + cura 1 unghia</span>
+              </div>
+            )}
             {/* Punchline per-nemico */}
             {(() => {
               const ENEMY_QUOTES = {
@@ -1181,6 +1283,17 @@ export function CombatView({ enemy, player, onEnd, onNailDamage, onCellScratch, 
               <span style={{color:C.gold}}> ({scratchedHandIdxs.length}/3 grattate)</span>
             )}
           </div>
+          {enemy.isMiniboss && (
+            <div style={{
+              marginBottom:"8px", padding:"4px 8px", fontSize:"10px",
+              background:"#1a0a1a", border:`1px solid ${C.magenta}66`,
+              color:C.magenta, display:"inline-block",
+            }}>
+              💀 Combo Challenge: <strong style={{color: minibossCombosHit.length >= 3 ? C.gold : minibossCombosHit.length >= 2 ? C.cyan : C.dim}}>{minibossCombosHit.length}/3</strong> distinti
+              {minibossCombosHit.length >= 3 && <span style={{color:C.gold}}> 🔥 MAX!</span>}
+              {minibossCombosHit.length === 2 && <span style={{color:C.cyan}}> ✔ +€40 sicuri</span>}
+            </div>
+          )}
           <div style={{
             display:"grid", gridTemplateColumns:"repeat(3,1fr)",
             gap:"6px", maxWidth:"480px", margin:"0 auto 10px",
@@ -1190,19 +1303,33 @@ export function CombatView({ enemy, player, onEnd, onNailDamage, onCellScratch, 
               const exhausted = !isScratched && scratchedHandIdxs.length >= 3;
               const col = catColors[cell.category] || C.dim;
               if (isScratched) {
+                // Sprint 5: variant visual overlay
+                const vKey = cell.variant;
+                const v = vKey ? CARD_VARIANTS[vKey] : null;
+                const variantBorder = v ? v.color : col;
+                const variantBg = vKey === "BN"
+                  ? "#1a1a1a"
+                  : vKey === "ORO" ? "#2a1f00"
+                  : vKey === "STRAPPATO" ? "#1a1208"
+                  : CAT_BG[cell.category] || "#0a0a12";
+                const variantFilter = vKey === "BN" ? "grayscale(100%) contrast(1.2)"
+                  : vKey === "STRAPPATO" ? "saturate(0.5) brightness(0.85)"
+                  : "none";
                 return (
                   <div key={i} style={{
-                    border:`2px solid ${col}`,
+                    border:`2px solid ${variantBorder}`,
                     borderRadius:"0",
-                    background: CAT_BG[cell.category] || "#0a0a12",
+                    background: variantBg,
                     textAlign:"center",
                     height:`${COMBAT_CARD_H}px`,
                     display:"flex", flexDirection:"column",
                     alignItems:"center", justifyContent:"center",
                     gap:"3px",
-                    boxShadow:`0 0 12px ${col}33, inset 0 0 20px ${col}11`,
+                    boxShadow: v ? v.glow : `0 0 12px ${col}33, inset 0 0 20px ${col}11`,
                     padding:"6px 6px",
                     position:"relative",
+                    filter: variantFilter,
+                    animation: vKey === "FOIL" || vKey === "MULTI" ? "pulse 1.6s ease-in-out infinite" : "none",
                   }}>
                     {/* Barra categoria in alto */}
                     <div style={{
@@ -1213,6 +1340,27 @@ export function CombatView({ enemy, player, onEnd, onNailDamage, onCellScratch, 
                     }}>
                       {CAT_EMOJI_MAP[cell.category]} {cell.category}
                     </div>
+                    {/* Variant badge in basso a destra */}
+                    {v && (
+                      <div style={{
+                        position:"absolute", bottom:2, right:3,
+                        background: v.color+"22", border:`1px solid ${v.color}88`,
+                        padding:"1px 4px", fontSize:"8px", fontWeight:"bold",
+                        color: v.color, letterSpacing:"1px",
+                      }}>
+                        {v.label}
+                      </div>
+                    )}
+                    {/* Strappo visivo — angolo rotto per STRAPPATO */}
+                    {vKey === "STRAPPATO" && (
+                      <div style={{
+                        position:"absolute", top:0, right:0,
+                        width:0, height:0,
+                        borderTop:`20px solid #1a1208`,
+                        borderLeft:`20px solid transparent`,
+                        zIndex:2,
+                      }} />
+                    )}
                     <div style={{fontSize:"30px", lineHeight:1, marginTop:"14px"}}>{cell.emoji}</div>
                     <div style={{
                       fontSize:"11px", color:C.bright, fontWeight:"bold",
@@ -1233,6 +1381,8 @@ export function CombatView({ enemy, player, onEnd, onNailDamage, onCellScratch, 
                   onRevealed={() => {
                     setScratchedHandIdxs(prev => [...prev, i]);
                     onCellScratch?.(false); // ogni carta grattata consuma 1 punto unghia
+                    // Sprint 5: traccia varianti scoperte → Vintage Collezionabili
+                    if (cell.variant && onVariantRevealed) onVariantRevealed(cell.variant);
                   }}
                 />
               );
@@ -1747,6 +1897,34 @@ export function CombatView({ enemy, player, onEnd, onNailDamage, onCellScratch, 
           </div>
           <div style={{color:C.dim, fontSize:"10px", marginTop:"10px"}}>
             💡 Pesca carte DIFESA per bloccare il Fiato del Drago!
+          </div>
+        </div>
+      )}
+
+      {/* 💸 Streamer donazioni dinamiche in combat — chat live */}
+      {donationEvent && (
+        <div style={{
+          position:"absolute", top:"12px", right:"12px",
+          minWidth:"220px", maxWidth:"280px",
+          background: donationEvent.type === "love" ? "#0a1f0a" : "#1f0a0a",
+          border: `1px solid ${donationEvent.type === "love" ? C.green : C.red}`,
+          borderRadius:"4px", padding:"8px 10px",
+          boxShadow: `0 0 20px ${donationEvent.type === "love" ? "#00ff0044" : "#ff000044"}`,
+          animation: "pulse 0.6s ease-out", zIndex: 50,
+        }}>
+          <div style={{
+            fontSize:"10px", color: C.dim, marginBottom:"4px",
+            textTransform:"uppercase", letterSpacing:"1px",
+          }}>📺 Chat Live</div>
+          <div style={{
+            fontSize:"12px", fontWeight:"bold",
+            color: donationEvent.type === "love" ? C.green : C.red,
+            lineHeight:"1.3",
+          }}>
+            {donationEvent.text}
+          </div>
+          <div style={{color:C.dim, fontSize:"9px", marginTop:"4px"}}>
+            👥 {player?.streamerFollowers || 0} follower
           </div>
         </div>
       )}
