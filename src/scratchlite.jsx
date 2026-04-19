@@ -161,6 +161,9 @@ export default function Grattini() {
       fortuneTurns: 0,
       smokesTotal: 0,
       tumore: false,
+      // Sprint 2: tick counters per risk/reward sigarette
+      sigarettaTicks: 0, // -> unghiaNera quando raggiunge 0
+      erbaTicks: 0,      // -> polliceVerde quando raggiunge 0
       consecutiveWins: 0,
       grattaMania: false,
       grattaManiaTurns: 0,
@@ -1988,6 +1991,8 @@ export default function Grattini() {
       {nailEquipModal && player && (() => {
         const TIER_ORDER = ["marcia","sanguinante","graffiata","sana","kawaii"];
         const TIER_COLORS = { marcia:C.red, sanguinante:C.orange, graffiata:C.gold, sana:C.green, kawaii:C.pink };
+        // Sprint 2: stati speciali fuori catena — mappa pip all'equivalente più vicino
+        const SPECIAL_TIER_MAP = { polliceVerde: "kawaii", unghiaNera: "marcia" };
         const activeNailColor = NAIL_INFO[player.nails[player.activeNail]?.state]?.color || C.magenta;
         return (
         <div style={{
@@ -2044,8 +2049,14 @@ export default function Grattini() {
               {player.nails.map((n, i) => {
                 const ni = NAIL_INFO[n.state];
                 const isDead = n.state === "morta";
-                const nailEmoji = isDead ? "💀" : n.state==="piede"?"🦶":n.state==="kawaii"?"💖":"🖐";
-                const aliveTiersModal = TIER_ORDER.indexOf(n.state);
+                const nailEmoji = isDead ? "💀"
+                  : n.state==="piede" ? "🦶"
+                  : n.state==="kawaii" ? "💖"
+                  : n.state==="polliceVerde" ? "🌿"
+                  : n.state==="unghiaNera" ? "🖤"
+                  : "🖐";
+                const pipStateModal = SPECIAL_TIER_MAP[n.state] || n.state;
+                const aliveTiersModal = TIER_ORDER.indexOf(pipStateModal);
                 const cbRef = nailEquipCallbackRef.current;
                 const canSelect = cbRef?.nailFilter ? cbRef.nailFilter(n) : !isDead;
                 return (

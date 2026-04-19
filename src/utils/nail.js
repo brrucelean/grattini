@@ -32,6 +32,19 @@ export function degradeNailObj(nail, amount=1) {
   }
   // Piede: al primo danno diventa graffiata (perde x3 ma resta usabile)
   if (newNail.state === "piede") { newNail.state = "graffiata"; return newNail; }
+  // Sprint 2: stati speciali fuori catena
+  if (newNail.state === "polliceVerde") {
+    // Buff si consuma al primo danno: torna Sana
+    newNail.state = "sana";
+    newNail.scratchCount = 0;
+    dmg -= 1;
+    if (dmg <= 0) return newNail;
+  }
+  if (newNail.state === "unghiaNera") {
+    // Già marcia/nera: al primo colpo muore
+    newNail.state = "morta";
+    return newNail;
+  }
   newNail.state = degradeNail(newNail.state, dmg);
   // Kawaii revert: se smalto è esaurito e stato è kawaii, torna a sana
   if (newNail.state === "kawaii" && (!newNail.smalto || newNail.smalto <= 0)) {

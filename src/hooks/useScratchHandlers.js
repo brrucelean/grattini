@@ -30,6 +30,36 @@ export function useScratchHandlers({
       if (totalScratch >= 50) unlockAchievement("scratcher");
     } catch {}
 
+    // ─── SPRINT 2: TICK SIGARETTA / ERBA → UNGHIA NERA / POLLICE VERDE ───
+    // Ogni grattata decrementa i tick. Quando il contatore raggiunge 0,
+    // l'unghia attiva muta nello stato speciale corrispondente.
+    {
+      const hasSig = (player?.sigarettaTicks || 0) > 0;
+      const hasErba = (player?.erbaTicks || 0) > 0;
+      if (hasSig || hasErba) {
+        updatePlayer(p => {
+          const nails = [...p.nails];
+          const active = p.activeNail ?? 0;
+          const nail = nails[active];
+          let sig = p.sigarettaTicks || 0;
+          let erba = p.erbaTicks || 0;
+          if (sig > 0) sig -= 1;
+          if (erba > 0) erba -= 1;
+          // Se entrambi vanno a 0 nella stessa grattata, priorità a Pollice Verde (buff vince)
+          if (nail && nail.state !== "morta") {
+            if (erba === 0 && (p.erbaTicks || 0) > 0) {
+              nails[active] = {...nail, state: "polliceVerde", scratchCount: 0};
+              addLog(`🌿 L'erba fa effetto — l'unghia attiva diventa POLLICE VERDE! (×2.5 premi al prossimo danno)`, C.green);
+            } else if (sig === 0 && (p.sigarettaTicks || 0) > 0) {
+              nails[active] = {...nail, state: "unghiaNera", scratchCount: 0};
+              addLog(`🖤 Troppo fumo — l'unghia attiva diventa UNGHIA NERA! (×0.4 premi, rischio annullo)`, C.red);
+            }
+          }
+          return {...p, nails, sigarettaTicks: sig, erbaTicks: erba};
+        });
+      }
+    }
+
     // ─── IMPIANTI A USI LIMITATI (Anziana: sacra | Macellaio: neonato/marcione/baddie) ───
     // Consuma 1 uso per grattata. A esaurimento: sacra torna "sana"; gli altri muoiono.
     {

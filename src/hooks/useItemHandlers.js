@@ -76,6 +76,8 @@ export function useItemHandlers({ player, updatePlayer, addLog }) {
     const isCanna = itemType === "sigarettaErba";
     const fortBonus = isCanna ? 2 : 1;
     const fortTurns = isCanna ? 4 : 3;
+    // Sprint 2: ticks risk/reward — sigaretta rapida e rischiosa, erba lenta ma benefica
+    const tickCount = isCanna ? 4 : 2;
     setSmokeChoiceModal(null);
     setShowSmokeEffect(true);
     setTimeout(() => setShowSmokeEffect(false), 2500);
@@ -92,11 +94,15 @@ export function useItemHandlers({ player, updatePlayer, addLog }) {
         fortuneTurns: getTumore ? 9999 : Math.max(p.fortuneTurns, fortTurns),
         smokesTotal: newSmokes,
         tumore: getTumore || p.tumore,
+        // Accumula ticks — se ne fumi un'altra dello stesso tipo, si somma
+        sigarettaTicks: isCanna ? (p.sigarettaTicks || 0) : (p.sigarettaTicks || 0) + tickCount,
+        erbaTicks:      isCanna ? (p.erbaTicks || 0) + tickCount : (p.erbaTicks || 0),
       };
     });
     addLog(isCanna
-      ? `🌿 Tiri una canna... +${fortBonus} Fortuna per ${fortTurns} turni. Che pace.`
-      : `🚬 Una fumata veloce. +${fortBonus} Fortuna per ${fortTurns} turni.`, C.green);
+      ? `🌿 Tiri una canna... +${fortBonus} Fortuna per ${fortTurns} turni. Tra ${tickCount} grattate: 🌿 POLLICE VERDE.`
+      : `🚬 Una fumata veloce. +${fortBonus} Fortuna per ${fortTurns} turni. Tra ${tickCount} grattate: 🖤 UNGHIA NERA.`,
+      C.green);
   }, [updatePlayer, addLog]);
 
   const handleSaveSmoke = useCallback((itemType) => {

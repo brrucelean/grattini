@@ -69,7 +69,13 @@ export function NailDisplay({ nails, activeNail, compact=false, onSelectNail=nul
               transition: "box-shadow 0.2s, border-color 0.2s",
               display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "2px",
             }}>
-            <div style={{fontSize:"18px"}}>{n.state==="piede"?"🦶":n.state==="kawaii"?"💖":isDead?"💀":"🖐"}</div>
+            <div style={{fontSize:"18px"}}>{
+              isDead ? "💀"
+              : n.state==="piede" ? "🦶"
+              : n.state==="kawaii" ? "💖"
+              : n.state==="polliceVerde" ? "🌿"
+              : n.state==="unghiaNera" ? "🖤"
+              : "🖐"}</div>
             <div style={{color: isActive ? col : isDead ? "#555" : col + "aa", fontSize:"10px", fontWeight: isActive ? "bold" : "normal"}}>{info.label}</div>
             <div style={{color: isActive ? col + "cc" : C.dim, fontSize:"9px"}}>
               {!isDead ? `${n.scratchCount}/3` : "---"}
