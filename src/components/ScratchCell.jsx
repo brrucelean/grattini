@@ -6,10 +6,39 @@ import { makeNailCursor } from "../utils/nail.js";
 import { AudioEngine, ParticleSystem } from "../audio.js";
 
 // ─── SCRATCH CELL (canvas silver-layer drag-to-reveal) ──────
-export function ScratchCell({ cell, idx, onScratch, finished, isWinSymbol, isPartialMatch, ambidestri=false, bloodMode=false, themeColor=null }) {
+export function ScratchCell({ cell, idx, onScratch, finished, isWinSymbol, isPartialMatch, ambidestri=false, bloodMode=false, isBloody=false, themeColor=null }) {
   const canvasRef = useRef(null);
   const drawing = useRef(false);
   const revealed = useRef(cell.scratched);
+  // Pattern pseudo-random stabile basato su idx — così ogni cella sporca ha macchie di sangue coerenti
+  // tra i render (altrimenti ballerebbero ad ogni update di React).
+  const bloodSplatter = useRef(null);
+  if (isBloody && !bloodSplatter.current) {
+    // 3-5 macchie ellittiche + 1-2 gocce che colano
+    const rng = (seed) => { const x = Math.sin(seed * 9301 + 49297) * 233280; return x - Math.floor(x); };
+    const blobs = [];
+    const nBlobs = 3 + Math.floor(rng(idx + 1) * 3);
+    for (let i = 0; i < nBlobs; i++) {
+      blobs.push({
+        cx: 10 + rng(idx * 7 + i) * 80,
+        cy: 10 + rng(idx * 11 + i * 3) * 55,
+        rx: 6 + rng(idx * 13 + i * 5) * 10,
+        ry: 4 + rng(idx * 17 + i * 7) * 7,
+        rot: rng(idx * 19 + i) * 180,
+        op: 0.55 + rng(idx * 23 + i) * 0.35,
+      });
+    }
+    const drips = [];
+    const nDrips = 1 + Math.floor(rng(idx + 31) * 2);
+    for (let i = 0; i < nDrips; i++) {
+      drips.push({
+        x: 15 + rng(idx * 29 + i) * 70,
+        y: 5 + rng(idx * 31 + i) * 20,
+        h: 12 + rng(idx * 37 + i) * 18,
+      });
+    }
+    bloodSplatter.current = { blobs, drips };
+  }
 
   // Init silver layer on mount
   useEffect(() => {
@@ -106,6 +135,38 @@ export function ScratchCell({ cell, idx, onScratch, finished, isWinSymbol, isPar
         }}>
           ░▒▓█▓▒░<br/>▒▓█▓▒░▒<br/>▓█▓▒░▒▓
         </div>
+      )}
+      {/* Blood splatter overlay — visibile solo su cella grattata e "sporcata" */}
+      {cell.scratched && isBloody && bloodSplatter.current && (
+        <svg
+          viewBox="0 0 100 70"
+          preserveAspectRatio="none"
+          style={{
+            position:"absolute", inset:0, width:"100%", height:"100%",
+            pointerEvents:"none", mixBlendMode:"multiply",
+          }}
+        >
+          {bloodSplatter.current.blobs.map((b, i) => (
+            <ellipse
+              key={`b${i}`}
+              cx={b.cx} cy={b.cy} rx={b.rx} ry={b.ry}
+              fill="#a00010"
+              opacity={b.op}
+              transform={`rotate(${b.rot} ${b.cx} ${b.cy})`}
+            />
+          ))}
+          {bloodSplatter.current.drips.map((d, i) => (
+            <rect
+              key={`d${i}`}
+              x={d.x - 1} y={d.y} width="2.2" height={d.h}
+              fill="#7a0008" opacity="0.7"
+            />
+          ))}
+          {/* Piccoli schizzi puntiformi */}
+          {bloodSplatter.current.blobs.slice(0, 3).map((b, i) => (
+            <circle key={`s${i}`} cx={b.cx + 8 + i * 3} cy={b.cy - 6 - i * 2} r="0.9" fill="#8a0010" opacity="0.8" />
+          ))}
+        </svg>
       )}
       {/* Silver canvas overlay */}
       {!cell.scratched && (

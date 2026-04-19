@@ -26,6 +26,9 @@ export function ScratchCardView({ card, onDone, nailState, nailImplant=null, for
   const [cancelled, setCancelled] = useState(false);
   const [nailAdviceDismissed, setNailAdviceDismissed] = useState(false);
   const scratchedWhileMarcia = useRef(false);
+  // Celle "sporcate di sangue" — set di indici grattati con unghia marcia/sanguinante.
+  // Usato per renderizzare macchie rosse persistenti sulla schedina.
+  const [bloodyCells, setBloodyCells] = useState(() => new Set());
   const firstHitUsed = useRef(false); // Reliquia Occhio di Tigre
   // Mechanic-specific state
   const runningSumRef = useRef(0);
@@ -107,6 +110,8 @@ export function ScratchCardView({ card, onDone, nailState, nailImplant=null, for
       setScratched(newCells.filter(c => c.scratched).length);
       finishedRef.current = false;
       setFinished(false);
+      setBloodyCells(new Set());
+      scratchedWhileMarcia.current = false;
       setWinFound(false); setWinSymbol(null); setWinPrize(0); setWinPrizeFull(0); setCancelled(false);
       runningSumRef.current = 0; setRunningSum(0); setBusted(false);
       collectedRef.current = 0; setCollected(0); setHitStop(false); setShowNoWin(false);
@@ -191,6 +196,11 @@ export function ScratchCardView({ card, onDone, nailState, nailImplant=null, for
   const doScratch = (idx) => {
     if (cells[idx].scratched || finished) return;
     if (!equippedGrattatore && nailState === "marcia") scratchedWhileMarcia.current = true;
+    // Macchia visiva: se stai grattando con unghia sanguinante/marcia (e senza grattatore),
+    // questa cella resta sporca di sangue per tutta la vita della schedina.
+    if (!equippedGrattatore && (nailState === "marcia" || nailState === "sanguinante")) {
+      setBloodyCells(prev => { if (prev.has(idx)) return prev; const next = new Set(prev); next.add(idx); return next; });
+    }
 
     // ── Item cell: dagli l'oggetto, non conta per win/nail ──────
     if (cells[idx].isItem) {
@@ -391,6 +401,14 @@ export function ScratchCardView({ card, onDone, nailState, nailImplant=null, for
     const newCells = cells.map(c => ({...c, scratched: true}));
     setCells(newCells);
     if (!equippedGrattatore && nailState === "marcia") scratchedWhileMarcia.current = true;
+    // Macchia TUTTE le celle appena grattate se l'unghia è marcia/sanguinante
+    if (!equippedGrattatore && (nailState === "marcia" || nailState === "sanguinante")) {
+      setBloodyCells(prev => {
+        const next = new Set(prev);
+        cells.forEach((c, i) => { if (!c.scratched) next.add(i); });
+        return next;
+      });
+    }
     newCells.forEach((c,i) => { if (!cells[i].scratched && c.isItem) onItemFound?.(c.itemId); });
     const trapCount = newCells.filter((c,i) => !cells[i].scratched && c.isTrap).length;
     for (let t=0; t<trapCount; t++) onNailDamage?.();
@@ -743,6 +761,11 @@ export function ScratchCardView({ card, onDone, nailState, nailImplant=null, for
       <div style={{
         display:"grid", gridTemplateColumns:`repeat(${card.cols}, 1fr)`,
         gap:"4px", maxWidth:"300px", margin:"6px auto 8px",
+        padding: (bloodyCells.size > 0 || scratchedWhileMarcia.current) ? "4px" : 0,
+        background: (bloodyCells.size > 0 || scratchedWhileMarcia.current)
+          ? "radial-gradient(circle at 30% 40%, rgba(170,0,15,0.18), transparent 60%), radial-gradient(circle at 70% 70%, rgba(120,0,10,0.14), transparent 55%)"
+          : "transparent",
+        transition: "background 0.4s",
       }}>
         {cells.map((cell, idx) => {
           const matchCount = revealedCounts[cell.symbol] || 0;
@@ -753,6 +776,7 @@ export function ScratchCardView({ card, onDone, nailState, nailImplant=null, for
               onScratch={doScratch} finished={finished}
               isWinSymbol={isWinSymbol} isPartialMatch={isPartialMatch}
               bloodMode={nailState === "sanguinante" || nailState === "marcia"}
+              isBloody={bloodyCells.has(idx)}
               ambidestri={ambidestri} themeColor={card.theme?.border} />
           );
         })}
