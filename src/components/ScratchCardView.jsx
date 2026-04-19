@@ -15,6 +15,9 @@ export function ScratchCardView({ card, onDone, nailState, nailImplant=null, for
   const [cells, setCells] = useState(card.cells.map(c => ({...c})));
   const [scratched, setScratched] = useState(0);
   const [finished, setFinished] = useState(false);
+  // Ref-based guard to prevent double-fire of onDone from rapid clicks / spacebar spam
+  // (React state updates are async: two clicks in the same tick both see finished=false).
+  const finishedRef = useRef(false);
   // Real-time win detection
   const [winFound, setWinFound] = useState(false);
   const [winSymbol, setWinSymbol] = useState(null);
@@ -102,6 +105,7 @@ export function ScratchCardView({ card, onDone, nailState, nailImplant=null, for
       }
       setCells(newCells);
       setScratched(newCells.filter(c => c.scratched).length);
+      finishedRef.current = false;
       setFinished(false);
       setWinFound(false); setWinSymbol(null); setWinPrize(0); setWinPrizeFull(0); setCancelled(false);
       runningSumRef.current = 0; setRunningSum(0); setBusted(false);
@@ -402,7 +406,7 @@ export function ScratchCardView({ card, onDone, nailState, nailImplant=null, for
   };
 
   const handleFinish = (claiming, stopHit=false) => {
-    if (finished) return;
+    if (finished || finishedRef.current) return;
 
     // ── setteemezzo incassa anticipato ──
     if (card.mechanic === "setteemezzo" && claiming && !winFound) {
@@ -418,6 +422,7 @@ export function ScratchCardView({ card, onDone, nailState, nailImplant=null, for
       return;
     }
 
+    finishedRef.current = true;
     setFinished(true);
 
     // ── collect win ────────────────────────

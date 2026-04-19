@@ -111,7 +111,12 @@ export function useScratchHandlers({
     // For intro cards: capture prize, don't add to budget yet (player will choose which to keep)
     if (returnScreen === "introScratch") {
       const prizeAmt = result.win && result.prize > 0 ? result.prize : 0;
-      setIntroPrizes(prev => [...prev, { prize: prizeAmt, cardName: scratchingCard?.name || "Biglietto" }]);
+      const cardKey = scratchingCard; // object identity — guard against double-fire on same card
+      setIntroPrizes(prev => {
+        // Defensive: if this exact card object was already recorded, skip (double-fire of onDone).
+        if (prev.some(p => p._cardRef === cardKey)) return prev;
+        return [...prev, { prize: prizeAmt, cardName: scratchingCard?.name || "Biglietto", _cardRef: cardKey }];
+      });
       if (prizeAmt > 0) { addLog(`Biglietto: €${prizeAmt} — scegli quale intascare!`, C.gold); triggerNpcComment(prizeAmt >= 5 ? "win_big" : "win_small"); }
       else { addLog(`Nessuna vincita su questo biglietto.`, C.dim); triggerNpcComment("lose"); }
     } else if (scratchingCard?.isContrabbando) {
