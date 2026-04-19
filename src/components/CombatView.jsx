@@ -202,6 +202,8 @@ export function CombatView({ enemy, player, onEnd, onNailDamage, onCellScratch, 
   const [minibossBonusShown, setMinibossBonusShown] = useState(false);
   // Sprint 5: flash quando una variante rara viene rivelata
   const [variantFlash, setVariantFlash] = useState(null); // { label, color }
+  // Auto-scroll del log risoluzione combattimento (stile chat)
+  const logScrollRef = useRef(null);
   // Unghie nemico: 5 vite proprio come il giocatore
   const [enemyNails, setEnemyNails] = useState(
     Array(5).fill(null).map(() => ({ state: "sana", scratchCount: 0 }))
@@ -1104,10 +1106,17 @@ export function CombatView({ enemy, player, onEnd, onNailDamage, onCellScratch, 
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
+  // Auto-scroll del log risoluzione: ad ogni nuova entry rivelata scorre al fondo
+  useEffect(() => {
+    if (logScrollRef.current) {
+      logScrollRef.current.scrollTop = logScrollRef.current.scrollHeight;
+    }
+  }, [revealStep, phase]);
+
   const won = playerMoney > enemyMoney;
 
   return (
-    <div style={{...S.panel, maxWidth:"500px", margin:"10px auto", textAlign:"center"}}>
+    <div style={{...S.panel, maxWidth:"620px", margin:"10px auto", textAlign:"center"}}>
       {/* Flash rosso fullscreen danno unghia */}
       {painFlash > 0 && (
         <div style={{
@@ -1696,9 +1705,17 @@ export function CombatView({ enemy, player, onEnd, onNailDamage, onCellScratch, 
               </div>
             </div>
 
-            {/* Log botta e risposta — cresce in tempo reale */}
-            <div style={{marginBottom:"10px", maxHeight:"180px", overflowY:"auto",
-              background:"#050510", borderRadius:"0", padding:"6px 8px"}}>
+            {/* Log botta e risposta — stile chat, auto-scroll al fondo */}
+            <div ref={logScrollRef} style={{
+              marginBottom:"10px",
+              marginLeft:"-8px", marginRight:"-8px",
+              maxHeight:"260px", overflowY:"auto",
+              background:"#050510", borderRadius:"0",
+              padding:"8px 12px",
+              border:`1px solid ${C.cyan}22`,
+              boxShadow:"inset 0 8px 12px -8px #000c, inset 0 -8px 12px -8px #000c",
+              scrollBehavior:"smooth",
+            }}>
               {visibleEntries.map((entry, i) => {
                 const isPlayer = entry.text.startsWith("✅") || entry.text.startsWith("⚔️") ||
                   entry.text.startsWith("🛡") || entry.text.startsWith("💨") ||
