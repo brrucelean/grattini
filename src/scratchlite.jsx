@@ -173,6 +173,10 @@ export default function Grattini() {
       monetaCineseActive: false,
       clipViraleActive: false,
       cappelloSbirroWorn: false, // true = indossato e attivo
+      // Sprint 4: tensione psicologica
+      streamerFollowers: 0, // aumenta con streamerLive → donazioni dinamiche in combat
+      snitchedOn: false,    // true dopo Snitch al Poliziotto → spacciatore ostile
+      bluffsBought: 0,      // quanti falsi-vincenti comprati dallo spacciatore (stat)
       grattedCards: [], // storico carte grattate: [{typeId, tier, isWinner, prize, name}]
       lastWonPrize: 0, // ultimo premio vinto (per Doppio o Nulla x2)
       extraTiles: [], // tile extra nel grattino corrente (es. monetaCinese)

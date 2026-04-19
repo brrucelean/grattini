@@ -195,6 +195,8 @@ export function CombatView({ enemy, player, onEnd, onNailDamage, onCellScratch, 
   const [nailHitThisRound, setNailHitThisRound] = useState(0);
   const [tauntData, setTauntData] = useState(null); // { text, respond: {text, reward, risk}, ignore: {text} }
   const [dragoFireData, setDragoFireData] = useState(null); // { text, dmgType:"nail"|"money" }
+  // Sprint 4: Streamer donazioni dinamiche in combat
+  const [donationEvent, setDonationEvent] = useState(null); // { text, amount, type:"love"|"hate", emoji, subtitle }
   // Unghie nemico: 5 vite proprio come il giocatore
   const [enemyNails, setEnemyNails] = useState(
     Array(5).fill(null).map(() => ({ state: "sana", scratchCount: 0 }))
@@ -255,6 +257,49 @@ export function CombatView({ enemy, player, onEnd, onNailDamage, onCellScratch, 
     setComboTracker({});
     setActiveCombo(null);
     setPhase("select");
+  }, [phase, round]);
+
+  // ─── SPRINT 4: Streamer donazioni dinamiche in combat ──────────
+  // Ogni round, se hai follower, chance di donazione (love) o hater-troll (hate).
+  // Più follower = più chance (cap 50%). Boss fight → amounts più alti.
+  useEffect(() => {
+    if (phase !== "select") return;
+    const followers = player?.streamerFollowers || 0;
+    if (followers <= 0) return;
+    const chance = Math.min(0.5, 0.12 + followers * 0.06);
+    if (Math.random() > chance) return;
+    // Se ho molti follower, più probabili le donazioni positive (60–75% love)
+    const loveChance = Math.min(0.75, 0.5 + followers * 0.02);
+    const isLove = Math.random() < loveChance;
+    const bossMult = enemy.isBoss ? 1.6 : 1;
+    if (isLove) {
+      const amount = Math.round((8 + Math.floor(Math.random() * 18)) * bossMult); // €8-26 (boss: 13-42)
+      const templates = [
+        `💸 "FORZA FRA' NON MOLLARE!" — +€${amount}`,
+        `💸 "QUESTO È IL MIO STREAMER!" — +€${amount}`,
+        `💸 "PRIME ACTIVATED!" — +€${amount}`,
+        `💸 "MAMMINA DONA PER IL FIGLIO!" — +€${amount}`,
+        `💸 "VAI COSÌ, LEGGENDA!" — +€${amount}`,
+      ];
+      const text = templates[Math.floor(Math.random() * templates.length)];
+      setPlayerMoney(m => m + amount);
+      setDonationEvent({ text, amount, type: "love", emoji: "💸", subtitle: `+€${amount} dalla chat!` });
+      setTimeout(() => setDonationEvent(null), 2200);
+    } else {
+      const amount = Math.round((4 + Math.floor(Math.random() * 10)) * bossMult); // €4-14 (boss: 6-22)
+      const templates = [
+        `🤬 "L1 ANDATE A LAVORARE!" — hater troll -€${amount}`,
+        `🤬 "STO STREAM FA CAGARE." — -€${amount} per pubblicità saltate`,
+        `🤬 "CHAT BOMBING!" — -€${amount} dai moderatori`,
+        `🤬 "UNBAN MI HA COSTATO." — -€${amount}`,
+        `🤬 "CHARGEBACK!" — donazione revocata -€${amount}`,
+      ];
+      const text = templates[Math.floor(Math.random() * templates.length)];
+      setPlayerMoney(m => Math.max(0, m - amount));
+      setDonationEvent({ text, amount, type: "hate", emoji: "🤬", subtitle: `-€${amount} hater troll` });
+      setTimeout(() => setDonationEvent(null), 2200);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, round]);
 
   // Reveal sequenziale: ogni step gira una carta + fa apparire il suo log
@@ -1747,6 +1792,34 @@ export function CombatView({ enemy, player, onEnd, onNailDamage, onCellScratch, 
           </div>
           <div style={{color:C.dim, fontSize:"10px", marginTop:"10px"}}>
             💡 Pesca carte DIFESA per bloccare il Fiato del Drago!
+          </div>
+        </div>
+      )}
+
+      {/* 💸 Streamer donazioni dinamiche in combat — chat live */}
+      {donationEvent && (
+        <div style={{
+          position:"absolute", top:"12px", right:"12px",
+          minWidth:"220px", maxWidth:"280px",
+          background: donationEvent.type === "love" ? "#0a1f0a" : "#1f0a0a",
+          border: `1px solid ${donationEvent.type === "love" ? C.green : C.red}`,
+          borderRadius:"4px", padding:"8px 10px",
+          boxShadow: `0 0 20px ${donationEvent.type === "love" ? "#00ff0044" : "#ff000044"}`,
+          animation: "pulse 0.6s ease-out", zIndex: 50,
+        }}>
+          <div style={{
+            fontSize:"10px", color: C.dim, marginBottom:"4px",
+            textTransform:"uppercase", letterSpacing:"1px",
+          }}>📺 Chat Live</div>
+          <div style={{
+            fontSize:"12px", fontWeight:"bold",
+            color: donationEvent.type === "love" ? C.green : C.red,
+            lineHeight:"1.3",
+          }}>
+            {donationEvent.text}
+          </div>
+          <div style={{color:C.dim, fontSize:"9px", marginTop:"4px"}}>
+            👥 {player?.streamerFollowers || 0} follower
           </div>
         </div>
       )}

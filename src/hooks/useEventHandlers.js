@@ -104,6 +104,35 @@ export function useEventHandlers({
         setScreen("map");
         break;
       }
+      case "buyFalsoVincente": {
+        // Sprint 4 — Bluff: lo spacciatore lo vende come "vincita garantita".
+        // Carta generata come vincente (forceWin) ma col flag bluffCard.
+        // In handleScratchDone il bluff ha 40% chance di nullificare il premio + danno unghia.
+        const card = { ...generateCard("fintoMilionario", 2, 0, true), owned: true, bluffCard: true, name: "\"VINCENTE\" (Contrabbando)" };
+        updatePlayer(p => ({
+          ...p,
+          money: p.money - 15,
+          scratchCards: [...p.scratchCards, card],
+          bluffsBought: (p.bluffsBought || 0) + 1,
+        }));
+        addLog("🤝 \"Vedrai vedrai, 'sta volta è ORO.\" Hai in mano un biglietto 'garantito'.", C.orange);
+        setScreen("map");
+        break;
+      }
+      case "snitchSpacciatore": {
+        // Sprint 4 — Snitch: +€30 subito, ma lo spacciatore lo scopre.
+        updatePlayer(p => ({...p, money: p.money + 30, snitchedOn: true}));
+        addLog("🕵️ \"Bravo, cittadino modello.\" Il poliziotto ti passa €30 in contanti e ti lascia andare.", C.gold);
+        setItemFoundModal({
+          emoji: "🕵️",
+          name: "+€30 — Informatore",
+          desc: "Hai denunciato lo spacciatore. La polizia ti ringrazia.\n\n⚠ Se incontri di nuovo lo spacciatore... ti aspetta.",
+          subtitle: "Tensione Psicologica",
+          buttonLabel: "Ok capo →",
+        });
+        setScreen("map");
+        break;
+      }
       case "implant_plastica": {
         updatePlayer(p => {
           const nails = [...p.nails]; const worst = nails.reduce((a,n,i) =>

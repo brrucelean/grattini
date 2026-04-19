@@ -17,6 +17,21 @@ export function useScratchHandlers({
   const [doppioONulla, setDoppioONulla] = useState(null);
 
   const handleScratchDone = useCallback((result) => {
+    // ─── SPRINT 4: BLUFF DEL SPACCIATORE ─────────────────────────
+    // Il "vincente garantito" venduto dallo spacciatore ha 40% di chance
+    // di rivelarsi una fregatura: premio azzerato + danno unghia.
+    let bluffBusted = false;
+    if (scratchingCard?.bluffCard && result.win && result.prize > 0 && roll(0.40)) {
+      bluffBusted = true;
+      result = { ...result, win: false, prize: 0, applyNailMalus: true, malusAmount: 1 };
+      addLog(`🤡 "VINCENTE GARANTITO"... ERA UNA FREGATURA! Premio annullato.`, C.red);
+      setItemFoundModal({
+        emoji: "🤡", name: "Bluff dello Spacciatore!",
+        desc: "Il biglietto 'garantito' era taroccato.\nI simboli si cancellano davanti ai tuoi occhi.\n\n€0 in tasca + unghia rotta.",
+        subtitle: "Truffato",
+        buttonLabel: "Bastardo... →",
+      });
+    }
     setGameStats(s => ({
       ...s,
       cardsScratched: s.cardsScratched + 1,
@@ -125,7 +140,11 @@ export function useScratchHandlers({
         addLog(`🔥 CLIP VIRALE! La chat impazzisce! €${result.prize} → €${streamerMultiplied} (x1.5 LIVE)!`, C.gold);
         // Aggiungi clipVirale item (moltiplicatore x2 prossima vincita) se c'è spazio
         updatePlayer(p => p.items.length >= MAX_ITEMS ? p : ({...p, items: [...p.items, "clipVirale"]}));
-        setItemFoundModal({ emoji:"🎬", name:"Clip Virale!", desc:"La prossima vincita sarà x2! Il video è virale!", subtitle:"Streamer Scratch" });
+        // Sprint 4: followers aumentano su vincita live → donazioni dinamiche in combat
+        const newFollowers = result.prize >= 20 ? 2 : 1;
+        updatePlayer(p => ({...p, streamerFollowers: (p.streamerFollowers || 0) + newFollowers}));
+        addLog(`📈 +${newFollowers} follower! La tua community cresce...`, C.cyan);
+        setItemFoundModal({ emoji:"🎬", name:"Clip Virale!", desc:`La prossima vincita sarà x2!\n\n+${newFollowers} follower: ti invieranno donazioni in combat!`, subtitle:"Streamer Scratch" });
       }
       if (hasClipVirale) {
         updatePlayer(p => ({...p, clipViraleActive: false}));
@@ -205,7 +224,12 @@ export function useScratchHandlers({
         consecutiveWins: 0,
       }));
       if (result.prize < 0) addLog(`Hai perso €${Math.abs(result.prize)}!`, C.red);
-      if (isStreamerLive) addLog(`😬 Cringe totale... -€10 (donazioni perse dalla chat)`, C.red);
+      if (isStreamerLive) {
+        addLog(`😬 Cringe totale... -€10 (donazioni perse dalla chat)`, C.red);
+        // Sprint 4: anche gli hater fanno follower → più donazioni-negative in combat
+        updatePlayer(p => ({...p, streamerFollowers: (p.streamerFollowers || 0) + 1}));
+        addLog(`📉 +1 hater ti segue per ridere delle tue disgrazie...`, C.orange);
+      }
       triggerNpcComment("lose");
     }
 
