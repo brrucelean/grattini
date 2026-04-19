@@ -149,13 +149,13 @@ export function generateCard(typeId, fortune=0, relicBonus=0, forceWin=false) {
         { symbol: winSym, scratched: false, reelIdx: 2 },
       ];
       prize = Math.max(type.cost * 3, rollPrize());
-    } else if (roll(0.35)) {
-      // Near-win: 2 matching, small prize
+    } else if (roll(0.30)) {
+      // Near-win: 2 matching, small prize (rebalance Beta 4.1: 0.35→0.30, mult 1.5x→1.3x)
       const winSym = pick(ruotaSyms);
       let loseSym; do { loseSym = pick(ruotaSyms); } while (loseSym === winSym);
       const reels = shuffle([winSym, winSym, loseSym]);
       cells = reels.map((s, i) => ({ symbol: s, scratched: false, reelIdx: i }));
-      prize = Math.round(type.cost * 1.5);
+      prize = Math.round(type.cost * 1.3);
     } else {
       // Full loss: all different
       const syms = shuffle([...ruotaSyms]).slice(0, 3);
