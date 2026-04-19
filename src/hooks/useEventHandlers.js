@@ -618,6 +618,37 @@ export function useEventHandlers({
         addLog("🌟 Una luce dorata avvolge le tue mani. Tutte le unghie risplendono. +3 Fortuna permanente!", C.gold);
         unlockAchievement("vecchio_luce");
         setScreen("map"); break;
+      case "buyGuantoBoss": {
+        const def = GRATTATORE_DEFS["guantoBoss"];
+        if (!def || player.money < 60) { setScreen("map"); break; }
+        const newGrat = { id: "guantoBoss", name: def.name, emoji: def.emoji, effect: def.effect, usesLeft: def.maxUses };
+        updatePlayer(p => ({...p, money: p.money - 60, grattatori: [...p.grattatori, newGrat]}));
+        addLog(`🧤 Hai comprato il ${def.name}! Protezione garantita al prossimo boss.`, C.gold);
+        setItemFoundModal({
+          emoji: def.emoji, name: def.name,
+          desc: `${def.desc}\nPagato €60 al Guantaio.`,
+          subtitle: "Guanto acquistato",
+        });
+        setScreen("map"); break;
+      }
+      case "barattoGuantoBoss": {
+        const def = GRATTATORE_DEFS["guantoBoss"];
+        if (!def) { setScreen("map"); break; }
+        updatePlayer(p => {
+          const nails = [...p.nails];
+          const idx = nails.findIndex(n => n.state !== "morta");
+          if (idx >= 0) nails[idx] = {...nails[idx], state: "morta", scratchCount: 0};
+          const newGrat = { id: "guantoBoss", name: def.name, emoji: def.emoji, effect: def.effect, usesLeft: def.maxUses };
+          return {...p, money: p.money - 20, nails, grattatori: [...p.grattatori, newGrat]};
+        });
+        addLog(`🦴 Hai ceduto un'unghia + €20. Il Guantaio ti consegna il ${def.name}.`, C.cyan);
+        setItemFoundModal({
+          emoji: def.emoji, name: def.name,
+          desc: `${def.desc}\nPagato con 1 unghia + €20.`,
+          subtitle: "Baratto col Guantaio",
+        });
+        setScreen("map"); break;
+      }
       case "vecchio_ombra":
         updatePlayer(p => {
           const nails = [...p.nails];

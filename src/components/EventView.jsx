@@ -305,6 +305,23 @@ export function EventView({ node, player, onChoice }) {
         { label: "Non ho sete, grazie", action: "leave" },
       ],
     },
+    guantaio: (() => {
+      const hasGuanto = (player.grattatori || []).some(g => g.id === "guantoBoss");
+      return {
+        title: "🧤 Il Guantaio",
+        art: `  ╭──╮\n  │🧤│\n  │◐ │\n  ╰┬─╯\n  /│\\\n   ✋`,
+        text: hasGuanto
+          ? "\"Hai già il mio pezzo migliore. Usalo bene contro il boss — non ne faccio altri fino al prossimo bioma.\""
+          : "\"Signore... le mani sono strumenti. E gli strumenti vanno protetti. Ho un pezzo raro — il GUANTO DA BOSS. Fatto con pelle di unghia marcia ingrassata. Protegge da TUTTI i danni fisici nel prossimo combattimento.\"",
+        choices: hasGuanto
+          ? [{ label: "Grazie, torno dopo aver grattato", action: "leave" }]
+          : [
+              { label: "🧤 Compra il Guanto da BOSS (€60)", action: "buyGuantoBoss", condition: player.money >= 60, tooltip: GRATTATORE_DEFS.guantoBoss.desc },
+              { label: "🦴 Baratto: 1 unghia + €20 → Guanto da BOSS", action: "barattoGuantoBoss", condition: player.money >= 20 && player.nails.filter(n => n.state !== "morta").length > 1 },
+              { label: "Troppo caro, passo", action: "leave" },
+            ],
+      };
+    })(),
   };
 
   const ev = events[node.type] || events.evento;

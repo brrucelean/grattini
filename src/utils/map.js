@@ -68,6 +68,16 @@ export function generateMap(biomeIdx = 0) {
     });
   }
 
+  // ── GUANTAIO: 1 nodo per mappa nelle righe pre-boss (7-9) ──
+  // Vende il Guanto da BOSS — protezione unica contro il combattimento finale.
+  const guantaioCandidates = rows.slice(7, 10).flat().filter(n =>
+    n.type !== "boss" && n.type !== "start" && n.type !== "poliziotto" && n.type !== "anziana" && n.type !== "bambino"
+  );
+  if (guantaioCandidates.length > 0) {
+    const chosen = pick(guantaioCandidates);
+    chosen.type = "guantaio";
+  }
+
   // ── Garantisci almeno 2 tabaccai, 2 locande, 1 sacerdote ────
   const midRows = rows.slice(1, LAYER_XS.length - 1).flat();
   const ensureMin = (type, min, exclude=[]) => {

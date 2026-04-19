@@ -140,8 +140,14 @@ export function useNodeHandlers({
   };
 
   const handleSelectCard = (idx) => {
-    setSelectedCardIdx(idx);
     let card = player.scratchCards[idx];
+    // ── SPRINT 3: alcune carte richiedono un grattatore per essere grattate ──
+    // (es. Jackpot Mix — cartone premium, ci vuole l'attrezzo)
+    if (card?.requiresGrattatore && !player.equippedGrattatore) {
+      addLog(`🔧 ${card.name} richiede un GRATTATORE equipaggiato. Le tue unghie non bastano!`, C.red);
+      return;
+    }
+    setSelectedCardIdx(idx);
     // Impianti a vincita garantita (Anziana: sacra | Macellaio: neonato/marcione/baddie)
     // Se attivi, rigenera la carta come vincente — il moltiplicatore del premio verrà
     // applicato in ScratchCardView.calcPrize (vedi implantMult).

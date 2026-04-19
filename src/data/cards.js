@@ -79,6 +79,16 @@ export const CARD_TYPES = [
   { id:"mahjong", name:"Il Mahjong", cost:25, rows:3, cols:3, matchNeeded:3, maxPrize:140,
     malus:null, desc:"🀄 Trova 3 tessere uguali — esclusiva Quartiere Cinese!", tier:3, mechanic:"match",
     theme:{ border:"#ff3333", bg:"#1a0000" }, biome:3 },
+  { id:"jackpotMix", name:"Jackpot Mix", cost:20, rows:3, cols:3, matchNeeded:3, maxPrize:180,
+    malus:{ type:"nailDamage", amount:2, desc:"Senza grattatore le unghie si spezzano!" },
+    desc:"🔧 RICHIEDE GRATTATORE. Cartone premium: solo chi ha un attrezzo professionale può grattarlo.",
+    tier:3, mechanic:"match", requiresGrattatore:true,
+    theme:{ border:"#ffaa00", bg:"#1a1100" } },
+  { id:"turistaPerSempre", name:"Turista Per Sempre", cost:40, rows:4, cols:4, matchNeeded:4, maxPrize:320,
+    malus:null,
+    desc:"✈️ VIP Quartiere Cinese. Souvenir d'oriente — alti premi, basse chance.",
+    tier:3, mechanic:"jolly", biome:3,
+    theme:{ border:"#ff66cc", bg:"#1a0015" } },
 ];
 
 // ─── CARD BALANCE — unica fonte di verità per winChance e EV ─
@@ -100,4 +110,6 @@ export const CARD_BALANCE = {
   mappaTesor0:     { winChance: 0.15, evTarget: -0.30, prizeMin: 70,  prizeMax: 260,  tier: 3 },
   doppioOnulla:    { winChance: 0.45, evTarget: -0.05, prizeMin: 30,  prizeMax: 60,   tier: 2 },
   mahjong:         { winChance: 0.20, evTarget: -0.30, prizeMin: 40,  prizeMax: 140,  tier: 3 },
+  jackpotMix:      { winChance: 0.22, evTarget: -0.20, prizeMin: 50,  prizeMax: 180,  tier: 3 },
+  turistaPerSempre:{ winChance: 0.14, evTarget: -0.25, prizeMin: 80,  prizeMax: 320,  tier: 3 },
 };
