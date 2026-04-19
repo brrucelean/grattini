@@ -20,3 +20,6 @@ yarn-error.log*
 # Env
 .env
 .env.local
+
+# Claude Code local tooling (settings, session locks, launch config)
+.claude/
