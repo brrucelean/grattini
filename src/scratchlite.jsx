@@ -438,6 +438,24 @@ export default function Grattini() {
         @keyframes variantPulse { 0%,100% { filter: brightness(1) saturate(1); } 50% { filter: brightness(1.35) saturate(1.4); } }
         @keyframes variantSparkle { 0% { opacity: 0; transform: scale(0.3) rotate(0); } 40% { opacity: 1; transform: scale(1.2) rotate(120deg); } 100% { opacity: 0; transform: scale(0.4) rotate(240deg); } }
         @keyframes oroGlint { 0%,100% { box-shadow: 0 0 36px #ffd700ff, 0 0 64px #ffaa00aa, inset 0 0 36px #ffaa0099; } 50% { box-shadow: 0 0 52px #ffee44ff, 0 0 96px #ffcc00dd, inset 0 0 48px #ffcc00cc; } }
+        @keyframes foilShine { 0% { background-position: -150% 0; } 100% { background-position: 250% 0; } }
+        @keyframes foilHue { 0%,100% { filter: hue-rotate(0deg) saturate(1); } 50% { filter: hue-rotate(18deg) saturate(1.3); } }
+        @keyframes asciiFlicker { 0%,100% { text-shadow: 0 0 14px currentColor, 0 0 40px currentColor55; } 47% { text-shadow: 0 0 14px currentColor, 0 0 40px currentColor55; } 48% { text-shadow: 0 0 2px currentColor, 0 0 6px currentColor44; } 52% { text-shadow: 0 0 2px currentColor, 0 0 6px currentColor44; } 53% { text-shadow: 0 0 14px currentColor, 0 0 40px currentColor55; } }
+        .foil-ascii { position: relative; display: inline-block; }
+        .foil-ascii::after {
+          content: ""; position: absolute; inset: 0; pointer-events: none;
+          background: linear-gradient(110deg,
+            transparent 20%,
+            rgba(255,255,255,0.0) 38%,
+            rgba(255,240,150,0.28) 46%,
+            rgba(255,255,255,0.55) 50%,
+            rgba(255,140,220,0.28) 54%,
+            rgba(255,255,255,0.0) 62%,
+            transparent 80%);
+          background-size: 220% 100%;
+          mix-blend-mode: screen;
+          animation: foilShine 3.2s linear infinite;
+        }
         html, body { margin: 0; padding: 0; overflow: hidden; background: #000; }
         * { box-sizing: border-box; }
         ::-webkit-scrollbar { width: 6px; height: 0px; }
@@ -552,19 +570,22 @@ export default function Grattini() {
 
           {/* Contenuto titolo */}
           <div style={{textAlign:"center", width:"min(95%, 1120px)", position:"relative", zIndex:1}}>
-            <pre style={{...S.pre, color:C.gold,
-              fontSize:"clamp(11px, 1.9vw, 20px)",
-              lineHeight:"1.2", overflowX:"auto",
-              textShadow:`0 0 14px ${C.gold}aa, 0 0 40px ${C.gold}55`,
-              animation:"titleBlink 3s ease-in-out infinite",
-              margin:"0 auto",
-            }}>
-              {ASCII_TITLE}
-            </pre>
+            {/* ASCII TITLE — foil iridescente animato sopra il gold */}
+            <div className="foil-ascii" style={{display:"inline-block", margin:"0 auto"}}>
+              <pre style={{...S.pre, color:C.gold,
+                fontSize:"clamp(11px, 1.9vw, 20px)",
+                lineHeight:"1.2", overflowX:"auto",
+                textShadow:`0 0 14px ${C.gold}aa, 0 0 40px ${C.gold}55`,
+                animation:"titleBlink 3s ease-in-out infinite, asciiFlicker 7s ease-in-out infinite",
+                margin:0,
+              }}>
+                {ASCII_TITLE}
+              </pre>
+            </div>
             <div style={{color:C.gold, fontSize:"clamp(11px, 1.2vw, 15px)", marginTop:"16px", letterSpacing:"5px",
               textShadow:`0 0 10px ${C.gold}88`,
             }}>
-              ░░░ BETA 4 — Bug Fix Completo ░░░
+              ░░░ BETA 5 — Graphics Pass ░░░
             </div>
             <div style={{color:C.text, marginBottom:"28px", marginTop:"20px", fontSize:"clamp(12px, 1.1vw, 15px)", letterSpacing:"0.5px", textAlign:"center"}}>
             Un roguelike di grattate, unghie e fortuna.
@@ -601,19 +622,127 @@ export default function Grattini() {
               </div>
             ) : null;
           })()}
-          <div style={{display:"flex", gap:"10px", justifyContent:"center", marginTop:"16px", flexWrap:"wrap"}}>
-            <Btn onClick={() => setShowTrophies(true)} style={{fontSize:"11px", padding:"7px 16px", borderColor:C.gold, color:C.gold}}>
-              🏆 Trofei ({Object.keys(achievements).length}/{ACHIEVEMENTS.length})
-            </Btn>
-            <Btn onClick={() => setShowReliquie(true)} style={{fontSize:"11px", padding:"7px 16px", borderColor:"#c060ff", color:"#c060ff"}}>
-              🏺 Reliquie ({discoveredRelics.length}/{Object.keys(RELIC_DEFS).length})
-            </Btn>
-            <Btn onClick={() => setShowVintage(true)} style={{fontSize:"11px", padding:"7px 16px", borderColor:"#ffaa88", color:"#ffaa88"}}>
-              🎨 Vintage ({vintageCollected.length}/5)
-            </Btn>
-            <Btn onClick={() => setShowAllTimeStats(true)} style={{fontSize:"11px", padding:"7px 16px", borderColor:C.cyan, color:C.cyan}}>
-              📊 Statistiche
-            </Btn>
+          {/* ─── META-PROGRESS FOIL CARDS ─── */}
+          <div style={{
+            display:"grid",
+            gridTemplateColumns:"repeat(auto-fit, minmax(150px, 1fr))",
+            gap:"12px", maxWidth:"720px", margin:"20px auto 0",
+          }}>
+            {(() => {
+              const trophyCount = Object.keys(achievements).length;
+              const trophyMax = ACHIEVEMENTS.length;
+              const relicCount = discoveredRelics.length;
+              const relicMax = Object.keys(RELIC_DEFS).length;
+              const vintageCount = vintageCollected.length;
+              const cards = [
+                { onClick: () => setShowTrophies(true), accent: C.gold, emoji: "🏆", label: "TROFEI", count: trophyCount, max: trophyMax, ascii: "╔═╗\n╚╦╝\n ▀" , shimmer: trophyCount > 0 },
+                { onClick: () => setShowReliquie(true), accent: "#c060ff", emoji: "🏺", label: "RELIQUIE", count: relicCount, max: relicMax, ascii: "╭─╮\n│ │\n╰─╯", shimmer: relicCount > 0 },
+                { onClick: () => setShowVintage(true), accent: "#ffaa88", emoji: "🎨", label: "VINTAGE", count: vintageCount, max: 5, ascii: "┌─┐\n│J│\n└─┘", shimmer: vintageCount > 0 },
+                { onClick: () => setShowAllTimeStats(true), accent: C.cyan, emoji: "📊", label: "STATS", count: null, max: null, ascii: "▁▃▅▇\n▇▅▃▁\n▃▇▁▅", shimmer: true },
+              ];
+              return cards.map((c, ci) => {
+                const pct = c.max ? (c.count / c.max) : 1;
+                return (
+                  <div key={ci} onClick={c.onClick} style={{
+                    cursor:"pointer", userSelect:"none",
+                    background:"#0a0a14",
+                    border:`2px solid ${c.accent}`,
+                    boxShadow:`0 0 18px ${c.accent}44, inset 0 0 22px ${c.accent}14`,
+                    display:"flex", flexDirection:"column",
+                    position:"relative", overflow:"hidden",
+                    transition:"transform 0.15s, box-shadow 0.15s",
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.transform = "translateY(-3px)";
+                    e.currentTarget.style.boxShadow = `0 0 32px ${c.accent}aa, 0 6px 16px #000a, inset 0 0 26px ${c.accent}22`;
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.transform = "translateY(0)";
+                    e.currentTarget.style.boxShadow = `0 0 18px ${c.accent}44, inset 0 0 22px ${c.accent}14`;
+                  }}
+                  >
+                    {/* Preview tile — ASCII + emoji + foil shimmer */}
+                    <div style={{
+                      position:"relative", height:"74px",
+                      background: `linear-gradient(135deg, ${c.accent}15, ${c.accent}08)`,
+                      borderBottom:`1px solid ${c.accent}55`,
+                      display:"flex", alignItems:"center", justifyContent:"center",
+                      overflow:"hidden",
+                    }}>
+                      {/* ASCII frame dietro */}
+                      <pre style={{
+                        position:"absolute", inset:0,
+                        display:"flex", alignItems:"center", justifyContent:"center",
+                        color: `${c.accent}55`, fontSize:"14px", lineHeight:"1.05",
+                        margin:0, fontFamily:FONT, letterSpacing:"2px",
+                        textShadow:`0 0 6px ${c.accent}88`,
+                      }}>{c.ascii}</pre>
+                      {/* Emoji centrale */}
+                      <div style={{
+                        fontSize:"32px", position:"relative", zIndex:2,
+                        textShadow:`0 0 16px ${c.accent}`,
+                        filter: c.shimmer ? "none" : "grayscale(0.4) brightness(0.85)",
+                      }}>{c.emoji}</div>
+                      {/* Foil shimmer diagonale animato (solo se ha progresso) */}
+                      {c.shimmer && (
+                        <div style={{
+                          position:"absolute", inset:0, pointerEvents:"none",
+                          background:`linear-gradient(110deg, transparent 30%, ${c.accent}44 48%, ${c.accent}aa 50%, ${c.accent}44 52%, transparent 70%)`,
+                          backgroundSize:"200% 100%",
+                          animation:"variantShimmer 2.4s linear infinite",
+                          mixBlendMode:"screen",
+                        }}/>
+                      )}
+                      {/* Sparkle angolo */}
+                      {c.shimmer && c.max && c.count >= c.max && (
+                        <div style={{
+                          position:"absolute", top:4, right:6, fontSize:"14px",
+                          color: c.accent, zIndex:3,
+                          animation:"variantSparkle 1.6s ease-in-out infinite",
+                          textShadow:`0 0 8px ${c.accent}`,
+                        }}>✦</div>
+                      )}
+                    </div>
+                    {/* Badge label solid */}
+                    <div style={{
+                      background: c.accent, color:"#000",
+                      padding:"4px 6px", fontSize:"11px", fontWeight:"bold",
+                      letterSpacing:"2px", textAlign:"center",
+                    }}>
+                      ★ {c.label} ★
+                    </div>
+                    {/* Body: counter + progress bar */}
+                    <div style={{padding:"8px 10px 10px", background:"#07070d"}}>
+                      {c.max ? (
+                        <>
+                          <div style={{
+                            display:"flex", justifyContent:"space-between",
+                            fontSize:"9px", color:`${c.accent}bb`, letterSpacing:"1px",
+                            marginBottom:"4px",
+                          }}>
+                            <span>SBLOCCATI</span>
+                            <span style={{color:c.accent, fontWeight:"bold"}}>{c.count} / {c.max}</span>
+                          </div>
+                          <div style={{height:"4px", background:"#1a1a22", border:`1px solid ${c.accent}33`, position:"relative"}}>
+                            <div style={{
+                              height:"100%", width:`${pct*100}%`,
+                              background:`linear-gradient(90deg, ${c.accent}88, ${c.accent})`,
+                              boxShadow:`0 0 8px ${c.accent}`,
+                              transition:"width 0.4s",
+                            }}/>
+                          </div>
+                        </>
+                      ) : (
+                        <div style={{
+                          fontSize:"9px", color:`${c.accent}bb`, letterSpacing:"1px",
+                          textAlign:"center", padding:"3px 0",
+                        }}>▸ APRI STATS</div>
+                      )}
+                    </div>
+                  </div>
+                );
+              });
+            })()}
           </div>
           </div>
         </div>
@@ -2372,78 +2501,160 @@ export default function Grattini() {
       {/* ═══ MODAL RELIQUIE ═══ */}
       {showReliquie && (
         <div style={{
-          position:"fixed", inset:0, background:"rgba(0,0,0,0.92)", zIndex:9000,
+          position:"fixed", inset:0, background:"rgba(0,0,0,0.94)", zIndex:9000,
           display:"flex", alignItems:"center", justifyContent:"center",
-          fontFamily:FONT,
+          fontFamily:FONT, padding:"16px",
         }} onClick={() => setShowReliquie(false)}>
           <div style={{
             background:"#08080f", border:"2px solid #c060ff",
-            maxWidth:"520px", width:"92vw", maxHeight:"85vh", overflowY:"auto",
-            padding:"20px",
+            maxWidth:"640px", width:"96vw", maxHeight:"92vh", overflowY:"auto",
+            padding:"18px 20px 16px",
+            boxShadow:"0 0 40px #c060ff44, inset 0 0 40px #c060ff11",
           }} onClick={e => e.stopPropagation()}>
-            <div style={{color:"#c060ff", fontSize:"16px", fontWeight:"bold", letterSpacing:"4px", textAlign:"center", marginBottom:"4px"}}>
+            {/* Header */}
+            <div style={{color:"#c060ff", fontSize:"18px", fontWeight:"bold", letterSpacing:"4px", textAlign:"center", marginBottom:"2px", textShadow:"0 0 12px #c060ff88"}}>
               🏺 RELIQUIE
             </div>
-            <div style={{color:C.dim, fontSize:"10px", textAlign:"center", letterSpacing:"2px", marginBottom:"16px"}}>
-              Scoperte: {discoveredRelics.length}/{Object.keys(RELIC_DEFS).length} — Attive nella prossima run: {enabledRelics.length}
+            <div style={{color:C.dim, fontSize:"10px", textAlign:"center", letterSpacing:"1px", marginBottom:"4px"}}>
+              Oggetti mistici da equipaggiare per la prossima run
             </div>
-            <div style={{display:"flex", flexDirection:"column", gap:"8px", marginBottom:"16px"}}>
+            {/* Progress bar */}
+            <div style={{margin:"8px auto 18px", maxWidth:"360px"}}>
+              <div style={{display:"flex", justifyContent:"space-between", fontSize:"9px", color:"#c060ff", marginBottom:"3px", letterSpacing:"1px"}}>
+                <span>SCOPERTE · {enabledRelics.length} ATTIVE</span>
+                <span>{discoveredRelics.length} / {Object.keys(RELIC_DEFS).length}</span>
+              </div>
+              <div style={{height:"6px", background:"#1a1a22", border:"1px solid #2a2a3a", position:"relative"}}>
+                <div style={{
+                  height:"100%", width:`${(discoveredRelics.length/Object.keys(RELIC_DEFS).length)*100}%`,
+                  background:"linear-gradient(90deg, #c060ff, #ff9900)",
+                  boxShadow:"0 0 8px #c060ffaa",
+                  transition:"width 0.4s",
+                }} />
+              </div>
+            </div>
+            {/* Grid cards — stile Vintage con toggle ATTIVA */}
+            <div style={{
+              display:"grid",
+              gridTemplateColumns:"repeat(auto-fit, minmax(190px, 1fr))",
+              gap:"12px", marginBottom:"16px",
+            }}>
               {Object.entries(RELIC_DEFS).map(([id, def]) => {
                 const known = discoveredRelics.includes(id);
                 const active = enabledRelics.includes(id);
-                const rarityColor = def.rarity === "epica" ? "#ff9900" : "#c060ff";
+                const isEpic = def.rarity === "epica";
+                const accent = isEpic ? "#ff9900" : "#c060ff";
                 return (
                   <div key={id} style={{
-                    display:"flex", alignItems:"center", gap:"12px",
-                    background: active ? "rgba(192,96,255,0.12)" : "#0d0d1a",
-                    border: `1px solid ${active ? "#c060ff" : known ? "#3a2a5a" : "#1a1a2a"}`,
-                    padding:"10px 12px",
-                    opacity: known ? 1 : 0.55,
+                    background: known ? "#0d0d14" : "#0a0a10",
+                    border: `2px solid ${known ? (active ? accent : accent+"55") : "#252538"}`,
+                    padding:"0", position:"relative",
+                    overflow:"hidden",
+                    boxShadow: known && active ? `0 0 14px ${accent}66` : "none",
+                    opacity: known ? 1 : 0.72,
+                    display:"flex", flexDirection:"column",
                   }}>
-                    <div style={{fontSize:"28px", flexShrink:0, filter: known ? "none" : "grayscale(1) brightness(0.3)"}}>
-                      {known ? def.emoji : "🔮"}
-                    </div>
-                    <div style={{flex:1}}>
-                      {known ? (<>
-                        <div style={{color: active ? "#c060ff" : C.bright, fontWeight:"bold", fontSize:"12px", marginBottom:"2px"}}>
-                          {def.name}
-                          <span style={{color:rarityColor, fontSize:"9px", marginLeft:"8px", letterSpacing:"1px"}}>
-                            [{def.rarity.toUpperCase()}]
-                          </span>
-                        </div>
-                        <div style={{color:C.dim, fontSize:"10px"}}>{def.desc}</div>
-                      </>) : (<>
-                        <div style={{color:"#3a3a5a", fontWeight:"bold", fontSize:"12px", marginBottom:"2px"}}>
-                          ??? RELIQUIA SEGRETA ???
-                        </div>
-                        <div style={{color:"#2a2a4a", fontSize:"10px"}}>Scoprila durante una run per sbloccarne i poteri.</div>
-                      </>)}
-                    </div>
-                    {known && (
-                      <button onClick={() => {
-                        setEnabledRelics(prev => {
-                          const next = prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id];
-                          setStored(STORAGE_KEYS.relicsEnabled, next);
-                          return next;
-                        });
-                      }} style={{
-                        background: active ? "#c060ff" : "none",
-                        border:`1px solid ${active ? "#c060ff" : "#3a3a5a"}`,
-                        color: active ? "#000" : "#3a3a5a",
-                        fontSize:"10px", cursor:"pointer", padding:"4px 10px",
-                        fontFamily:FONT, flexShrink:0, fontWeight:"bold",
-                        letterSpacing:"1px",
+                    {/* Preview tile */}
+                    <div style={{
+                      height:"92px", position:"relative",
+                      background: known ? (isEpic ? "#1f1408" : "#140a1f") : "#060608",
+                      borderBottom: `1px solid ${known ? accent+"66" : "#1a1a28"}`,
+                      display:"flex", alignItems:"center", justifyContent:"center",
+                      filter: known ? "none" : "grayscale(100%) brightness(0.4)",
+                      overflow:"hidden",
+                    }}>
+                      {/* Shimmer foil per scoperti */}
+                      {known && (
+                        <div style={{
+                          position:"absolute", inset:0, pointerEvents:"none",
+                          background:`linear-gradient(110deg, transparent 30%, ${accent}55 48%, ${accent}aa 50%, ${accent}55 52%, transparent 70%)`,
+                          backgroundSize:"200% 100%",
+                          animation:`variantShimmer ${active ? "2.2s" : "3.2s"} linear infinite`,
+                          mixBlendMode:"screen",
+                        }} />
+                      )}
+                      {/* Emoji centrale */}
+                      <div style={{
+                        fontSize:"40px", position:"relative", zIndex:2,
+                        textShadow: known ? `0 0 14px ${accent}cc` : "none",
+                        filter: known ? "none" : "blur(1px)",
                       }}>
-                        {active ? "✓ ATTIVA" : "OFF"}
-                      </button>
-                    )}
+                        {known ? def.emoji : "🔮"}
+                      </div>
+                      {/* Sparkle per epiche */}
+                      {known && isEpic && (
+                        <div style={{
+                          position:"absolute", top:8, right:10, fontSize:"14px",
+                          color: accent, zIndex:3,
+                          animation:"variantSparkle 1.6s ease-in-out infinite",
+                          textShadow:`0 0 8px ${accent}`,
+                        }}>✦</div>
+                      )}
+                      {/* Rarity badge angolo */}
+                      {known && (
+                        <div style={{
+                          position:"absolute", top:6, left:6, zIndex:3,
+                          fontSize:"7px", letterSpacing:"1px", fontWeight:"bold",
+                          color: accent,
+                          background: isEpic ? "#1f1408" : "#140a1f",
+                          border:`1px solid ${accent}88`,
+                          padding:"1px 4px",
+                        }}>{def.rarity.toUpperCase()}</div>
+                      )}
+                    </div>
+                    {/* Badge label */}
+                    <div style={{
+                      background: known ? accent : "#1a1a28",
+                      color: known ? "#000" : "#3a3a52",
+                      padding:"4px 6px", fontSize:"11px", fontWeight:"bold",
+                      letterSpacing:"2px", textAlign:"center",
+                      textShadow: known ? "0 0 4px #fff8" : "none",
+                    }}>
+                      ★ {known ? def.name.toUpperCase() : "???"} ★
+                    </div>
+                    {/* Body: desc + toggle */}
+                    <div style={{padding:"8px 8px 10px", flex:1, display:"flex", flexDirection:"column", gap:"6px"}}>
+                      <div style={{
+                        color: known ? C.text : "#2a2a4a",
+                        fontSize:"10px", lineHeight:"1.35", minHeight:"42px",
+                      }}>
+                        {known ? def.desc : "Scoprila durante una run per sbloccarne i poteri."}
+                      </div>
+                      {known ? (
+                        <button onClick={() => {
+                          setEnabledRelics(prev => {
+                            const next = prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id];
+                            setStored(STORAGE_KEYS.relicsEnabled, next);
+                            return next;
+                          });
+                        }} style={{
+                          width:"100%",
+                          background: active ? accent : "transparent",
+                          border:`1px solid ${active ? accent : accent+"55"}`,
+                          color: active ? "#000" : accent,
+                          fontSize:"10px", cursor:"pointer", padding:"5px 8px",
+                          fontFamily:FONT, fontWeight:"bold", letterSpacing:"1.5px",
+                          textShadow: active ? "0 0 4px #fff8" : "none",
+                          boxShadow: active ? `0 0 8px ${accent}66` : "none",
+                          transition:"all 0.15s",
+                        }}>
+                          {active ? "✓ ATTIVA" : "▸ ATTIVA"}
+                        </button>
+                      ) : (
+                        <div style={{
+                          borderTop:`1px solid #1a1a28`, paddingTop:"5px",
+                          fontSize:"9px", color:"#3a3a52", textAlign:"center",
+                          letterSpacing:"1px",
+                        }}>— LOCKED —</div>
+                      )}
+                    </div>
                   </div>
                 );
               })}
             </div>
             {enabledRelics.length > 0 && (
               <div style={{color:"#c060ff", fontSize:"10px", textAlign:"center", marginBottom:"10px", letterSpacing:"1px"}}>
-                ✦ Le reliquie attive saranno presenti dall'inizio della prossima run ✦
+                ✦ Le {enabledRelics.length} reliquie attive saranno presenti dall'inizio della prossima run ✦
               </div>
             )}
             <div style={{textAlign:"center"}}>
@@ -2627,52 +2838,148 @@ export default function Grattini() {
       {showTrophies && (
         <div style={{
           position:"fixed", top:0, left:0, width:"100%", height:"100%",
-          background:"rgba(0,0,0,0.88)", zIndex:99990,
+          background:"rgba(0,0,0,0.92)", zIndex:99990,
           display:"flex", alignItems:"center", justifyContent:"center",
-          fontFamily: FONT,
+          fontFamily: FONT, padding:"16px",
         }} onClick={() => setShowTrophies(false)}>
           <div style={{
-            background:"#0a0a16", border:`2px solid ${C.gold}`,
-            borderRadius:"0", padding:"24px", maxWidth:"500px", width:"92%",
-            maxHeight:"80vh", overflowY:"auto",
-            boxShadow:"none",
+            background:"#08080f", border:`2px solid ${C.gold}`,
+            maxWidth:"640px", width:"96vw", maxHeight:"92vh", overflowY:"auto",
+            padding:"18px 20px 16px",
+            boxShadow:`0 0 40px ${C.gold}44, inset 0 0 40px ${C.gold}11`,
           }} onClick={e => e.stopPropagation()}>
-            <div style={{color:C.gold, fontSize:"16px", fontWeight:"bold", letterSpacing:"2px", marginBottom:"4px", textAlign:"center"}}>
+            {/* Header */}
+            <div style={{color:C.gold, fontSize:"18px", fontWeight:"bold", letterSpacing:"4px", textAlign:"center", marginBottom:"2px", textShadow:`0 0 12px ${C.gold}88`}}>
               🏆 TROFEI
             </div>
-            <div style={{color:C.dim, fontSize:"10px", textAlign:"center", marginBottom:"16px"}}>
-              {Object.keys(achievements).length} / {ACHIEVEMENTS.length} sbloccati
+            <div style={{color:C.dim, fontSize:"10px", textAlign:"center", letterSpacing:"1px", marginBottom:"4px"}}>
+              Achievements sbloccati durante le tue run
             </div>
-            <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:"8px"}}>
+            {/* Progress bar */}
+            <div style={{margin:"8px auto 18px", maxWidth:"360px"}}>
+              <div style={{display:"flex", justifyContent:"space-between", fontSize:"9px", color:C.gold, marginBottom:"3px", letterSpacing:"1px"}}>
+                <span>COLLEZIONE</span>
+                <span>{Object.keys(achievements).length} / {ACHIEVEMENTS.length}</span>
+              </div>
+              <div style={{height:"6px", background:"#1a1a22", border:"1px solid #2a2a3a", position:"relative"}}>
+                <div style={{
+                  height:"100%", width:`${(Object.keys(achievements).length/ACHIEVEMENTS.length)*100}%`,
+                  background:`linear-gradient(90deg, ${C.gold}, ${C.green})`,
+                  boxShadow:`0 0 8px ${C.gold}aa`,
+                  transition:"width 0.4s",
+                }} />
+              </div>
+            </div>
+            {/* Grid cards — stile Vintage */}
+            <div style={{
+              display:"grid",
+              gridTemplateColumns:"repeat(auto-fit, minmax(170px, 1fr))",
+              gap:"12px", marginBottom:"16px",
+            }}>
               {ACHIEVEMENTS.map(ach => {
                 const unlocked = achievements[ach.id];
+                const isSecret = ach.secret;
+                const hidden = isSecret && !unlocked;
+                const accent = unlocked ? C.gold : isSecret ? "#6a5a2a" : "#3a3a52";
                 return (
                   <div key={ach.id} style={{
-                    background: unlocked ? "#12121f" : "#0a0a0e",
-                    border:`1px solid ${unlocked ? C.gold + "66" : "#333"}`,
-                    borderRadius:"0", padding:"8px 10px",
-                    opacity: unlocked ? 1 : 0.55,
+                    background: unlocked ? "#0d0d14" : "#0a0a10",
+                    border: `2px solid ${unlocked ? C.gold : "#252538"}`,
+                    padding:"0", position:"relative",
+                    overflow:"hidden",
+                    boxShadow: unlocked ? `0 0 12px ${C.gold}44` : "none",
+                    opacity: unlocked ? 1 : 0.72,
+                    display:"flex", flexDirection:"column",
                   }}>
-                    <div style={{fontSize:"18px", marginBottom:"2px"}}>
-                      {unlocked ? ach.emoji : (ach.secret ? "🔒" : ach.emoji)}
-                    </div>
-                    <div style={{color: unlocked ? C.bright : C.dim, fontSize:"11px", fontWeight:"bold"}}>
-                      {unlocked || !ach.secret ? ach.name : "???"}
-                    </div>
-                    <div style={{color:C.dim, fontSize:"9px", lineHeight:"1.4", marginTop:"2px"}}>
-                      {unlocked || !ach.secret ? ach.desc : "Segreto da scoprire"}
-                    </div>
-                    {unlocked && (
-                      <div style={{color:`${C.gold}88`, fontSize:"9px", marginTop:"4px"}}>
-                        ✓ {new Date(unlocked.unlockedAt).toLocaleDateString("it-IT")}
+                    {/* Preview tile */}
+                    <div style={{
+                      height:"92px", position:"relative",
+                      background: unlocked ? "#1f1a08" : "#060608",
+                      borderBottom: `1px solid ${unlocked ? C.gold+"66" : "#1a1a28"}`,
+                      display:"flex", alignItems:"center", justifyContent:"center",
+                      filter: unlocked ? "none" : "grayscale(100%) brightness(0.5)",
+                      overflow:"hidden",
+                    }}>
+                      {/* Shimmer foil per sbloccati */}
+                      {unlocked && (
+                        <div style={{
+                          position:"absolute", inset:0, pointerEvents:"none",
+                          background:`linear-gradient(110deg, transparent 30%, ${C.gold}55 48%, ${C.gold}aa 50%, ${C.gold}55 52%, transparent 70%)`,
+                          backgroundSize:"200% 100%",
+                          animation:"variantShimmer 2.8s linear infinite",
+                          mixBlendMode:"screen",
+                        }} />
+                      )}
+                      {/* Emoji centrale */}
+                      <div style={{
+                        fontSize:"40px", position:"relative", zIndex:2,
+                        textShadow: unlocked ? `0 0 14px ${C.gold}cc` : "none",
+                        filter: hidden ? "blur(1px)" : "none",
+                      }}>
+                        {hidden ? "🔒" : ach.emoji}
                       </div>
-                    )}
+                      {/* Sparkle angolo per sbloccati */}
+                      {unlocked && (
+                        <div style={{
+                          position:"absolute", top:8, right:10, fontSize:"14px",
+                          color: C.gold, zIndex:3,
+                          animation:"variantSparkle 1.6s ease-in-out infinite",
+                          textShadow:`0 0 8px ${C.gold}`,
+                        }}>✦</div>
+                      )}
+                      {/* Badge SECRET in alto a sx */}
+                      {isSecret && (
+                        <div style={{
+                          position:"absolute", top:6, left:6, zIndex:3,
+                          fontSize:"7px", letterSpacing:"1px", fontWeight:"bold",
+                          color: unlocked ? C.magenta : "#4a3a5a",
+                          background: unlocked ? "#1a0a1f" : "#0a0810",
+                          border:`1px solid ${unlocked ? C.magenta+"88" : "#2a1a3a"}`,
+                          padding:"1px 4px",
+                        }}>SECRET</div>
+                      )}
+                    </div>
+                    {/* Badge label */}
+                    <div style={{
+                      background: unlocked ? C.gold : "#1a1a28",
+                      color: unlocked ? "#000" : "#3a3a52",
+                      padding:"4px 6px", fontSize:"11px", fontWeight:"bold",
+                      letterSpacing:"2px", textAlign:"center",
+                      textShadow: unlocked ? "0 0 4px #fff8" : "none",
+                    }}>
+                      ★ {hidden ? "???" : ach.name.toUpperCase()} ★
+                    </div>
+                    {/* Body: desc + unlock date */}
+                    <div style={{padding:"8px 8px 10px", flex:1, display:"flex", flexDirection:"column", gap:"6px"}}>
+                      <div style={{
+                        color: unlocked ? C.text : "#3a3a52",
+                        fontSize:"10px", lineHeight:"1.35", minHeight:"28px",
+                      }}>
+                        {hidden ? "Un mistero da scoprire giocando..." : ach.desc}
+                      </div>
+                      <div style={{
+                        display:"flex", justifyContent:"space-between",
+                        fontSize:"9px", color:C.dim,
+                        borderTop:`1px solid ${unlocked ? C.gold+"33" : "#1a1a28"}`,
+                        paddingTop:"5px", letterSpacing:"0.5px",
+                      }}>
+                        <span>{isSecret ? "TIPO" : "TIPO"} <span style={{color: isSecret ? C.magenta : C.cyan, fontWeight:"bold"}}>
+                          {isSecret ? "SECRET" : "NORMAL"}
+                        </span></span>
+                        <span style={{color: unlocked ? C.gold : C.dim, fontWeight:"bold"}}>
+                          {unlocked ? `✓ ${new Date(unlocked.unlockedAt).toLocaleDateString("it-IT")}` : "— LOCKED"}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 );
               })}
             </div>
-            <div style={{textAlign:"center", marginTop:"16px", display:"flex", gap:"10px", justifyContent:"center"}}>
-              <Btn onClick={() => setShowTrophies(false)} variant="normal" style={{fontSize:"11px"}}>Chiudi</Btn>
+            <div style={{color:C.gold, fontSize:"10px", textAlign:"center", marginBottom:"10px", letterSpacing:"1px"}}>
+              ✦ Completa tutti i trofei per diventare leggenda ✦
+            </div>
+            <div style={{textAlign:"center", display:"flex", gap:"10px", justifyContent:"center"}}>
+              <Btn onClick={() => setShowTrophies(false)} style={{borderColor:C.gold, color:C.gold, fontSize:"11px"}}>Chiudi</Btn>
               <Btn onClick={() => {
                 setStored(STORAGE_KEYS.achievements, {});
                 setAchievements({});
@@ -2685,44 +2992,113 @@ export default function Grattini() {
       {/* ═══ ALL-TIME STATS OVERLAY ═══ */}
       {showAllTimeStats && (() => {
         const alltime = getStored(STORAGE_KEYS.alltime, {});
+        const totalRuns = alltime.totalRuns || 0;
+        const totalWins = alltime.totalWins || 0;
+        const winRate = totalRuns ? Math.round((totalWins / totalRuns) * 100) : 0;
+        const money = alltime.totalMoneyEarned || 0;
+        const cards = alltime.totalCardsScratched || 0;
         return (
           <div style={{
             position:"fixed", top:0, left:0, width:"100%", height:"100%",
-            background:"rgba(0,0,0,0.88)", zIndex:99990,
+            background:"rgba(0,0,0,0.94)", zIndex:99990,
             display:"flex", alignItems:"center", justifyContent:"center",
-            fontFamily: FONT,
+            fontFamily: FONT, padding:"16px",
           }} onClick={() => setShowAllTimeStats(false)}>
             <div style={{
-              background:"#0a0a16", border:`2px solid ${C.cyan}`,
-              borderRadius:"0", padding:"24px", maxWidth:"440px", width:"92%",
-              boxShadow:"none",
+              background:"#08080f", border:`2px solid ${C.cyan}`,
+              maxWidth:"560px", width:"96vw", maxHeight:"92vh", overflowY:"auto",
+              padding:"18px 20px 16px",
+              boxShadow:`0 0 40px ${C.cyan}44, inset 0 0 40px ${C.cyan}11`,
             }} onClick={e => e.stopPropagation()}>
-              <div style={{color:C.cyan, fontSize:"16px", fontWeight:"bold", letterSpacing:"2px", marginBottom:"16px", textAlign:"center"}}>
+              {/* Header */}
+              <div style={{color:C.cyan, fontSize:"18px", fontWeight:"bold", letterSpacing:"4px", textAlign:"center", marginBottom:"2px", textShadow:`0 0 12px ${C.cyan}88`}}>
                 📊 STATISTICHE ALL-TIME
               </div>
-              <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:"8px", marginBottom:"16px"}}>
+              <div style={{color:C.dim, fontSize:"10px", textAlign:"center", letterSpacing:"1px", marginBottom:"14px"}}>
+                Tutto ciò che hai fatto dall'inizio dei tempi
+              </div>
+
+              {/* HERO: Win rate grande con barra */}
+              <div style={{
+                position:"relative", overflow:"hidden",
+                background:"#0d0d14", border:`2px solid ${C.cyan}`,
+                padding:"14px 16px", marginBottom:"14px",
+                boxShadow:`0 0 16px ${C.cyan}33`,
+              }}>
+                {/* shimmer foil */}
+                <div style={{
+                  position:"absolute", inset:0, pointerEvents:"none",
+                  background:`linear-gradient(110deg, transparent 30%, ${C.cyan}33 48%, ${C.cyan}77 50%, ${C.cyan}33 52%, transparent 70%)`,
+                  backgroundSize:"220% 100%",
+                  animation:"variantShimmer 3.6s linear infinite",
+                  mixBlendMode:"screen",
+                }} />
+                <div style={{position:"relative", zIndex:2, display:"flex", alignItems:"center", justifyContent:"space-between", gap:"12px"}}>
+                  <div>
+                    <div style={{color:C.cyan, fontSize:"9px", letterSpacing:"2px", opacity:0.8}}>WIN RATE</div>
+                    <div style={{color:C.gold, fontSize:"36px", fontWeight:"bold", letterSpacing:"2px", textShadow:`0 0 14px ${C.gold}aa`, lineHeight:1}}>
+                      {winRate}%
+                    </div>
+                    <div style={{color:C.dim, fontSize:"9px", marginTop:"4px", letterSpacing:"1px"}}>
+                      {totalWins} vittorie · {totalRuns} run
+                    </div>
+                  </div>
+                  <div style={{fontSize:"56px", filter:`drop-shadow(0 0 12px ${C.gold}88)`, opacity: totalRuns ? 1 : 0.3}}>
+                    {winRate >= 50 ? "🏆" : totalRuns ? "🎯" : "🕹️"}
+                  </div>
+                </div>
+                {/* progress bar */}
+                <div style={{marginTop:"10px", position:"relative", zIndex:2}}>
+                  <div style={{height:"6px", background:"#1a1a22", border:"1px solid #2a2a3a", position:"relative"}}>
+                    <div style={{
+                      height:"100%", width:`${winRate}%`,
+                      background:`linear-gradient(90deg, ${C.cyan}, ${C.gold})`,
+                      boxShadow:`0 0 8px ${C.gold}aa`,
+                      transition:"width 0.6s",
+                    }} />
+                  </div>
+                </div>
+              </div>
+
+              {/* 4 stat cards in griglia */}
+              <div style={{display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(130px, 1fr))", gap:"10px", marginBottom:"14px"}}>
                 {[
-                  ["🎮 Run totali", alltime.totalRuns || 0, C.cyan],
-                  ["🏆 Vittorie", alltime.totalWins || 0, C.gold],
-                  ["💰 Guadagni totali", `€${alltime.totalMoneyEarned || 0}`, C.green],
-                  ["🖐️ Carte grattate", alltime.totalCardsScratched || 0, C.magenta],
-                ].map(([label, val, color]) => (
-                  <div key={label} style={{
-                    background:"#12121f", border:"1px solid #2a2a3a",
-                    borderRadius:"0", padding:"10px",
+                  {label:"RUN TOTALI", icon:"🎮", val: totalRuns, color: C.cyan},
+                  {label:"VITTORIE", icon:"🏆", val: totalWins, color: C.gold},
+                  {label:"GUADAGNI", icon:"💰", val: `€${money}`, color: C.green},
+                  {label:"CARTE GRATTATE", icon:"🖐️", val: cards, color: C.magenta},
+                ].map(s => (
+                  <div key={s.label} style={{
+                    background:"#0d0d14", border:`1px solid ${s.color}55`,
+                    padding:"10px 12px",
+                    display:"flex", flexDirection:"column", gap:"2px",
+                    position:"relative", overflow:"hidden",
                   }}>
-                    <div style={{color:C.dim, fontSize:"10px"}}>{label}</div>
-                    <div style={{color, fontSize:"16px", fontWeight:"bold"}}>{val}</div>
+                    <div style={{display:"flex", alignItems:"center", gap:"6px"}}>
+                      <span style={{fontSize:"16px", filter:`drop-shadow(0 0 4px ${s.color}88)`}}>{s.icon}</span>
+                      <span style={{color:s.color, fontSize:"8px", letterSpacing:"1.5px", fontWeight:"bold", opacity:0.8}}>{s.label}</span>
+                    </div>
+                    <div style={{color:s.color, fontSize:"20px", fontWeight:"bold", letterSpacing:"1px", textShadow:`0 0 8px ${s.color}66`, lineHeight:1.1, marginTop:"2px"}}>
+                      {s.val}
+                    </div>
                   </div>
                 ))}
               </div>
-              <div style={{color:C.dim, fontSize:"10px", textAlign:"center", marginBottom:"16px", fontStyle:"italic"}}>
-                {alltime.totalRuns
-                  ? `Win rate: ${Math.round(((alltime.totalWins||0) / alltime.totalRuns) * 100)}%`
-                  : "Nessuna run completata ancora."}
+
+              {/* footer insight */}
+              <div style={{
+                color:C.cyan, fontSize:"10px", textAlign:"center",
+                letterSpacing:"1px", marginBottom:"12px", opacity:0.9,
+                borderTop:`1px solid ${C.cyan}33`, paddingTop:"10px",
+              }}>
+                {totalRuns === 0 ? "✦ Nessuna run completata ancora — inizia a grattare! ✦"
+                  : totalRuns >= 100 ? `✦ Leggenda del grattino — ${totalRuns} run al tuo attivo ✦`
+                  : totalRuns >= 10 ? `✦ Grattatore esperto — ${totalRuns} run completate ✦`
+                  : `✦ Continua così — ${totalRuns} run e non fermarti ✦`}
               </div>
+
               <div style={{textAlign:"center"}}>
-                <Btn onClick={() => setShowAllTimeStats(false)} variant="normal" style={{fontSize:"11px"}}>Chiudi</Btn>
+                <Btn onClick={() => setShowAllTimeStats(false)} style={{borderColor:C.cyan, color:C.cyan, fontSize:"11px"}}>Chiudi</Btn>
               </div>
             </div>
           </div>
