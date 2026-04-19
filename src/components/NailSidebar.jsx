@@ -2,7 +2,7 @@ import { useState } from "react";
 import { C, FONT } from "../data/theme.js";
 import { NAIL_INFO, NAIL_ORDER } from "../data/nails.js";
 import { GRATTATORE_DEFS, ALL_IMPLANTS_META } from "../data/items.js";
-import { makeNailCursor, NAIL_CURSOR } from "../utils/nail.js";
+import { makeNailCursor, NAIL_CURSOR, getNailVisual } from "../utils/nail.js";
 import { Tooltip } from "./Tooltip.jsx";
 
 export function NailSidebar({ nails, activeNail, onSelectNail, locked=false, grattatori=[], equippedGrattatore=null, onEquipGrattatore=null }) {
@@ -18,7 +18,8 @@ export function NailSidebar({ nails, activeNail, onSelectNail, locked=false, gra
       </div>
       {nails.map((n, i) => {
         const info = NAIL_INFO[n.state];
-        const col = info.color;
+        const visual = getNailVisual(n);
+        const col = visual?.color || info.color;
         const isActive = i === activeNail;
         const isDead = n.state === "morta";
         const canSwitch = !isDead && !isActive && !locked;
@@ -28,13 +29,25 @@ export function NailSidebar({ nails, activeNail, onSelectNail, locked=false, gra
         const aliveTiers = isDead ? 0 : tierIdx + 1; // 1-5 pips filled
         // Scratch damage bar within current tier (3 ticks)
         const dmgFilled = isDead ? 0 : n.scratchCount;
+        const accent = visual?.accent;
+        const borderCol = isDead ? "#222"
+          : accent && !isActive ? accent+"cc"
+          : isActive ? col : col+"44";
+        const sidebarGlow = isDead ? "none"
+          : isActive ? (visual?.glow && visual.glow !== "none"
+              ? `${visual.glow}, 0 0 10px ${col}55`
+              : `0 0 10px ${col}55, inset 0 0 10px ${col}08`)
+            : (visual?.glow && visual.glow !== "none" ? visual.glow : "none");
+        const sidebarBg = isDead ? "#080810"
+          : visual?.bg ? visual.bg
+          : isActive ? col+"12" : "#080810";
         return (
           <div key={i} onClick={canSwitch ? () => onSelectNail(i) : undefined}
             style={{
               position:"relative",
-              border:`1px solid ${isActive ? col : isDead ? "#222" : col+"33"}`,
-              background: isActive ? col+"12" : "#080810",
-              boxShadow: isActive ? `0 0 10px ${col}55, inset 0 0 10px ${col}08` : "none",
+              border:`1px solid ${borderCol}`,
+              background: sidebarBg,
+              boxShadow: sidebarGlow,
               padding:"5px 8px", borderRadius:"0",
               cursor: canSwitch ? "pointer" : "default",
               opacity: isDead ? 0.35 : 1,
@@ -65,13 +78,11 @@ export function NailSidebar({ nails, activeNail, onSelectNail, locked=false, gra
               return (
                 <Tooltip text={tipText} color={col}>
                   <span style={{display:"flex", alignItems:"center", gap:"6px", width:"100%"}}>
-                    <span style={{fontSize:"15px", lineHeight:1, flexShrink:0}}>
-                      {isDead ? "💀"
-                        : n.state==="piede" ? "🦶"
-                        : n.state==="kawaii" ? "💖"
-                        : n.state==="polliceVerde" ? "🌿"
-                        : n.state==="unghiaNera" ? "🖤"
-                        : "🖐"}
+                    <span style={{
+                      fontSize:"15px", lineHeight:1, flexShrink:0,
+                      filter: !isDead && visual?.glow && visual.glow !== "none" ? `drop-shadow(0 0 4px ${col})` : "none",
+                    }}>
+                      {visual?.emoji || "🖐"}
                     </span>
                     <span style={{flex:1, minWidth:0}}>
                       <span style={{display:"flex", alignItems:"center", gap:"4px"}}>

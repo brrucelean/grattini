@@ -1,6 +1,70 @@
-import { NAIL_ORDER } from "../data/nails.js";
+import { NAIL_ORDER, NAIL_INFO } from "../data/nails.js";
 
 export function nailStateIndex(state) { return NAIL_ORDER.indexOf(state); }
+
+// ─── NAIL VISUAL THEMES ──────────────────────────────────────
+// Ogni impianto sovrascrive l'aspetto dell'unghia (emoji, colore,
+// glow, background). Smalto aggiunge un halo magenta sopra.
+// Lo stato (kawaii/sana/morta/etc.) rimane la base fallback.
+export const IMPLANT_VISUALS = {
+  oro:       { emoji:"🥇", color:"#ffd700", glow:"0 0 14px #ffd70099, inset 0 0 16px #ffaa0055", bg:"linear-gradient(145deg,#3a2e0a 0%,#6b4e10 50%,#3a2e0a 100%)" },
+  ferro:     { emoji:"⚙️", color:"#c0c0d0", glow:"0 0 8px #c0c0d066, inset 0 0 10px #55556644", bg:"linear-gradient(145deg,#1a1a22 0%,#333344 50%,#1a1a22 100%)" },
+  plastica:  { emoji:"🧪", color:"#44ddee", glow:"0 0 8px #44ddee88, inset 0 0 8px #22889933", bg:"linear-gradient(145deg,#0a2830 0%,#144050 50%,#0a2830 100%)" },
+  sacra:     { emoji:"✨", color:"#fff7cc", glow:"0 0 18px #fff7cc99, 0 0 4px #ffd700, inset 0 0 14px #ffd70055", bg:"linear-gradient(145deg,#2a2508 0%,#55481c 50%,#2a2508 100%)" },
+  baddie:    { emoji:"💋", color:"#ff4477", glow:"0 0 12px #ff447799, inset 0 0 10px #aa224466", bg:"linear-gradient(145deg,#2a0811 0%,#55112a 50%,#2a0811 100%)" },
+  neonato:   { emoji:"👶", color:"#ffc0cb", glow:"0 0 8px #ffc0cb88", bg:"linear-gradient(145deg,#2a1016 0%,#55202c 50%,#2a1016 100%)" },
+  marcione:  { emoji:"🧟", color:"#6b8e23", glow:"0 0 8px #6b8e2388, inset 0 0 8px #44551144", bg:"linear-gradient(145deg,#111808 0%,#223010 50%,#111808 100%)" },
+  velenosa:  { emoji:"☠️", color:"#88ff44", glow:"0 0 10px #88ff4488, inset 0 0 8px #449922", bg:"linear-gradient(145deg,#0a1f08 0%,#15401a 50%,#0a1f08 100%)" },
+  parassita: { emoji:"🪱", color:"#bb77ff", glow:"0 0 10px #bb77ff88, inset 0 0 8px #7744cc55", bg:"linear-gradient(145deg,#1a0a22 0%,#33144a 50%,#1a0a22 100%)" },
+};
+
+// Emoji default per stato "base" (quando non c'è impianto)
+const STATE_EMOJI = {
+  morta:"💀", piede:"🦶", kawaii:"💖",
+  polliceVerde:"🌿", unghiaNera:"🖤",
+  sana:"🖐", graffiata:"🖐", sanguinante:"🖐", marcia:"🖐",
+};
+
+// Ritorna aspetto visuale per un'unghia (emoji, colore primario,
+// glow CSS, background CSS, e flag decorativi)
+export function getNailVisual(nail) {
+  if (!nail) return null;
+  const stateInfo = NAIL_INFO[nail.state] || NAIL_INFO.sana;
+  const isDead = nail.state === "morta";
+  const hasImplant = !!nail.implant && (nail.implantUses || 0) > 0;
+  const hasSmalto = (nail.smalto || 0) > 0;
+
+  // Base: stato dell'unghia
+  let visual = {
+    emoji: STATE_EMOJI[nail.state] || "🖐",
+    color: stateInfo.color,
+    glow: "none",
+    bg: null,
+    accent: null,         // bordo secondario (smalto)
+    label: stateInfo.label,
+  };
+
+  // Override: impianto attivo → colore/emoji/glow dedicati
+  if (!isDead && hasImplant) {
+    const iv = IMPLANT_VISUALS[nail.implant];
+    if (iv) {
+      visual.emoji = iv.emoji;
+      visual.color = iv.color;
+      visual.glow = iv.glow;
+      visual.bg = iv.bg;
+    }
+  }
+
+  // Smalto: aggiunge bordo/halo magenta sopra (preserva emoji impianto)
+  if (!isDead && hasSmalto) {
+    visual.accent = "#ff4bd8";            // magenta kawaii
+    visual.glow = visual.glow === "none"
+      ? "0 0 8px #ff4bd888"
+      : `${visual.glow}, 0 0 6px #ff4bd877`;
+  }
+
+  return visual;
+}
 
 export function degradeNail(state, amount=1) {
   const idx = nailStateIndex(state);
