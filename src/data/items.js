@@ -4,8 +4,8 @@
 export const ITEM_DEFS = {
   cerotto:     { name:"Cerotto", desc:"Cura 1 unghia di 1 stato (scegli quale)", cost:3, rarity:"comune", emoji:"🩹", nailEquip:true },
   disinfettante:{ name:"Disinfettante", desc:"Cura 1 unghia di 2 stati (scegli quale)", cost:8, rarity:"comune", emoji:"💧", nailEquip:true },
-  sigaretta:     { name:"Sigaretta", desc:"+1 Fortuna per 3 grattate", cost:4, rarity:"comune", emoji:"🚬", global:true },
-  sigarettaErba: { name:"Sigaretta con Erba", desc:"+2 Fortuna per 4 grattate + cura unghia attiva", cost:8, rarity:"media", emoji:"🌿", global:true },
+  sigaretta:     { name:"Sigaretta", desc:"+1 Fortuna (3 turni). Dopo 2 grattate l'unghia attiva diventa 🖤 UNGHIA NERA (×0.4, rischio annullo)", cost:4, rarity:"comune", emoji:"🚬", global:true },
+  sigarettaErba: { name:"Sigaretta con Erba", desc:"+2 Fortuna (4 turni) + cura unghia attiva. Dopo 4 grattate l'unghia attiva diventa 🌿 POLLICE VERDE (×2.5 premi)", cost:8, rarity:"media", emoji:"🌿", global:true },
   cremaRinforzante:{ name:"Crema Rinforzante", desc:"+1 HP bianco sull'unghia (assorbe 3 danni)", cost:10, rarity:"media", emoji:"🧴", nailEquip:true, cremaEquip:true },
   cappelloSbirro:{ name:"Cappello Sbirro", desc:"Ignora poliziotto 1 volta (attira ladri e spacciatori!)", cost:15, rarity:"rara", emoji:"🎩", global:true },
   sieroRicrescita:{ name:"Siero Ricrescita", desc:"Ricresce 1 unghia morta → Sana", cost:25, rarity:"rara", emoji:"💉", nailEquip:true },

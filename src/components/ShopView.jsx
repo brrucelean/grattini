@@ -76,6 +76,7 @@ export function ShopView({ player, onBuyCard, onBuyItem, onBuyGrattatore, onLeav
     ...(player.money >= 15 ? [CARD_TYPES[9]] : []),   // La Ruota €15
     ...(player.money >= 20 && player.lastWonPrize > 0 ? [CARD_TYPES[13]] : []),  // Doppio o Nulla €20, only if has won before
     ...(currentBiome === 3 && player.money >= 25 ? [CARD_TYPES.find(c => c.id === "mahjong")] : []).filter(Boolean),  // 🀄 Mahjong — solo Quartiere Cinese
+    ...(player.money >= 20 && currentRow >= 3 ? [CARD_TYPES.find(c => c.id === "jackpotMix")] : []).filter(Boolean),  // 🔧 Jackpot Mix — richiede grattatore
   ];
   const shopItems = ["cerotto","disinfettante","sigaretta","smalto"];
   const rareItems = player.money >= 20 ? ["cremaRinforzante","cappelloSbirro"] : [];
@@ -90,6 +91,8 @@ export function ShopView({ player, onBuyCard, onBuyItem, onBuyGrattatore, onLeav
     ...(player.money >= 15 ? [CARD_TYPES.find(t=>t.id==="labirinto")] : []),
     ...(player.money >= 25 ? [CARD_TYPES.find(t=>t.id==="grattaCombina")] : []),
     ...(player.money >= 35 ? [CARD_TYPES.find(t=>t.id==="mappaTesor0")] : []),
+    // ✈️ Turista Per Sempre — esclusiva VIP Quartiere Cinese (bioma 3)
+    ...(currentBiome === 3 && player.money >= 40 ? [CARD_TYPES.find(t=>t.id==="turistaPerSempre")] : []),
   ].filter(Boolean) : [];
 
   const Section = ({ label, children }) => (

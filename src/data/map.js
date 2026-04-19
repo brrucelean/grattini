@@ -5,7 +5,7 @@ export const NODE_ICONS = {
   boss:"👹", evento:"❓", start:"🚩", stregone:"🧙",
   poliziotto:"🚔", anziana:"👵", sacerdote:"⛪", bambino:"👦",
   streamer:"📱", macellaio:"🔪",
-  maestroTe:"🍵",
+  maestroTe:"🍵", guantaio:"🧤",
 };
 
 export const NODE_POOL_WEIGHTS = [
@@ -39,4 +39,5 @@ export const NODE_TOOLTIPS = {
   streamer:    "📱 Streamer Scratch — vuole filmarti. La chat impazzirà comunque.",
   macellaio:   "🔪 Il Chirurgo Macellaio — impianti d'avanguardia. 25% di complicazioni.",
   maestroTe:   "🍵 Il Maestro del Tè — tè speciali che curano e potenziano. Solo nel Quartiere Cinese.",
+  guantaio:    "🧤 Il Guantaio — vende guanti rari, incluso il GUANTO DA BOSS (protegge dal prossimo combattimento).",
 };

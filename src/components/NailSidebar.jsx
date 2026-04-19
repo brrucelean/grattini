@@ -9,6 +9,8 @@ export function NailSidebar({ nails, activeNail, onSelectNail, locked=false, gra
   // Alive tiers in order worst→best (excluding morta)
   const TIER_ORDER = ["marcia","sanguinante","graffiata","sana","kawaii"];
   const TIER_COLORS = { marcia:C.red, sanguinante:C.orange, graffiata:C.gold, sana:C.green, kawaii:C.pink };
+  // Sprint 2: stati speciali fuori catena — mappa pip all'equivalente più vicino
+  const SPECIAL_TIER_MAP = { polliceVerde: "kawaii", unghiaNera: "marcia" };
   return (
     <div style={{display:"flex", flexDirection:"column", gap:"5px", alignItems:"stretch"}}>
       <div style={{color: locked ? C.orange+"99" : C.dim, fontSize:"9px", textAlign:"center", letterSpacing:"1px", marginBottom:"2px", opacity:0.7}}>
@@ -21,7 +23,8 @@ export function NailSidebar({ nails, activeNail, onSelectNail, locked=false, gra
         const isDead = n.state === "morta";
         const canSwitch = !isDead && !isActive && !locked;
         // HP pips: how many tiers still alive
-        const tierIdx = TIER_ORDER.indexOf(n.state); // -1 if morta, 0-4 otherwise
+        const pipState = SPECIAL_TIER_MAP[n.state] || n.state;
+        const tierIdx = TIER_ORDER.indexOf(pipState); // -1 if morta, 0-4 otherwise
         const aliveTiers = isDead ? 0 : tierIdx + 1; // 1-5 pips filled
         // Scratch damage bar within current tier (3 ticks)
         const dmgFilled = isDead ? 0 : n.scratchCount;
@@ -63,7 +66,12 @@ export function NailSidebar({ nails, activeNail, onSelectNail, locked=false, gra
                 <Tooltip text={tipText} color={col}>
                   <span style={{display:"flex", alignItems:"center", gap:"6px", width:"100%"}}>
                     <span style={{fontSize:"15px", lineHeight:1, flexShrink:0}}>
-                      {isDead ? "💀" : n.state==="piede"?"🦶":n.state==="kawaii"?"💖":"🖐"}
+                      {isDead ? "💀"
+                        : n.state==="piede" ? "🦶"
+                        : n.state==="kawaii" ? "💖"
+                        : n.state==="polliceVerde" ? "🌿"
+                        : n.state==="unghiaNera" ? "🖤"
+                        : "🖐"}
                     </span>
                     <span style={{flex:1, minWidth:0}}>
                       <span style={{display:"flex", alignItems:"center", gap:"4px"}}>

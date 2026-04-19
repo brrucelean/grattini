@@ -340,13 +340,13 @@ export function CombatView({ enemy, player, onEnd, onNailDamage, onCellScratch, 
     if (isRomanaccio) {
       const romanaccioEntries = [];
       // Taxi: il Romanaccio ti fa pagare la corsa ogni round, soldi sicuri in tasca sua
-      const taxiFee = 15 + (round - 1) * 5; // r1=15, r2=20, r3=25, r4=30
+      const taxiFee = 10 + (round - 1) * 3; // r1=10, r2=13, r3=16, r4=19
       eMoney += taxiFee; eRunning += taxiFee;
       setTaxiGain(prev => prev + taxiFee);
       romanaccioEntries.push({ text: `🚕 TAXI — il Romanaccio ti porta al casinò con la strada lunga: +€${taxiFee} per lui`, color: C.orange, pTotal: 0, eTotal: 0 });
-      // Manomissione: 1 volta su 2 prova a truccare i dadi — se il player ha denunciato, reverti
-      if (roll(0.55)) {
-        const cheatAmount = 30 + (round - 1) * 10; // r1=30, r2=40, r3=50, r4=60
+      // Manomissione: 40% prova a truccare i dadi — se il player ha denunciato, reverti
+      if (roll(0.40)) {
+        const cheatAmount = 20 + (round - 1) * 8; // r1=20, r2=28, r3=36, r4=44
         if (manomissioneActive && manomissioneActive.reverted) {
           // Già denunciato: segnala che ci prova di nuovo ma stavolta lo beccheremo dopo
           romanaccioEntries.push({ text: `🔧 MANOMISSIONE — prova a truccare le carte (+€${cheatAmount}) — DENUNCIA disponibile!`, color: C.red, pTotal: 0, eTotal: 0 });
@@ -548,8 +548,8 @@ export function CombatView({ enemy, player, onEnd, onNailDamage, onCellScratch, 
 
     // Broker: accumula investimento cross-round
     if (enemy.isBoss && enemy.name === "Il Broker") {
-      const invest = Math.round(eMoney * 0.30);
-      const grown = Math.round(brokerInvestment * 0.20);
+      const invest = Math.round(eMoney * 0.20);
+      const grown = Math.round(brokerInvestment * 0.10);
       setBrokerInvestment(prev => prev + invest + grown);
       const newInv = brokerInvestment + invest + grown;
       steps.push({ flipSide: null, flipIdx: -1, entries: [
@@ -567,7 +567,8 @@ export function CombatView({ enemy, player, onEnd, onNailDamage, onCellScratch, 
 
     // Il Napoletano: gratta una carta bonus dopo la risoluzione
     if (enemy.isBoss && enemy.name === "Il Napoletano") {
-      const tiers = [1, 2, 3, 4];
+      // Cap tier 1-2: evita spike da €800+ tier 4 (tredici) che rende il boss imbattibile
+      const tiers = [1, 2];
       const tier = pick(tiers);
       const reTierCards = CARD_TYPES.filter(t => {
         const cb = CARD_BALANCE[t.id];
