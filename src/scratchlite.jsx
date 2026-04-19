@@ -561,7 +561,7 @@ export default function Grattini() {
             <div style={{color:C.gold, fontSize:"clamp(11px, 1.2vw, 15px)", marginTop:"16px", letterSpacing:"5px",
               textShadow:`0 0 10px ${C.gold}88`,
             }}>
-              ░░░ BETA 3 — 3 Biomi ░░░
+              ░░░ BETA 4 — Bug Fix Completo ░░░
             </div>
             <div style={{color:C.text, marginBottom:"28px", marginTop:"20px", fontSize:"clamp(12px, 1.1vw, 15px)", letterSpacing:"0.5px", textAlign:"center"}}>
             Un roguelike di grattate, unghie e fortuna.
@@ -1940,7 +1940,7 @@ export default function Grattini() {
               ))}
             </div>
             <div style={{color:C.dim, marginBottom:"12px", fontSize:"11px"}}>
-              BETA 3 — Hai completato tutti i biomi!
+              BETA 4 — Hai completato tutti i biomi!
             </div>
             <div style={{display:"flex", gap:"10px", justifyContent:"center", flexWrap:"wrap"}}>
               <Btn variant="gold" onClick={() => setScreen("title")} style={{fontSize:"16px", padding:"12px 32px"}}>
