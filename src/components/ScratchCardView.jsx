@@ -146,10 +146,14 @@ export function ScratchCardView({ card, onDone, nailState, nailImplant=null, for
     let fullPrize = card.prize; // premio senza penalità marcia
     // Cap piede: moltiplicatore x3 ma mai più di €500
     if (nailState === "piede") prize = Math.min(prize, 500);
-    // Penalità unghia: mult basato sullo stato attuale dell'unghia
+    // Penalità unghia: mult basato sullo stato attuale dell'unghia.
+    // IMPORTANTE: se l'unghia era marcia mentre grattavi e poi è guarita,
+    // la schedina resta "sporca" — applichiamo comunque il 25% (coerente con isDirty nell'UI).
     const usingGrattatore = !!equippedGrattatore;
+    const effMarcia = !usingGrattatore && (nailState === "marcia" || scratchedWhileMarcia.current);
     const nailInfo = NAIL_INFO[nailState] || NAIL_INFO.sana;
-    const nailMult = usingGrattatore ? Math.max(nailInfo.mult, 1.0) : nailInfo.mult;
+    const rawMult = usingGrattatore ? Math.max(nailInfo.mult, 1.0) : nailInfo.mult;
+    const nailMult = effMarcia ? Math.min(rawMult, 0.25) : rawMult;
     prize = Math.round(prize * nailMult);
     // Implant prize multiplier
     if (nailImplant) {
@@ -360,7 +364,9 @@ export function ScratchCardView({ card, onDone, nailState, nailImplant=null, for
     if (sym && !winFound) {
       const { prize: rawP, fullPrize: rawFP, cancelled: wc } = calcPrize();
       const prize = rawP > 0 ? rawP : Math.max(card.cost, Math.round(card.cost + Math.random() * card.maxPrize * 0.15));
-      const fullPrize = rawFP > 0 ? rawFP : prize;
+      // Preserva il "full" (pre-penalità) anche quando prize cade al fallback —
+      // così il display "€X → €Y" mostra davvero due valori diversi se c'è penalità.
+      const fullPrize = rawFP > 0 ? rawFP : (rawP > 0 ? prize : Math.max(prize, card.prize || prize));
       setWinFound(true); setWinSymbol(sym); setWinPrize(prize); setWinPrizeFull(fullPrize); setCancelled(wc);
       setNearWin(false);
       AudioEngine.win();
