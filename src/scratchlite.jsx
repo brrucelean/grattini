@@ -41,6 +41,7 @@ import { ScratchCell } from "./components/ScratchCell.jsx";
 import { DoppioONullaView } from "./components/DoppioONullaView.jsx";
 import { ScratchCardView } from "./components/ScratchCardView.jsx";
 import { CombatCardScratch, CombatView, DEBUG_MODE, DEBUG_COMBAT, DEBUG_BIOME, DEBUG_ROW } from "./components/CombatView.jsx";
+import { CARD_VARIANTS } from "./utils/combat.js";
 import { MapView } from "./components/MapView.jsx";
 import { ShopView } from "./components/ShopView.jsx";
 import { LocandaView } from "./components/LocandaView.jsx";
@@ -99,9 +100,11 @@ export default function Grattini() {
     showAllTimeStats, setShowAllTimeStats,
     unlockAchievement,
     updateAllTimeStats,
+    vintageCollected, collectVintage,
   } = useMeta();
   // ─── SPECIAL MINIGAME STATES ─────────────────────────────────
   const [labirintoState, setLabirintoState] = useState(null); // {pos, revealed, prize, grid, done}
+  const [showVintage, setShowVintage] = useState(false); // Sprint 5: modal collezione vintage
   const [combinaState, setCombinaState] = useState(null); // gratta & combina
   const [tesoroState, setTesoroState] = useState(null); // mappa del tesoro
   const [specialCardRef, setSpecialCardRef] = useState(null); // card that triggered the minigame
@@ -177,6 +180,11 @@ export default function Grattini() {
       streamerFollowers: 0, // aumenta con streamerLive → donazioni dinamiche in combat
       snitchedOn: false,    // true dopo Snitch al Poliziotto → spacciatore ostile
       bluffsBought: 0,      // quanti falsi-vincenti comprati dallo spacciatore (stat)
+      // Sprint 5: Giornaletto Porno
+      giornalettoRead: false, // true mentre il giornaletto è letto recentemente → Poliziotto ti becca
+      giornalettoTicks: 0,    // grattate rimanenti prima che svanisca l'effetto
+      // Sprint 5: Vintage Collezionabili (achievement meta)
+      vintageCollection: [],  // array di id variant raccolti (FOIL/STRAPPATO/ORO/BN/MULTI)
       grattedCards: [], // storico carte grattate: [{typeId, tier, isWinner, prize, name}]
       lastWonPrize: 0, // ultimo premio vinto (per Doppio o Nulla x2)
       extraTiles: [], // tile extra nel grattino corrente (es. monetaCinese)
@@ -596,6 +604,9 @@ export default function Grattini() {
             </Btn>
             <Btn onClick={() => setShowReliquie(true)} style={{fontSize:"11px", padding:"7px 16px", borderColor:"#c060ff", color:"#c060ff"}}>
               🏺 Reliquie ({discoveredRelics.length}/{Object.keys(RELIC_DEFS).length})
+            </Btn>
+            <Btn onClick={() => setShowVintage(true)} style={{fontSize:"11px", padding:"7px 16px", borderColor:"#ffaa88", color:"#ffaa88"}}>
+              🎨 Vintage ({vintageCollected.length}/5)
             </Btn>
             <Btn onClick={() => setShowAllTimeStats(true)} style={{fontSize:"11px", padding:"7px 16px", borderColor:C.cyan, color:C.cyan}}>
               📊 Statistiche
@@ -1215,6 +1226,13 @@ export default function Grattini() {
             onCellScratch={handleCombatCellScratch}
             playerWallet={player.money}
             onCombo={() => { unlockAchievement("combo_master"); setGameStats(s => ({...s, combosFired: (s.combosFired || 0) + 1})); }}
+            onVariantRevealed={(variantId) => {
+              if (!vintageCollected.includes(variantId)) {
+                collectVintage(variantId);
+                addLog(`🎨 Nuova variante vintage scoperta: ${variantId}!`, C.magenta);
+                if (vintageCollected.length + 1 >= 5) unlockAchievement("vintage_collector");
+              }
+            }}
             onNailDamage={(count, onExplosiva) => {
               updatePlayer(p => {
                 // noCombatDegradeMeta: unghia d'acciaio — nessun danno in combat
@@ -2427,6 +2445,69 @@ export default function Grattini() {
             )}
             <div style={{textAlign:"center"}}>
               <Btn onClick={() => setShowReliquie(false)} style={{borderColor:"#c060ff", color:"#c060ff", fontSize:"11px"}}>
+                Chiudi
+              </Btn>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══ VINTAGE COLLEZIONABILI (Sprint 5) ═══ */}
+      {showVintage && (
+        <div style={{
+          position:"fixed", inset:0, background:"rgba(0,0,0,0.92)", zIndex:9000,
+          display:"flex", alignItems:"center", justifyContent:"center",
+          fontFamily:FONT,
+        }} onClick={() => setShowVintage(false)}>
+          <div style={{
+            background:"#08080f", border:"2px solid #ffaa88",
+            maxWidth:"480px", width:"92vw", maxHeight:"85vh", overflowY:"auto",
+            padding:"20px",
+          }} onClick={e => e.stopPropagation()}>
+            <div style={{color:"#ffaa88", fontSize:"16px", fontWeight:"bold", letterSpacing:"3px", textAlign:"center", marginBottom:"4px"}}>
+              🎨 VINTAGE COLLEZIONABILI
+            </div>
+            <div style={{color:C.dim, fontSize:"10px", textAlign:"center", letterSpacing:"1px", marginBottom:"16px"}}>
+              Scoperte: {vintageCollected.length}/5 — Varianti rare carte combat
+            </div>
+            <div style={{display:"flex", flexDirection:"column", gap:"8px", marginBottom:"16px"}}>
+              {Object.entries(CARD_VARIANTS).map(([id, v]) => {
+                const known = vintageCollected.includes(id);
+                return (
+                  <div key={id} style={{
+                    display:"flex", alignItems:"center", gap:"12px",
+                    background: known ? v.color+"14" : "#0d0d1a",
+                    border: `1px solid ${known ? v.color+"88" : "#1a1a2a"}`,
+                    padding:"10px 12px",
+                    opacity: known ? 1 : 0.55,
+                    boxShadow: known ? v.glow : "none",
+                  }}>
+                    <div style={{fontSize:"22px", flexShrink:0, color: known ? v.color : "#3a3a5a",
+                      filter: known ? "none" : "grayscale(1) brightness(0.5)", fontWeight:"bold",
+                      letterSpacing:"1px", minWidth:"64px", textAlign:"center",
+                      border:`1px solid ${known ? v.color : "#3a3a5a"}`, padding:"6px 4px",
+                    }}>
+                      {known ? v.label : "???"}
+                    </div>
+                    <div style={{flex:1}}>
+                      {known ? (
+                        <div style={{color: v.color, fontSize:"11px"}}>
+                          {v.desc}<br/>
+                          <span style={{color:C.dim, fontSize:"9px"}}>× val: {(v.valueMult*100).toFixed(0)}% — chance drop: {(v.chance*100).toFixed(0)}%</span>
+                        </div>
+                      ) : (
+                        <div style={{color:"#2a2a4a", fontSize:"11px"}}>Scopri questa variante in combat per sbloccarla.</div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div style={{color:"#ffaa88", fontSize:"10px", textAlign:"center", marginBottom:"10px"}}>
+              ✦ Collezionale tutte e 5 per l'achievement "Collezionista Vintage" ✦
+            </div>
+            <div style={{textAlign:"center"}}>
+              <Btn onClick={() => setShowVintage(false)} style={{borderColor:"#ffaa88", color:"#ffaa88", fontSize:"11px"}}>
                 Chiudi
               </Btn>
             </div>

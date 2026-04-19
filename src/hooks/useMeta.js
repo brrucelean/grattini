@@ -19,7 +19,20 @@ export function useMeta() {
   const [enabledRelics, setEnabledRelics] = useState(() => {
     try { return JSON.parse(localStorage.getItem('grattini_relics_enabled') || '[]'); } catch { return []; }
   });
+  // Sprint 5: Vintage Collezionabili — varianti carte combat scoperte (meta, persiste tra run)
+  const [vintageCollected, setVintageCollected] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('grattini_vintage') || '[]'); } catch { return []; }
+  });
   const [showAllTimeStats, setShowAllTimeStats] = useState(false);
+
+  const collectVintage = useCallback((variantId) => {
+    setVintageCollected(prev => {
+      if (prev.includes(variantId)) return prev;
+      const next = [...prev, variantId];
+      try { localStorage.setItem('grattini_vintage', JSON.stringify(next)); } catch {}
+      return next;
+    });
+  }, []);
 
   const unlockAchievement = useCallback((id) => {
     setAchievements(prev => {
@@ -61,5 +74,6 @@ export function useMeta() {
     showAllTimeStats, setShowAllTimeStats,
     unlockAchievement,
     updateAllTimeStats,
+    vintageCollected, collectVintage,
   };
 }

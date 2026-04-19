@@ -278,8 +278,18 @@ export function useEventHandlers({
         setScreen("map"); break;
       }
       case "pagaMulta": {
-        updatePlayer(p => ({...p, money: p.money - 20}));
-        addLog("Paghi €20 di multa. \"Prossima volta si fa i fatti suoi.\"", C.red);
+        // Sprint 5: multa doppia se beccato col Giornaletto — e sequestro!
+        const busted = !!player.giornalettoRead;
+        const amount = busted ? 40 : 20;
+        updatePlayer(p => ({
+          ...p,
+          money: p.money - amount,
+          // Sequestra il giornaletto: rimuove flag + rimuove item se ancora in inventario
+          giornalettoRead: false,
+          items: busted ? p.items.filter(i => i !== "giornalettoPorno") : p.items,
+        }));
+        if (busted) addLog(`📖🚔 Multa DOPPIA: €${amount}. Il Poliziotto sequestra il giornaletto scuotendo la testa.`, C.red);
+        else addLog(`Paghi €${amount} di multa. "Prossima volta si fa i fatti suoi."`, C.red);
         setScreen("map"); break;
       }
       case "multaNail": {

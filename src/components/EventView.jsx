@@ -149,12 +149,14 @@ export function EventView({ node, player, onChoice }) {
     poliziotto: {
       title: "🚔 Poliziotto della Lotteria",
       art: NPC_ART.poliziotto,
-      text: player.snitchedOn
+      text: player.giornalettoRead
+        ? "\"Ma che... COSA HA IN TASCA?! Un GIORNALETTO?! Atti osceni in luogo pubblico! Multa raddoppiata e che vergogna, a lei!\""
+        : player.snitchedOn
         ? "\"Bravo, informatore. Ma non ti ho detto ancora basta. Documenti?\""
         : "\"Alt! Documenti! Cosa ci fa con tutti questi grattini? Lei non mi sembra un pensionato... né un tipo onesto.\"",
       choices: [
         { label: "🎩 Mostra il Cappello Sbirro", action: "useCappello", condition: player.cappelloSbirroWorn },
-        { label: "Paga la multa (€20)", action: "pagaMulta", condition: player.money >= 20 },
+        { label: player.giornalettoRead ? "Paga la multa DOPPIA (€40)" : "Paga la multa (€20)", action: "pagaMulta", condition: player.money >= (player.giornalettoRead ? 40 : 20) },
         { label: "🦴 Offri un'unghia invece di €20", action: "multaNail", condition: player.money < 20 && player.nails.filter(n=>n.state!=="morta").length > 1 },
         // Sprint 4: Snitch — denuncia lo spacciatore per €30. Ti mette in pace col poliziotto,
         // ma lo spacciatore scopre e ti attacca alla prossima visita.

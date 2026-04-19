@@ -80,6 +80,8 @@ export function ShopView({ player, onBuyCard, onBuyItem, onBuyGrattatore, onLeav
   ];
   const shopItems = ["cerotto","disinfettante","sigaretta","smalto"];
   const rareItems = player.money >= 20 ? ["cremaRinforzante","cappelloSbirro"] : [];
+  // Sprint 5: Giornaletto — dietro il bancone del tabaccaio, €8
+  const sottoBanco = player.money >= 8 ? ["giornalettoPorno"] : [];
   const shopGrattatori = ["bottone","bullone","unghiaFinta"];
   const rareGrattatori = player.money >= 15 ? ["plettro","moneta_argento","discoRotto"] : [];
   const legendaryGrattatori = player.money >= 40 ? ["moneta_oro"] : [];
@@ -172,7 +174,7 @@ export function ShopView({ player, onBuyCard, onBuyItem, onBuyGrattatore, onLeav
 
       {/* ── Consumabili ── */}
       <Section label="💊 Consumabili">
-        {[...shopItems, ...rareItems].map(id => {
+        {[...shopItems, ...rareItems, ...sottoBanco].map(id => {
           const item = ITEM_DEFS[id];
           if (!item) return null;
           return (
