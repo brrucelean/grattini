@@ -34,7 +34,7 @@ export const NEWS_TICKER_BY_BIOME = [
   [
     "🗞 ECONOMIA — Analisti del Centro Slot: \"Investire in grattini rende il 400% in meno della borsa.\" Vendite record.",
     "🗞 CRONACA — Al Centro Slot(Unico) uomo gioca per 72 ore di fila. Dimesso con unghie nuove.",
-    "🗞 FLASH — Il Croupier Maledetto nega di esistere. La moquette del casinò, invece, conferma.",
+    "🗞 FLASH — Il Romanaccio scoperto a truccare la roulette: \"Ao', è 'na manomissione pe' gioco.\" Archiviato pe' simpatia.",
     "🗞 SALUTE — Psicologi del Centro: \"La frase 'stavolta vinco' è la più pronunciata della regione.\"",
     "🗞 SOCIETÀ — Vinti €500 alle slot, ripersi in 4 minuti alle slot a fianco. Nuovo record provinciale.",
     "🗞 CRONACA — Lampadine al neon del Centro Slot sostituite dopo 43 anni. Clienti: \"Non si vedeva più niente.\"",
@@ -48,7 +48,7 @@ export const NEWS_TICKER_BY_BIOME = [
     "🗞 CULTURA — A Grattanapoli la processione del Santo Grattino attira 40.000 fedeli. Pioggia di vincite simboliche.",
     "🗞 CRONACA — Smorfia napoletana aggiornata: il numero 90 ora significa \"biglietto graffiato male\".",
     "🗞 GASTRONOMIA — Inventata la \"pizza gratta e mangia\": gratti la mozzarella e scopri il condimento.",
-    "🗞 FLASH — Il Re dei Grattini avvistato al Vomero con corteo di sei tabaccai. Traffico paralizzato.",
+    "🗞 FLASH — 'O Napoletano avvistato al Vomero con corteo di sei tabaccai e quattro carte in mano. Traffico paralizzato.",
   ],
   // Bioma 3 — Quartiere Cinese (lanterne, drago, mahjong)
   [

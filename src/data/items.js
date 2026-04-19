@@ -18,13 +18,37 @@ export const ITEM_DEFS = {
 };
 
 // ─── IMPIANTI CHIRURGO MACELLAIO ────────────────────────────
+// Unghie "recuperate" da clienti precedenti. Vincita garantita,
+// ma si sacrificano dopo gli usi.
 export const MACELLAIO_IMPLANTS = [
-  { id:"velenosa", name:"Unghia Velenosa", emoji:"☠️", cost:15,
-    desc:"In combattimento, ogni grattata fa €5 danno al nemico", rarity:"rara", statBoost:{potenza:2} },
-  { id:"esplosiva", name:"Unghia Esplosiva", emoji:"💥", cost:30,
-    desc:"Quando muore, fa €60 danni al nemico", rarity:"epica", statBoost:{potenza:3} },
-  { id:"parassita", name:"Unghia Parassita", emoji:"🪱", cost:40,
-    desc:"Ruba €3 al nemico ogni round di combattimento", rarity:"epica", statBoost:{potenza:2, fortuna:1} },
+  { id:"neonato", name:"Unghia Neonato", emoji:"👶", cost:20,
+    desc:"1 grattata: VINCITA GARANTITA al 50% del premio. Dopo, l'unghia muore.",
+    rarity:"rara", uses:1, prizeMult:0.5, guaranteedWin:true, onExhaust:"morta" },
+  { id:"marcione", name:"Unghia Marcia", emoji:"🧟", cost:15,
+    desc:"2 grattate: VINCITA GARANTITA al 50% del premio. Dopo, l'unghia muore.",
+    rarity:"media", uses:2, prizeMult:0.5, guaranteedWin:true, onExhaust:"morta" },
+  { id:"baddie", name:"Unghia da Baddie", emoji:"💋", cost:60,
+    desc:"9 grattate al 100% del premio. I ladri se ne INNAMORANO — non ti rubano più nulla. Poi l'unghia muore.",
+    rarity:"epica", uses:9, prizeMult:1.0, thiefImmune:true, onExhaust:"morta" },
+];
+
+// ─── IMPIANTI SACRI (Anziana Maledetta) ──────────────────────
+export const ANZIANA_IMPLANTS = [
+  { id:"sacra", name:"Unghia Sacra", emoji:"✨", cost:40,
+    desc:"1 grattata: vincita × 5 GARANTITA. Poi l'unghia torna Sana.",
+    rarity:"rarissima", uses:1, prizeMult:5.0, guaranteedWin:true, onExhaust:"sana" },
+];
+
+// ─── IMPIANTI CHIRURGO OSCURO (già esistenti) ────────────────
+export const CHIRURGO_OSCURO_IMPLANTS = [
+  { id:"plastica", name:"Unghia di Plastica", emoji:"🧪", cost:10, desc:"3 grattate al 50% del premio.", rarity:"comune", uses:3, prizeMult:0.5 },
+  { id:"ferro",    name:"Unghia di Ferro",    emoji:"⚙️", cost:25, desc:"6 grattate al 100% del premio. Attira ladri.", rarity:"media", uses:6, prizeMult:1.0 },
+  { id:"oro",      name:"Unghia d'Oro",       emoji:"🥇", cost:50, desc:"9 grattate al 150% del premio. ALTO PERICOLO LADRI.", rarity:"rara", uses:9, prizeMult:1.5 },
+];
+
+// Meta unificata per il lookup nel sidebar/tooltip
+export const ALL_IMPLANTS_META = [
+  ...MACELLAIO_IMPLANTS, ...ANZIANA_IMPLANTS, ...CHIRURGO_OSCURO_IMPLANTS,
 ];
 
 // ─── RELIQUIE (persistenti per tutta la run) ─────────────────

@@ -2,7 +2,7 @@ import { useState, useCallback } from "react";
 import { C } from "../data/theme.js";
 import { NAIL_ORDER } from "../data/nails.js";
 import { NODE_ICONS } from "../data/map.js";
-import { ITEM_DEFS, RELIC_DEFS, GRATTATORE_DEFS } from "../data/items.js";
+import { ITEM_DEFS, RELIC_DEFS, GRATTATORE_DEFS, MACELLAIO_IMPLANTS } from "../data/items.js";
 import { BIOMES } from "../data/biomes.js";
 import { CARD_TYPES, CARD_BALANCE } from "../data/cards.js";
 import { degradeNailObj, healNail } from "../utils/nail.js";
@@ -82,8 +82,8 @@ export function useNodeHandlers({
       const bossName = currentNode.bossName || "Il Broker";
       const BOSS_ENTRY = {
         "Il Broker":             { min: 200, quote: `"€${player.money}? Non sei nemmeno degno del mio tempo. Torna quando hai qualcosa da perdere — minimo €200. Arrivederci."` },
-        "Il Croupier Maledetto": { min: 300, quote: `"Il banco non gioca coi poveracci. Servono almeno €300 per sedersi a questo tavolo. Fuori dai piedi."` },
-        "Il Re dei Grattini":    { min: 500, quote: `"Un Re non degna di udienza i mendicanti. Torna con €500 nel portafoglio — o non tornare affatto."` },
+        "Il Romanaccio":         { min: 300, quote: `"Aho, co' meno de €300 manco te risponno, bello. E nun me fa' arrabbià che chiamo er taxi."` },
+        "Il Napoletano":         { min: 500, quote: `"Guagliò, cu' meno 'e €500 nun te parlo manco pe' sbaglio. Torna quanno tieni 'o ccapo."` },
         "Il Drago d'Oro":        { min: 700, quote: `"🐲 龙不见穷人. Il Drago non riceve i poveri. Porta almeno €700 o brucerai prima di entrare."` },
       };
       const entry = BOSS_ENTRY[bossName];
@@ -141,7 +141,20 @@ export function useNodeHandlers({
 
   const handleSelectCard = (idx) => {
     setSelectedCardIdx(idx);
-    const card = player.scratchCards[idx];
+    let card = player.scratchCards[idx];
+    // Impianti a vincita garantita (Anziana: sacra | Macellaio: neonato/marcione/baddie)
+    // Se attivi, rigenera la carta come vincente — il moltiplicatore del premio verrà
+    // applicato in ScratchCardView.calcPrize (vedi implantMult).
+    const activeNail = player.nails[player.activeNail];
+    const guaranteedImplants = ["sacra", "neonato", "marcione", "baddie"];
+    if (activeNail && guaranteedImplants.includes(activeNail.implant) && (activeNail.implantUses || 0) > 0 && !card.isWinner) {
+      const rebuilt = { ...generateCard(card.id, effectiveFortune, 0, true), owned: card.owned };
+      updatePlayer(p => {
+        const nc = [...p.scratchCards]; nc[idx] = rebuilt; return { ...p, scratchCards: nc };
+      });
+      card = rebuilt;
+      addLog(`${activeNail.implant === "sacra" ? "✨" : "🔮"} L'impianto garantisce la vincita su questa grattata!`, C.gold);
+    }
     setScratchingCard(card);
     setPreScratchCount(c => c + 1);
     setReturnScreen("preScratch");
@@ -295,10 +308,10 @@ export function useNodeHandlers({
         },
         {
           emoji: "👑",
-          text: "Il Re dei Grattini ti sussurra il numero vincente.\nTi svegli un istante prima di sentirlo.\nLa bocca ancora aperta.",
+          text: "'O Napoletano ti sussurra il numero vincente.\nTi svegli un istante prima di sentirlo.\nLa bocca ancora aperta.",
           effect: null,
           onConfirm: () => {
-            addLog("👑 Il Re dei Grattini ti ha sussurrato qualcosa... ma non ricordi cosa. Forse era importante.", C.magenta);
+            addLog("👑 'O Napoletano ti ha sussurrato qualcosa... ma non ricordi cosa. Forse era importante.", C.magenta);
           },
         },
         {

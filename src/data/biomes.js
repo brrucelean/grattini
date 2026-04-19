@@ -3,8 +3,8 @@ import { C } from "./theme.js";
 // ─── BIOME DEFINITIONS ──────────────────────────────────────
 export const BIOMES = [
   { id: 0, name: "Tabacchitalia Nord", boss: "Il Broker", color: C.cyan, desc: "La periferia grigia dove tutto è iniziato — e dove molti hanno finito." },
-  { id: 1, name: "Centro Slot(Unico)", boss: "Il Croupier Maledetto", color: C.magenta, desc: "Neon rotti, moquette anni '80 e debiti che non si azzerano mai." },
-  { id: 2, name: "Grattanapoli", boss: "Il Re dei Grattini", color: C.gold, desc: "La capitale assoluta del gratta e vinci. Chi arriva qui non torna uguale." },
+  { id: 1, name: "Centro Slot(Unico)", boss: "Il Romanaccio", color: C.magenta, desc: "Neon rotti, moquette anni '80, tassisti che ti fregano e debiti che non si azzerano mai." },
+  { id: 2, name: "Grattanapoli", boss: "Il Napoletano", color: C.gold, desc: "La capitale assoluta del gratta e vinci. Quattro carte in mano e 'o problema è tuo." },
   { id: 3, name: "🇨🇳 Quartiere Cinese", boss: "Il Drago d'Oro", color: "#ff3333", desc: "你好! Lanterne rosse, incenso e grattini con ideogrammi. Qui le regole sono diverse." },
 ];
 

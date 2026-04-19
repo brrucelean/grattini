@@ -966,8 +966,8 @@ export default function Grattini() {
             const bossName = currentNode.bossName || "Il Broker";
             const BOSS_ENTRY = {
               "Il Broker":             { min: 200 },
-              "Il Croupier Maledetto": { min: 300 },
-              "Il Re dei Grattini":    { min: 500 },
+              "Il Romanaccio":         { min: 300 },
+              "Il Napoletano":         { min: 500 },
               "Il Drago d'Oro":        { min: 400 },
             };
             const req = BOSS_ENTRY[bossName];
@@ -1893,7 +1893,7 @@ export default function Grattini() {
               Hai sconfitto {BIOMES[BIOMES.length-1].boss}!
             </div>
             <div style={{color:C.bright, marginBottom:"12px", fontSize:"11px"}}>
-              Hai conquistato tutti e 3 i biomi. Sei il Re dei Grattini!
+              Hai conquistato tutti e 3 i biomi. Sei il Re dei Grattini — 'o capo d'Italia!
             </div>
             <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:"5px", marginBottom:"16px", textAlign:"left", maxWidth:"380px", margin:"0 auto 16px"}}>
               {[

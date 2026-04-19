@@ -108,38 +108,38 @@ export const ENEMY_COMBAT_POOLS = {
       { name:"IPO",         effect:"money", value:120, emoji:"🏦" },
     ],
   },
-  "Il Croupier": {
+  "Il Romanaccio": {
     COMBATTIMENTO: [
-      { name:"Banco vince",  effect:"stealMoney", value:40, emoji:"🎰" },
-      { name:"Mazzata",      effect:"damageNail",  emoji:"🃏" },
-      { name:"Azzardo",      effect:"stealMoney", value:25, emoji:"🎲" },
-      { name:"Truffa",       effect:"lightDamage", emoji:"♠️" },
+      { name:"Tassametro",   effect:"stealMoney", value:40, emoji:"🚕" },
+      { name:"Manomissione", effect:"damageNail",  emoji:"🔧" },
+      { name:"Fregatura",    effect:"stealMoney", value:25, emoji:"😏" },
+      { name:"Spallata",     effect:"lightDamage", emoji:"💢" },
     ],
     DIFESA: [
-      { name:"Casa Vince",   effect:"block",  emoji:"🏛" },
-      { name:"Schermaglia",  effect:"dodge",  emoji:"🎩" },
+      { name:"A Capoccia",   effect:"block",  emoji:"🏛" },
+      { name:"Scappa in Vespa",effect:"dodge", emoji:"🛵" },
     ],
     DENARO: [
-      { name:"Jackpot",      effect:"money", value:60, emoji:"🎰" },
-      { name:"Montepremi",   effect:"money", value:90, emoji:"💎" },
-      { name:"Bonus VIP",    effect:"money", value:50, emoji:"🃏" },
-      { name:"Chip",         effect:"money", value:30, emoji:"🔴" },
+      { name:"Bar Sport",    effect:"money", value:60, emoji:"☕" },
+      { name:"Giro del Colosseo",effect:"money", value:90, emoji:"🏟" },
+      { name:"Mancia Grossa",effect:"money", value:50, emoji:"💶" },
+      { name:"Spicci",       effect:"money", value:30, emoji:"🪙" },
     ],
   },
-  "Il Re dei Grattini": {
+  "Il Napoletano": {
     COMBATTIMENTO: [
-      { name:"Scettro Reale", effect:"damageNail",  emoji:"👑" },
-      { name:"Guardie!",      effect:"lightDamage", emoji:"⚔️" },
-      { name:"Decreto",       effect:"stealMoney", value:35, emoji:"📜" },
+      { name:"'O Scippo",     effect:"damageNail",  emoji:"🗝" },
+      { name:"'A Guapparia",  effect:"lightDamage", emoji:"🔪" },
+      { name:"'O Pizzo",      effect:"stealMoney", value:35, emoji:"📜" },
     ],
     DIFESA: [
-      { name:"Manto Reale",   effect:"block",  emoji:"🛡" },
-      { name:"Araldo",        effect:"dodge",  emoji:"📣" },
+      { name:"'O Munaciello",  effect:"block",  emoji:"👻" },
+      { name:"Tarantella",     effect:"dodge",  emoji:"💃" },
     ],
     DENARO: [
-      { name:"Tesoro Reale",  effect:"money", value:70, emoji:"👑" },
-      { name:"Tributo",       effect:"money", value:50, emoji:"💎" },
-      { name:"Erario",        effect:"money", value:100, emoji:"🏛" },
+      { name:"Lotto Clandestino",effect:"money", value:70, emoji:"🎟" },
+      { name:"'A Parulana",    effect:"money", value:50, emoji:"🥖" },
+      { name:"Tesoro 'e San Gennaro",effect:"money", value:100, emoji:"💎" },
     ],
   },
   "Il Drago d'Oro": {
