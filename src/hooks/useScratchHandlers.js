@@ -1,0 +1,315 @@
+import { useState, useCallback } from "react";
+import { C, MAX_ITEMS } from "../data/theme.js";
+import { CARD_BALANCE } from "../data/cards.js";
+import { degradeNailObj } from "../utils/nail.js";
+import { rng } from "../utils/random.js";
+import { AudioEngine } from "../audio.js";
+import { generateMap } from "../utils/map.js";
+
+export function useScratchHandlers({
+  player, scratchingCard, returnScreen, currentNode, currentRow, currentBiome,
+  updatePlayer, addLog, triggerNpcComment, consumeGrattatore, unlockAchievement,
+  setGameStats, setScratchingCard, setReturnScreen, setCardSelectMode, setSelectedCardIdx,
+  setScreen, setIntroCardsLeft, setIntroPrizes, setItemFoundModal,
+  setMap, setCurrentRow, setVisitedNodes, setCurrentNode, setCurrentBiome,
+  setPlayer, isAlive,
+}) {
+  const [doppioONulla, setDoppioONulla] = useState(null);
+
+  const handleScratchDone = useCallback((result) => {
+    setGameStats(s => ({
+      ...s,
+      cardsScratched: s.cardsScratched + 1,
+      scratchWins: s.scratchWins + (result.win && result.prize > 0 ? 1 : 0),
+      scratchLosses: s.scratchLosses + (!result.win || result.prize <= 0 ? 1 : 0),
+    }));
+    // Scratcher achievement: total lifetime scratches
+    try {
+      const totalScratch = (parseInt(localStorage.getItem('grattini_totalScratches') || '0', 10)) + 1;
+      localStorage.setItem('grattini_totalScratches', String(totalScratch));
+      if (totalScratch >= 50) unlockAchievement("scratcher");
+    } catch {}
+
+    // For intro cards: capture prize, don't add to budget yet (player will choose which to keep)
+    if (returnScreen === "introScratch") {
+      const prizeAmt = result.win && result.prize > 0 ? result.prize : 0;
+      setIntroPrizes(prev => [...prev, { prize: prizeAmt, cardName: scratchingCard?.name || "Biglietto" }]);
+      if (prizeAmt > 0) { addLog(`Biglietto: €${prizeAmt} — scegli quale intascare!`, C.gold); triggerNpcComment(prizeAmt >= 5 ? "win_big" : "win_small"); }
+      else { addLog(`Nessuna vincita su questo biglietto.`, C.dim); triggerNpcComment("lose"); }
+    } else if (scratchingCard?.isContrabbando) {
+      // Contrabbando: "vince" sempre ma il premio è... schiaffi!
+      const schiaffi = Math.round(100 + rng() * 900); // 100-1000 schiaffi
+      setItemFoundModal({
+        emoji: "👋", name: `HAI VINTO ${schiaffi} SCHIAFFI!`,
+        desc: `Complimenti! Il biglietto contrabbandato era una fregatura!\n\n${schiaffi} schiaffi virtuali.\n€0 reali.\n\nLo spacciatore sta ridendo da qualche parte.`,
+        subtitle: "TRUFFATO!"
+      });
+      addLog(`👋 Contrabbando: HAI VINTO ${schiaffi} SCHIAFFI! €0 in tasca.`, C.red);
+      // Danno unghia per lo shock
+      updatePlayer(p => {
+        const nails = [...p.nails];
+        nails[p.activeNail] = degradeNailObj(nails[p.activeNail]);
+        return {...p, nails, consecutiveWins: 0};
+      });
+    } else if (result.win && result.prize > 0) {
+      const hasClipVirale = player?.clipViraleActive;
+      const isStreamerLive = returnScreen === "streamerMap";
+      // Bonus streamer in diretta: x1.5 sulla vincita base
+      const streamerMultiplied = isStreamerLive ? Math.round(result.prize * 1.5) : result.prize;
+      const basePrize = hasClipVirale ? streamerMultiplied * 2 : streamerMultiplied;
+      if (isStreamerLive) {
+        addLog(`🔥 CLIP VIRALE! La chat impazzisce! €${result.prize} → €${streamerMultiplied} (x1.5 LIVE)!`, C.gold);
+        // Aggiungi clipVirale item (moltiplicatore x2 prossima vincita) se c'è spazio
+        updatePlayer(p => p.items.length >= MAX_ITEMS ? p : ({...p, items: [...p.items, "clipVirale"]}));
+        setItemFoundModal({ emoji:"🎬", name:"Clip Virale!", desc:"La prossima vincita sarà x2! Il video è virale!", subtitle:"Streamer Scratch" });
+      }
+      if (hasClipVirale) {
+        updatePlayer(p => ({...p, clipViraleActive: false}));
+        addLog(`🎬 CLIP VIRALE! Vincita RIPRESA e x2! €${streamerMultiplied} → €${basePrize}!`, C.gold);
+        setItemFoundModal({ emoji:"🎬", name:`CLIP VIRALE! €${streamerMultiplied} → €${basePrize}!`, desc:`La tua vincita di €${streamerMultiplied} è stata RIPRESA e RADDOPPIATA!\n\n€${streamerMultiplied} × 2 = €${basePrize}`, subtitle:"Vincita x2!" });
+      }
+      updatePlayer(p => {
+        let newConsec = p.consecutiveWins + 1;
+        let isGM = p.grattaMania;
+        // Win-streak bonus: +10% prize per streak of 3
+        const streakBonus = Math.floor(newConsec / 3) * 0.1;
+        const finalPrize = streakBonus > 0 ? Math.round(basePrize * (1 + streakBonus)) : basePrize;
+        if (newConsec >= 3 && !isGM && !p._grattaManiaOffered) {
+          // Non attivare automaticamente — offri scelta al giocatore
+          setTimeout(() => {
+            setItemFoundModal({
+              emoji: "⚡", name: "GRATTAMANIA!",
+              desc: "3 vittorie di fila! Vuoi attivare GrattaMania?\n\n✅ x2 PREMI su tutto!\n❌ Ogni cella grattata danneggia 1 unghia random!",
+              subtitle: "Rischi o rinunci?",
+              choices: [
+                { label: "⚡ ACCETTA — x2 premi!", action: () => { updatePlayer(pp => ({...pp, grattaMania: true, grattaManiaTurns: 0, _grattaManiaOffered: false})); addLog("⚡ GRATTAMANIA ATTIVATA! Vincite x2!", C.red); }},
+                { label: "🚫 No grazie — reset streak", action: () => { updatePlayer(pp => ({...pp, consecutiveWins: 0, _grattaManiaOffered: false})); addLog("Hai rifiutato GrattaMania. Streak azzerata.", C.dim); }},
+              ]
+            });
+          }, 300);
+          const newMoney = p.money + finalPrize;
+          return {...p, money: newMoney, consecutiveWins: newConsec, lastWonPrize: finalPrize, _grattaManiaOffered: true};
+        }
+        if (streakBonus > 0) addLog(`🔥 Streak x${newConsec}! Bonus +${Math.round(streakBonus*100)}%`, C.gold);
+        const newMoney = p.money + finalPrize;
+        // Rico / Paperone achievements
+        if (newMoney >= 1000) unlockAchievement("paperone");
+        else if (newMoney >= 500) unlockAchievement("rico");
+        return {
+          ...p,
+          money: newMoney,
+          consecutiveWins: newConsec,
+          grattaMania: isGM,
+          lastWonPrize: finalPrize, // track for Doppio o Nulla x2
+        };
+      });
+      // Grattatore x5teleport (Moneta Cinese): teleport al Quartiere Cinese (bioma 3)
+      if (player?.equippedGrattatore?.effect === "x5teleport" && currentBiome !== 3) {
+        addLog(`🀄 MONETA CINESE! Vincita x5!`, C.gold);
+        AudioEngine.play("china");
+        setTimeout(() => {
+          setMap(generateMap(3));
+          setCurrentRow(0);
+          setVisitedNodes([]);
+          setCurrentNode(null);
+          setCurrentBiome(3);
+          addLog(`🀄 TELETRASPORTO IN CINA! 🇨🇳 你好!`, "#ff3333");
+          setItemFoundModal({ emoji: "🀄", name: "Teletrasporto in Cina! 🇨🇳", desc: "La Moneta Cinese ti ha teletrasportato nel Quartiere Cinese!\n你好! Lanterne rosse e grattini con ideogrammi.", subtitle: "你好!", buttonLabel: "进入! (Entra!) →" });
+          setScreen("map");
+        }, 500);
+      }
+      // Grattatore healAll (Gettone Autolavaggio): cura tutte dopo grattata
+      if (player?.equippedGrattatore?.effect === "healAll") {
+        updatePlayer(p => ({
+          ...p,
+          nails: p.nails.map(n => n.state !== "morta" ? {...n, state: "sana", scratchCount: 0} : n),
+          grattaMania: false, grattaManiaTurns: 0, consecutiveWins: 0,
+        }));
+        addLog("🪙 Gettone Autolavaggio! Tutte le unghie curate + GrattaMania rimossa!", C.cyan);
+      }
+      // Use base prize for stats tracking
+      setGameStats(s => ({...s, moneyEarned: s.moneyEarned + basePrize, bestPrize: Math.max(s.bestPrize || 0, basePrize)}));
+      addLog(`Hai vinto €${basePrize}! (${result.cellsScratched} celle grattate)`, C.green);
+      triggerNpcComment(basePrize >= 10 ? "win_big" : "win_small");
+    } else {
+      const isStreamerLive = returnScreen === "streamerMap";
+      // Penalità streamer: cringe in diretta → -€10 di donazioni perse dalla chat
+      const streamerPenalty = isStreamerLive ? 10 : 0;
+      updatePlayer(p => ({
+        ...p,
+        money: Math.max(0, p.money + (result.prize || 0) - streamerPenalty),
+        consecutiveWins: 0,
+      }));
+      if (result.prize < 0) addLog(`Hai perso €${Math.abs(result.prize)}!`, C.red);
+      if (isStreamerLive) addLog(`😬 Cringe totale... -€10 (donazioni perse dalla chat)`, C.red);
+      triggerNpcComment("lose");
+    }
+
+    // Apply card malus (nail damage type) — scaled by map row
+    if (result.applyNailMalus) {
+      updatePlayer(p => {
+        const nails = [...p.nails];
+        let nail = {...nails[p.activeNail]};
+        // Scale malus by progression: row 0-3: -1, row 4-6: -2, row 7+: -3
+        const baseMalus = result.malusAmount || 1;
+        const scaledMalus = currentRow <= 3 ? Math.min(baseMalus, 1) : currentRow <= 6 ? Math.min(baseMalus, 2) : baseMalus;
+        nail = degradeNailObj(nail, scaledMalus);
+        nails[p.activeNail] = nail;
+        return {...p, nails};
+      });
+      addLog("L'unghia si è danneggiata per il malus!", C.red);
+    }
+
+    // Porta-Chiavi SCRATCH-LITE: track consecutive losses, break after 3
+    if (player?.equippedGrattatore?.effect === "portaChiavi") {
+      if (result.win && result.prize > 0) {
+        updatePlayer(p => {
+          if (!p.equippedGrattatore) return p;
+          const idx = p.equippedGrattatore.inventoryIdx;
+          const grattatori = [...p.grattatori];
+          grattatori[idx] = {...grattatori[idx], consecutiveLosses: 0};
+          return {...p, grattatori, equippedGrattatore: {...p.equippedGrattatore, consecutiveLosses: 0}};
+        });
+      } else {
+        const losses = (player.equippedGrattatore.consecutiveLosses || 0) + 1;
+        if (losses >= 3) {
+          updatePlayer(p => {
+            const idx = p.equippedGrattatore.inventoryIdx;
+            const grattatori = [...p.grattatori];
+            grattatori.splice(idx, 1);
+            addLog("🔐💥 Il Porta-Chiavi SCRATCH-LITE si è ROTTO! 3 perdite di fila!", C.red);
+            setItemFoundModal({ emoji: "💥", name: "Porta-Chiavi ROTTO!", desc: "Troppi grattini perdenti di fila... il leggendario Porta-Chiavi si è spezzato!", subtitle: "Oggetto Distrutto", buttonLabel: "Merda... →" });
+            return {...p, grattatori, equippedGrattatore: null};
+          });
+          setScratchingCard(null);
+          // Skip normal grattatore consumption
+          updatePlayer(p => {
+            const idx = p.scratchCards.findIndex(c => c === scratchingCard);
+            if (idx >= 0) { const nc = [...p.scratchCards]; nc.splice(idx, 1); return {...p, scratchCards: nc}; }
+            return p;
+          });
+          setTimeout(() => {
+            setPlayer(p => {
+              if (!isAlive(p.nails)) { setScreen("gameOver"); return p; }
+              if (currentNode) setScreen("preScratch"); else setScreen("map");
+              return p;
+            });
+          }, 100);
+          return; // skip rest of handler
+        } else {
+          updatePlayer(p => {
+            if (!p.equippedGrattatore) return p;
+            const idx = p.equippedGrattatore.inventoryIdx;
+            const grattatori = [...p.grattatori];
+            grattatori[idx] = {...grattatori[idx], consecutiveLosses: losses};
+            addLog(`🔐 Porta-Chiavi: ${losses}/3 perdite consecutive...`, C.orange);
+            return {...p, grattatori, equippedGrattatore: {...p.equippedGrattatore, consecutiveLosses: losses}};
+          });
+        }
+      }
+    }
+
+    // Consume grattatore use (skip for portaChiavi which has its own logic)
+    if (player?.equippedGrattatore?.effect !== "portaChiavi") consumeGrattatore();
+
+    // Traccia la carta grattata per il Bambino Collezionista (storico)
+    if (scratchingCard && returnScreen !== "introScratch") {
+      const cardId = scratchingCard.id || scratchingCard.typeId;
+      updatePlayer(p => ({...p, grattedCards: [...(p.grattedCards||[]), {
+        typeId: cardId,
+        tier: CARD_BALANCE[cardId]?.tier || 1,
+        isWinner: result.win && result.prize > 0,
+        prize: result.prize || 0,
+        name: scratchingCard.name,
+      }]}));
+    }
+
+    setScratchingCard(null);
+
+    // Remove card from hand
+    updatePlayer(p => {
+      const idx = p.scratchCards.findIndex(c => c === scratchingCard);
+      if (idx >= 0) {
+        const newCards = [...p.scratchCards];
+        newCards.splice(idx, 1);
+        return {...p, scratchCards: newCards};
+      }
+      return p;
+    });
+
+    // Check alive from fresh state and navigate back
+    setTimeout(() => {
+      setPlayer(p => {
+        if (!isAlive(p.nails)) {
+          setScreen("gameOver");
+          return p;
+        }
+
+        // Offer Doppio o Nulla randomly on wins (not intro, not streamer-live, prize >= €2, 30% chance, not for doppioOnulla cards)
+        if (returnScreen !== "introScratch" && returnScreen !== "streamerMap" && result.win && result.prize >= 2 && Math.random() < 0.3 && scratchingCard?.mechanic !== "doppioOnulla") {
+          setDoppioONulla({ prize: result.prize });
+          setScreen("doppioONulla");
+          setReturnScreen(null);
+          return p;
+        }
+
+        if (returnScreen === "introScratch") {
+          setIntroCardsLeft(l => {
+            const next = l - 1;
+            if (next === 0) setTimeout(() => triggerNpcComment("intro_done"), 400);
+            return next;
+          });
+          setScratchingCard(null);
+          setScreen("introScratch");
+        } else if (returnScreen === "streamerMap") {
+          // Dopo la grattata in diretta si torna sulla mappa (nodo streamer consumato)
+          setCardSelectMode(false);
+          setSelectedCardIdx(null);
+          setScreen("map");
+        } else {
+          setCardSelectMode(false);
+          setSelectedCardIdx(null);
+          if (currentNode) {
+            setScreen("preScratch");
+          } else {
+            setScreen("map");
+          }
+        }
+        setReturnScreen(null);
+        return p;
+      });
+    }, 100);
+  }, [scratchingCard, returnScreen, currentNode, consumeGrattatore, updatePlayer, addLog, triggerNpcComment]);
+
+  // ─── DOPPIO O NULLA ──────────────────────────────────────────
+  const handleDoppioDecline = useCallback(() => {
+    addLog("Hai intascato la vincita. Scelta saggia!", C.green);
+    setDoppioONulla(null);
+    setCardSelectMode(false);
+    setSelectedCardIdx(null);
+    if (currentNode) setScreen("preScratch");
+    else setScreen("map");
+  }, [currentNode, addLog]);
+
+  const handleDoppioResult = useCallback((won) => {
+    if (!doppioONulla) return;
+    const prize = doppioONulla.prize;
+    if (won) {
+      updatePlayer(p => ({...p, money: p.money + prize}));
+      setGameStats(s => ({...s, moneyEarned: s.moneyEarned + prize}));
+      addLog(`🎰 DOPPIO O NULLA: HAI VINTO! +€${prize}! (totale vincita: €${prize * 2})`, C.gold);
+    } else {
+      updatePlayer(p => ({...p, money: Math.max(0, p.money - prize)}));
+      addLog(`🎰 DOPPIO O NULLA: Hai perso tutto! -€${prize}`, C.red);
+    }
+    setDoppioONulla(null);
+    setTimeout(() => {
+      setCardSelectMode(false);
+      setSelectedCardIdx(null);
+      if (currentNode) setScreen("preScratch");
+      else setScreen("map");
+    }, 1500);
+  }, [doppioONulla, currentNode, updatePlayer, addLog]);
+
+  return { doppioONulla, setDoppioONulla, handleScratchDone, handleDoppioDecline, handleDoppioResult };
+}

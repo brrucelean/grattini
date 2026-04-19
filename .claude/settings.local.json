@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//usr/local/bin/**)",
+      "Read(//usr/local/**)",
+      "Bash(mdfind \"kMDItemFSName == ''''node''''\")",
+      "Read(//Users/robertomarra/Library/Application Support/Claude/local-agent-mode-sessions/a921de6b-3f7c-4287-a889-53d1ceeba192/9ca9307c-f90f-4e91-845e-066cc6a11c3a/local_20fd5487-308e-4dd1-9626-a2b81bed9c14/**)",
+      "Bash(npx vite:*)",
+      "Bash(npm run:*)",
+      "Bash(find '/Users/robertomarra/Library/Application Support/Claude/local-agent-mode-sessions/a921de6b-3f7c-4287-a889-53d1ceeba192/9ca9307c-f90f-4e91-845e-066cc6a11c3a/local_20fd5487-308e-4dd1-9626-a2b81bed9c14/outputs' -name *.md ! -path */node_modules/*)",
+      "Bash(find '/Users/robertomarra/Library/Application Support/Claude' -path */eed04352* ! -path */node_modules/*)",
+      "Bash(find '/Users/robertomarra/Library/Application Support/Claude/local-agent-mode-sessions/a921de6b-3f7c-4287-a889-53d1ceeba192/9ca9307c-f90f-4e91-845e-066cc6a11c3a/local_20fd5487-308e-4dd1-9626-a2b81bed9c14/outputs' -name *.md -o -name CLAUDE.md -o -name MEMORY*)",
+      "Bash(python3 -c \"import sys,json; [print\\(json.dumps\\(json.loads\\(l\\), indent=2\\)\\) for l in sys.stdin]\")",
+      "Bash(python3 -c \"import sys,json; data=json.loads\\(sys.stdin.read\\(\\)\\); print\\(''''type:'''', data.get\\(''''type''''\\)\\); print\\(''''uuid:'''', data.get\\(''''uuid''''\\)\\); print\\(''''agentId:'''', data.get\\(''''agentId''''\\)\\)\")",
+      "Bash(grep -l \"Verification\\\\|hooks\\\\|Stop\\\\|stopReason\" \"/Users/robertomarra/.claude/backups/\"*.backup.*)",
+      "WebFetch(domain:www.asciiart.eu)",
+      "Skill(update-config)",
+      "Skill(update-config:*)",
+      "Bash(grep -l \"isAlive\\\\|equipGrattatore\\\\|unequipGrattatore\\\\|consumeGrattatore\\\\|handleSelectNail\\\\|getReachableNodes\" src/hooks/*.js)",
+      "Bash(wc -l src/hooks/*.js)",
+      "mcp__Claude_Preview__preview_start"
+    ]
+  }
+}

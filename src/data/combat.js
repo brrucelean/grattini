@@ -1,0 +1,183 @@
+// ─── COMBAT CARD HEIGHT ──────────────────────────────────────
+export const COMBAT_CARD_H = 150;
+export const CAT_EMOJI_MAP = { COMBATTIMENTO:"🗡️", DIFESA:"🛡", DENARO:"💰" };
+export const CAT_BG = { COMBATTIMENTO:"#1a0005", DIFESA:"#00051a", DENARO:"#1a1000" };
+
+// Pool carte base — usate dal giocatore
+export const PLAYER_COMBAT_CELLS = {
+  COMBATTIMENTO: [
+    { name:"Strappa!",    desc:"TAGLIA un'unghia — morta istantanea! 💀",           effect:"damageNail",  emoji:"✂️" },
+    { name:"Furto!",      desc:"Ruba €10 al nemico",                                effect:"stealMoney",  value:10, emoji:"💸" },
+    { name:"Schiaffo!",   desc:"Degrada 1 stato unghia avversario 🩸",              effect:"lightDamage", emoji:"🖐" },
+    // Tradeoff: alto rischio/ricompensa
+    { name:"All-in!",     desc:"+€40 MA il nemico guadagna +€15 sicuri 🎲",         effect:"allIn",       value:40, cost:15, emoji:"🎰", tradeoff:true },
+    { name:"Berserk!",    desc:"Strappa unghia nemico MA degrada la tua di 1 🩸",   effect:"berserk",     emoji:"💢", tradeoff:true },
+  ],
+  DIFESA: [
+    { name:"Scudo!",      desc:"Blocca il prossimo attacco",                        effect:"block",       emoji:"🛡" },
+    { name:"Schiva!",     desc:"Schiva tutto — nessun danno",                       effect:"dodge",       emoji:"💨" },
+    { name:"Adrenalina!", desc:"Unghie danneggiate: cura 1. Sane: +€15.",           effect:"adrenaline",  value:15, emoji:"💉" },
+    // Tradeoff: difesa costosa
+    { name:"Fortezza!",   desc:"Blocca tutto MA perdi €20 per costruirla 🏰",       effect:"fortress",    cost:20, emoji:"🏰", tradeoff:true },
+  ],
+  DENARO: [
+    { name:"+10€",        desc:"Guadagni €10",                                      effect:"money", value:10,  emoji:"💰" },
+    { name:"+20€",        desc:"Guadagni €20",                                      effect:"money", value:20,  emoji:"💰" },
+    { name:"+30€",        desc:"Guadagni €30",                                      effect:"money", value:30,  emoji:"💰" },
+    { name:"+50€",        desc:"Guadagni €50",                                      effect:"money", value:50,  emoji:"💰" },
+    // Grattino in omaggio — carta gratis trovata in combattimento
+    { name:"Grattino!",   desc:"Trovi un grattino in omaggio! 🎫",                  effect:"freeCard",        emoji:"🎫" },
+    // Tradeoff: jackpot con rischio
+    { name:"Schedina!",   desc:"50% chance: +€60. 50%: −€15 🎟",                   effect:"gamble", value:60, cost:15, emoji:"🎟", tradeoff:true },
+  ],
+};
+
+// Pool carte nemico — variano per tipo di nemico
+export const ENEMY_COMBAT_POOLS = {
+  "Ladro": {
+    COMBATTIMENTO: [
+      { name:"Borseggio",   effect:"stealMoney", value:20, emoji:"🖐" },
+      { name:"Sgambetto",   effect:"lightDamage", emoji:"👟" },
+      { name:"Coltellata",  effect:"stealMoney", value:35, emoji:"🔪" },
+    ],
+    DIFESA: [
+      { name:"Scappa!",     effect:"dodge",  emoji:"🏃" },
+      { name:"Si nasconde", effect:"block",  emoji:"🫥" },
+    ],
+    DENARO: [
+      { name:"Refurtiva",   effect:"money", value:25, emoji:"💼" },
+      { name:"Ricettazione",effect:"money", value:45, emoji:"📦" },
+    ],
+  },
+  "Mini Boss": {
+    COMBATTIMENTO: [
+      { name:"Pugno",       effect:"lightDamage", emoji:"👊" },
+      { name:"Strappa!",    effect:"damageNail",  emoji:"✂️" },
+      { name:"Schiaccia",   effect:"lightDamage", emoji:"🦶" },
+    ],
+    DIFESA: [
+      { name:"Corazza",     effect:"block",  emoji:"🛡" },
+      { name:"Resistenza",  effect:"block",  emoji:"💪" },
+    ],
+    DENARO: [
+      { name:"Bottino",     effect:"money", value:35, emoji:"💰" },
+      { name:"Trofeo",      effect:"money", value:60, emoji:"🏆" },
+    ],
+  },
+  "Sfidante": {
+    COMBATTIMENTO: [
+      { name:"Provocazione",effect:"lightDamage", emoji:"😤" },
+      { name:"Schiaffo",    effect:"lightDamage", emoji:"🖐" },
+    ],
+    DIFESA: [
+      { name:"Schiva",      effect:"dodge", emoji:"💨" },
+      { name:"Parata",      effect:"block", emoji:"🛡" },
+    ],
+    DENARO: [
+      { name:"+30€",        effect:"money", value:30, emoji:"💰" },
+      { name:"+50€",        effect:"money", value:50, emoji:"💰" },
+      { name:"+80€",        effect:"money", value:80, emoji:"💰" },
+    ],
+  },
+  "Ladro Nascosto": {
+    COMBATTIMENTO: [
+      { name:"Imboscata",   effect:"damageNail",  emoji:"🗡" },
+      { name:"Veleno",      effect:"lightDamage", emoji:"☠️" },
+    ],
+    DIFESA: [
+      { name:"Sparisce",    effect:"dodge", emoji:"🫥" },
+    ],
+    DENARO: [
+      { name:"Refurtiva",   effect:"money", value:30, emoji:"💼" },
+      { name:"Contrabbando",effect:"money", value:55, emoji:"📦" },
+    ],
+  },
+  "Il Broker": {
+    COMBATTIMENTO: [
+      { name:"Commissione", effect:"stealMoney", value:30, emoji:"📊" },
+      { name:"Margin Call", effect:"damageNail",  emoji:"📉" },
+      { name:"Shorting",    effect:"stealMoney", value:50, emoji:"🩳" },
+    ],
+    DIFESA: [
+      { name:"Hedge",       effect:"block",  emoji:"🛡" },
+      { name:"Diversifica", effect:"dodge",  emoji:"📁" },
+    ],
+    DENARO: [
+      { name:"Dividendo",   effect:"money", value:40, emoji:"💼" },
+      { name:"Bull Run",    effect:"money", value:80, emoji:"📈" },
+      { name:"IPO",         effect:"money", value:120, emoji:"🏦" },
+    ],
+  },
+  "Il Croupier": {
+    COMBATTIMENTO: [
+      { name:"Banco vince",  effect:"stealMoney", value:40, emoji:"🎰" },
+      { name:"Mazzata",      effect:"damageNail",  emoji:"🃏" },
+      { name:"Azzardo",      effect:"stealMoney", value:25, emoji:"🎲" },
+      { name:"Truffa",       effect:"lightDamage", emoji:"♠️" },
+    ],
+    DIFESA: [
+      { name:"Casa Vince",   effect:"block",  emoji:"🏛" },
+      { name:"Schermaglia",  effect:"dodge",  emoji:"🎩" },
+    ],
+    DENARO: [
+      { name:"Jackpot",      effect:"money", value:60, emoji:"🎰" },
+      { name:"Montepremi",   effect:"money", value:90, emoji:"💎" },
+      { name:"Bonus VIP",    effect:"money", value:50, emoji:"🃏" },
+      { name:"Chip",         effect:"money", value:30, emoji:"🔴" },
+    ],
+  },
+  "Il Re dei Grattini": {
+    COMBATTIMENTO: [
+      { name:"Scettro Reale", effect:"damageNail",  emoji:"👑" },
+      { name:"Guardie!",      effect:"lightDamage", emoji:"⚔️" },
+      { name:"Decreto",       effect:"stealMoney", value:35, emoji:"📜" },
+    ],
+    DIFESA: [
+      { name:"Manto Reale",   effect:"block",  emoji:"🛡" },
+      { name:"Araldo",        effect:"dodge",  emoji:"📣" },
+    ],
+    DENARO: [
+      { name:"Tesoro Reale",  effect:"money", value:70, emoji:"👑" },
+      { name:"Tributo",       effect:"money", value:50, emoji:"💎" },
+      { name:"Erario",        effect:"money", value:100, emoji:"🏛" },
+    ],
+  },
+  "Il Drago d'Oro": {
+    COMBATTIMENTO: [
+      { name:"Soffio di Fuoco",   effect:"damage", value:50,  emoji:"🔥" },
+      { name:"Artiglio del Drago",effect:"killNail",           emoji:"🐲" },
+      { name:"Tempesta di Fiamme",effect:"damage", value:35,  emoji:"☄️" },
+      { name:"Morso Velenoso",    effect:"steal",  value:40,  emoji:"🐍" },
+    ],
+    DIFESA: [
+      { name:"Scaglie d'Oro",    effect:"block",  emoji:"🛡" },
+      { name:"Nebbia d'Incenso",  effect:"dodge",  emoji:"🌫" },
+      { name:"Muro di Giada",     effect:"block",  emoji:"🟢" },
+    ],
+    DENARO: [
+      { name:"Perla del Drago",   effect:"money", value:80,  emoji:"🔮" },
+      { name:"Lingotto d'Oro",    effect:"money", value:60,  emoji:"🥇" },
+      { name:"Tesoro Imperiale",  effect:"money", value:120, emoji:"🏯" },
+      { name:"Seta Preziosa",     effect:"money", value:45,  emoji:"🧧" },
+    ],
+  },
+};
+
+// ─── TAUNTS ─────────────────────────────────────────────────
+export const TAUNTS = [
+  { text:"\"Quelle unghie fanno schifo, nemmeno mia nonna gratta così male!\"",
+    respond:"\"Le mie unghie ti STRAPPERANNO la faccia!\"",
+    rewardMoney:15, riskDamage:1, winChance:0.55 },
+  { text:"\"Hai la faccia di uno che perde sempre alla lotteria!\"",
+    respond:"\"Stavolta vinco IO, stronzo!\"",
+    rewardMoney:20, riskDamage:1, winChance:0.5 },
+  { text:"\"Scommetto che non hai neanche i soldi per un Poveraccio!\"",
+    respond:"\"Ho più soldi di quanti ne vedrai MAI!\"",
+    rewardMoney:25, riskDamage:1, winChance:0.45 },
+  { text:"\"Guarda quelle unghie... sembrano i denti di mio nonno!\"",
+    respond:"\"Queste unghie ti faranno PIANGERE!\"",
+    rewardMoney:10, riskDamage:0, winChance:0.6 },
+  { text:"\"Ancora qui? Pensavo fossi già scappato col culo tra le gambe!\"",
+    respond:"\"Io non scappo MAI! Adesso paghi!\"",
+    rewardMoney:30, riskDamage:2, winChance:0.4 },
+];
