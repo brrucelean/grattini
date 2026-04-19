@@ -5,6 +5,7 @@ import { degradeNailObj } from "../utils/nail.js";
 import { rng } from "../utils/random.js";
 import { AudioEngine } from "../audio.js";
 import { generateMap } from "../utils/map.js";
+import { STORAGE_KEYS, getStoredNumber, setStoredNumber } from "../utils/storage.js";
 
 export function useScratchHandlers({
   player, scratchingCard, returnScreen, currentNode, currentRow, currentBiome,
@@ -39,11 +40,9 @@ export function useScratchHandlers({
       scratchLosses: s.scratchLosses + (!result.win || result.prize <= 0 ? 1 : 0),
     }));
     // Scratcher achievement: total lifetime scratches
-    try {
-      const totalScratch = (parseInt(localStorage.getItem('grattini_totalScratches') || '0', 10)) + 1;
-      localStorage.setItem('grattini_totalScratches', String(totalScratch));
-      if (totalScratch >= 50) unlockAchievement("scratcher");
-    } catch {}
+    const totalScratch = getStoredNumber(STORAGE_KEYS.totalScratches, 0) + 1;
+    setStoredNumber(STORAGE_KEYS.totalScratches, totalScratch);
+    if (totalScratch >= 50) unlockAchievement("scratcher");
 
     // ─── SPRINT 2: TICK SIGARETTA / ERBA → UNGHIA NERA / POLLICE VERDE ───
     // Ogni grattata decrementa i tick. Quando il contatore raggiunge 0,

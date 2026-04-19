@@ -42,6 +42,7 @@ import { DoppioONullaView } from "./components/DoppioONullaView.jsx";
 import { ScratchCardView } from "./components/ScratchCardView.jsx";
 import { CombatCardScratch, CombatView, DEBUG_MODE, DEBUG_COMBAT, DEBUG_BIOME, DEBUG_ROW } from "./components/CombatView.jsx";
 import { CARD_VARIANTS } from "./utils/combat.js";
+import { STORAGE_KEYS, getStored, setStored, removeStored } from "./utils/storage.js";
 import { MapView } from "./components/MapView.jsx";
 import { ShopView } from "./components/ShopView.jsx";
 import { LocandaView } from "./components/LocandaView.jsx";
@@ -57,8 +58,6 @@ const hasRelic = (player, effectId) => player?.relics?.some(r => r.effect === ef
 
 
 
-// Consiglio unghia sanguinante — mostrato solo la prima volta
-let _nailAdviceShown = false;
 
 // ═══════════════════════════════════════════════════════════════
 //  MAIN GAME COMPONENT
@@ -219,7 +218,6 @@ export default function Grattini() {
     setGameStats({ nodesVisited:0, moneyEarned:0, cardsScratched:0, scratchWins:0, scratchLosses:0, moneySpent:0, combatsWon:0, combatsLost:0, nailsLost:0, dreamsHad:0, slotPlays:0, bestPrize:0, combosFired:0, _chirurgoUses:0, _broke:false });
     setFirstScratchShown(false);
     setVictoryRevealed(false);
-    _nailAdviceShown = false; // reset consiglio unghia per nuova run
     if (DEBUG_COMBAT) {
       setIntroCardsLeft(0);
       if (DEBUG_COMBAT === "boss") {
@@ -588,7 +586,7 @@ export default function Grattini() {
                   ✚ {cd.pro} &nbsp;|&nbsp; ✖ {cd.contro}
                 </div>
                 <button onClick={() => {
-                  localStorage.removeItem('grattini_cedola');
+                  removeStored(STORAGE_KEYS.cedola);
                   setActiveCedola(null);
                 }} style={{
                   background:"none", border:`1px solid ${C.red}`, color:C.red,
@@ -1827,7 +1825,7 @@ export default function Grattini() {
               <div
                 key={cedola.id}
                 onClick={() => {
-                  localStorage.setItem('grattini_cedola', JSON.stringify(cedola.id));
+                  setStored(STORAGE_KEYS.cedola, cedola.id);
                   setActiveCedola(cedola.id);
                   setPendingCedoleOffer(null);
                   setScreen("victory");
@@ -2420,7 +2418,7 @@ export default function Grattini() {
                       <button onClick={() => {
                         setEnabledRelics(prev => {
                           const next = prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id];
-                          localStorage.setItem('grattini_relics_enabled', JSON.stringify(next));
+                          setStored(STORAGE_KEYS.relicsEnabled, next);
                           return next;
                         });
                       }} style={{
@@ -2583,9 +2581,8 @@ export default function Grattini() {
             <div style={{textAlign:"center", marginTop:"16px", display:"flex", gap:"10px", justifyContent:"center"}}>
               <Btn onClick={() => setShowTrophies(false)} variant="normal" style={{fontSize:"11px"}}>Chiudi</Btn>
               <Btn onClick={() => {
-                const empty = {};
-                try { localStorage.setItem('grattini_achievements', '{}'); } catch {}
-                setAchievements(empty);
+                setStored(STORAGE_KEYS.achievements, {});
+                setAchievements({});
               }} style={{fontSize:"11px", borderColor:C.red+"88", color:C.red, opacity:0.7}}>🗑 Azzera</Btn>
             </div>
           </div>
@@ -2594,8 +2591,7 @@ export default function Grattini() {
 
       {/* ═══ ALL-TIME STATS OVERLAY ═══ */}
       {showAllTimeStats && (() => {
-        let alltime = {};
-        try { alltime = JSON.parse(localStorage.getItem('grattini_alltime') || '{}'); } catch {}
+        const alltime = getStored(STORAGE_KEYS.alltime, {});
         return (
           <div style={{
             position:"fixed", top:0, left:0, width:"100%", height:"100%",

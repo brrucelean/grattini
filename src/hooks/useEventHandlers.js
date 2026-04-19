@@ -1,7 +1,7 @@
 import { C, MAX_ITEMS } from "../data/theme.js";
 import { ITEM_DEFS, MACELLAIO_IMPLANTS, RELIC_DEFS, GRATTATORE_DEFS } from "../data/items.js";
 import { CARD_TYPES, CARD_BALANCE } from "../data/cards.js";
-import { nailStateIndex, degradeNailObj, healNail } from "../utils/nail.js";
+import { degradeNailObj, healNail, findWorstNailIdx, findWorstAliveIdx } from "../utils/nail.js";
 import { rng, roll, pick } from "../utils/random.js";
 import { generateCard } from "../utils/card.js";
 import { AudioEngine } from "../audio.js";
@@ -135,8 +135,8 @@ export function useEventHandlers({
       }
       case "implant_plastica": {
         updatePlayer(p => {
-          const nails = [...p.nails]; const worst = nails.reduce((a,n,i) =>
-            nailStateIndex(n.state) < nailStateIndex(nails[a].state) ? i : a, 0);
+          const nails = [...p.nails];
+          const worst = findWorstNailIdx(nails);
           nails[worst] = {...nails[worst], state:"sana", implant:"plastica", implantUses:3, scratchCount:0};
           return {...p, money: p.money - 10, nails};
         });
@@ -147,8 +147,8 @@ export function useEventHandlers({
       }
       case "implant_ferro": {
         updatePlayer(p => {
-          const nails = [...p.nails]; const worst = nails.reduce((a,n,i) =>
-            nailStateIndex(n.state) < nailStateIndex(nails[a].state) ? i : a, 0);
+          const nails = [...p.nails];
+          const worst = findWorstNailIdx(nails);
           nails[worst] = {...nails[worst], state:"sana", implant:"ferro", implantUses:6, scratchCount:0};
           return {...p, money: p.money - 25, nails};
         });
@@ -159,8 +159,8 @@ export function useEventHandlers({
       }
       case "implant_oro": {
         updatePlayer(p => {
-          const nails = [...p.nails]; const worst = nails.reduce((a,n,i) =>
-            nailStateIndex(n.state) < nailStateIndex(nails[a].state) ? i : a, 0);
+          const nails = [...p.nails];
+          const worst = findWorstNailIdx(nails);
           nails[worst] = {...nails[worst], state:"sana", implant:"oro", implantUses:9, scratchCount:0};
           return {...p, money: p.money - 50, nails};
         });
@@ -440,7 +440,7 @@ export function useEventHandlers({
       case "teVerde": {
         updatePlayer(p => {
           const nails = [...p.nails];
-          const worst = nails.reduce((wi, n, i) => n.state !== "morta" && nailStateIndex(n.state) < nailStateIndex(nails[wi]?.state || "kawaii") ? i : wi, 0);
+          const worst = findWorstAliveIdx(nails);
           if (nails[worst].state !== "morta") nails[worst] = {...nails[worst], state: healNail(nails[worst].state, "sana")};
           return {...p, money: p.money - 5, fortune: p.fortune + 1, fortuneTurns: 3, nails};
         });

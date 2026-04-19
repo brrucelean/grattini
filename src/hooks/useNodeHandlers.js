@@ -10,6 +10,7 @@ import { rng, roll, pick } from "../utils/random.js";
 import { generateCard } from "../utils/card.js";
 import { generateMap, generateLabirintoGrid, generateCombinaState, generateTesoroState } from "../utils/map.js";
 import { AudioEngine } from "../audio.js";
+import { STORAGE_KEYS, setStored } from "../utils/storage.js";
 
 export function useNodeHandlers({
   player, currentNode, currentBiome, currentRow,
@@ -450,7 +451,7 @@ export function useNodeHandlers({
           setDiscoveredRelics(prev => {
             if (prev.includes(relicId)) return prev;
             const next = [...prev, relicId];
-            localStorage.setItem('grattini_relics_discovered', JSON.stringify(next));
+            setStored(STORAGE_KEYS.relicsDiscovered, next);
             return next;
           });
           setTimeout(() => {

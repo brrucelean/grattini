@@ -123,6 +123,21 @@ export function healNail(state, target) {
   return tIdx > idx ? target : state;
 }
 
+// Trova l'indice dell'unghia più degradata (stato più basso nella scala)
+// Include "morta" nel confronto. Per escludere morte usa findWorstAliveIdx.
+export function findWorstNailIdx(nails) {
+  return nails.reduce((a, n, i) =>
+    nailStateIndex(n.state) < nailStateIndex(nails[a].state) ? i : a, 0);
+}
+
+// Trova l'indice dell'unghia più degradata tra quelle vive (!= morta).
+// Se tutte morte ritorna 0 (fallback sicuro per array non vuoti).
+export function findWorstAliveIdx(nails) {
+  return nails.reduce((wi, n, i) =>
+    n.state !== "morta" && nailStateIndex(n.state) < nailStateIndex(nails[wi]?.state || "kawaii")
+      ? i : wi, 0);
+}
+
 // ─── NAIL CURSOR — pixel art hand con sangue progressivo ─────
 // Genera cursore a mano pixel-art; l'unghia si riempie di sangue
 // in base allo stato: sana=pulita, graffiata=scratch, sanguinante=gocce,
