@@ -5,9 +5,9 @@ import { BIOMES } from "../data/biomes.js";
 import { Tooltip } from "./Tooltip.jsx";
 
 export function MapView({ map, currentRow, visitedNodes, onSelectNode, reachableNodes, currentBiome = 0, playerFortuna = 0 }) {
-  const W = 620;    // larghezza canvas — più largo per riempire lo spazio
-  const ROW_H = 66; // spaziatura verticale
-  const NW = 62, NH = 46; // nodi più grandi
+  const W = 760;    // larghezza canvas — più largo per riempire il 16:9
+  const ROW_H = 72; // spaziatura verticale
+  const NW = 72, NH = 52; // nodi più grandi — più leggibili
   const totalH = map.rows.length * ROW_H;
 
   // Glitter particles — stabili (non ricalcolate a ogni render)
@@ -63,35 +63,109 @@ export function MapView({ map, currentRow, visitedNodes, onSelectNode, reachable
   };
 
   const biomeColor = BIOMES[currentBiome]?.color || C.cyan;
+  const biomeName = BIOMES[currentBiome]?.name || "Tabacchitalia Nord";
+  const biomeBoss = BIOMES[currentBiome]?.boss || "Il Broker";
+  const biomeDesc = BIOMES[currentBiome]?.desc || "";
+  const totalRows = map.rows.length;
+  const progressRow = Math.min(currentRow + 1, totalRows);
+  const progressPct = (progressRow / totalRows) * 100;
+
+  // Emoji simbolo per bioma (ASCII-emblem per fascia superiore)
+  const BIOME_GLYPH = ["🏭", "🎰", "🍕", "🏮"];
+  const biomeGlyph = BIOME_GLYPH[currentBiome] || "🏭";
+
+  // Chips legenda — design Vintage/foil, più prominenti
+  const LEGEND_CHIPS = [
+    { icon:"◈", label:"PERICOLO",    color:C.red },
+    { icon:"◈", label:"SICURO",      color:C.green },
+    { icon:"⚡", label:"SCORCIATOIA", color:C.magenta },
+    { icon:"🔮", label:"SEGRETO",     color:"#cc99ff" },
+    { icon:"★", label:"ELITE",       color:C.orange },
+  ];
 
   return (
     <div style={{
       margin:"6px auto",
       overflowX:"hidden", overflowY:"auto",
       maxHeight:"calc(100vh - 110px)",
-      border:`1px solid ${biomeColor}33`,
+      border:`2px solid ${biomeColor}`,
       borderRadius:"0",
       background:"#05050f",
       position:"relative",
+      boxShadow:`0 0 24px ${biomeColor}33, inset 0 0 40px ${biomeColor}11`,
     }}>
-      {/* ── HEADER ── */}
+      {/* ── HEADER — pattern Vintage con stemma bioma + chips legenda + progress ── */}
       <div style={{
         position:"sticky", top:0, zIndex:10,
-        background:"#08081888",
-        backdropFilter:"blur(6px)",
-        padding:"6px 12px",
-        display:"flex", alignItems:"center", justifyContent:"space-between",
-        borderBottom:`1px solid ${biomeColor}33`,
+        background:`linear-gradient(180deg, ${biomeColor}14, #08081899)`,
+        backdropFilter:"blur(8px)",
+        borderBottom:`1px solid ${biomeColor}66`,
+        padding:"8px 14px 6px",
       }}>
-        <div style={{color: biomeColor, fontFamily:FONT, fontWeight:"bold", fontSize:"13px", letterSpacing:"2px", }}>
-          ⬡ {BIOMES[currentBiome]?.name || "Tabacchitalia Nord"}
+        {/* Riga top: stemma + titolo + boss */}
+        <div style={{display:"flex", alignItems:"center", justifyContent:"space-between", gap:"12px", marginBottom:"6px", position:"relative", overflow:"hidden"}}>
+          {/* Foil shimmer sul titolo */}
+          <div style={{
+            position:"absolute", inset:0, pointerEvents:"none",
+            background:`linear-gradient(110deg, transparent 30%, ${biomeColor}22 48%, ${biomeColor}55 50%, ${biomeColor}22 52%, transparent 70%)`,
+            backgroundSize:"220% 100%",
+            animation:"variantShimmer 4s linear infinite",
+            mixBlendMode:"screen",
+          }}/>
+          <div style={{display:"flex", alignItems:"center", gap:"10px", position:"relative", zIndex:2}}>
+            {/* Stemma bioma */}
+            <div style={{
+              width:"38px", height:"38px", flexShrink:0,
+              border:`2px solid ${biomeColor}`,
+              background:`radial-gradient(circle, ${biomeColor}33, ${biomeColor}08)`,
+              boxShadow:`0 0 12px ${biomeColor}88, inset 0 0 8px ${biomeColor}44`,
+              display:"flex", alignItems:"center", justifyContent:"center",
+              fontSize:"20px",
+              filter:`drop-shadow(0 0 6px ${biomeColor})`,
+            }}>{biomeGlyph}</div>
+            <div>
+              <div style={{color: biomeColor, fontFamily:FONT, fontWeight:"bold", fontSize:"16px", letterSpacing:"3px", textShadow:`0 0 10px ${biomeColor}99, 0 0 20px ${biomeColor}44`, lineHeight:1}}>
+                ⬡ {biomeName.toUpperCase()} ⬡
+              </div>
+              <div style={{color:`${biomeColor}aa`, fontSize:"8px", letterSpacing:"2px", marginTop:"3px"}}>
+                BIOMA {currentBiome + 1}/4 · BOSS: <span style={{color:C.red, fontWeight:"bold"}}>{biomeBoss.toUpperCase()}</span>
+              </div>
+            </div>
+          </div>
+          {/* Progress row → boss */}
+          <div style={{position:"relative", zIndex:2, textAlign:"right", flexShrink:0}}>
+            <div style={{color:C.dim, fontSize:"8px", letterSpacing:"2px", marginBottom:"2px"}}>
+              RIGA <span style={{color:biomeColor, fontWeight:"bold"}}>{progressRow}</span>/{totalRows}
+            </div>
+            <div style={{width:"120px", height:"5px", background:"#1a1a22", border:`1px solid ${biomeColor}44`, position:"relative"}}>
+              <div style={{
+                height:"100%", width:`${progressPct}%`,
+                background:`linear-gradient(90deg, ${biomeColor}, ${C.red})`,
+                boxShadow:`0 0 6px ${biomeColor}aa`,
+                transition:"width 0.4s",
+              }}/>
+            </div>
+            <div style={{color:C.red, fontSize:"8px", letterSpacing:"1px", marginTop:"2px", opacity:0.8}}>
+              → BOSS
+            </div>
+          </div>
         </div>
-        <div style={{display:"flex", gap:"10px", fontSize:"9px"}}>
-          <span style={{color:C.red, opacity:0.9}}>◈ Pericolo</span>
-          <span style={{color:C.green, opacity:0.9}}>◈ Sicuro</span>
-          <span style={{color:C.magenta}}>⚡ Scorciatoia</span>
-          <span style={{color:"#cc99ff"}}>🔮 Segreto</span>
-          <span style={{color:C.orange}}>★ Elite</span>
+        {/* Chips legenda */}
+        <div style={{display:"flex", gap:"6px", justifyContent:"center", flexWrap:"wrap"}}>
+          {LEGEND_CHIPS.map(chip => (
+            <span key={chip.label} style={{
+              display:"inline-flex", alignItems:"center", gap:"3px",
+              padding:"2px 7px",
+              background: `${chip.color}14`,
+              border:`1px solid ${chip.color}66`,
+              color: chip.color,
+              fontSize:"8px", letterSpacing:"1.5px", fontWeight:"bold",
+              fontFamily: FONT,
+              textShadow:`0 0 4px ${chip.color}88`,
+            }}>
+              <span>{chip.icon}</span><span>{chip.label}</span>
+            </span>
+          ))}
         </div>
       </div>
 
@@ -280,7 +354,7 @@ export function MapView({ map, currentRow, visitedNodes, onSelectNode, reachable
                 onMouseEnter={e => { if(isActive && !effectivelyHidden) e.currentTarget.style.transform="scale(1.12)"; }}
                 onMouseLeave={e => { e.currentTarget.style.transform="scale(1)"; }}
               >
-                <span style={{fontSize: isBoss ? "20px" : "15px", lineHeight:1, filter: isActive ? "drop-shadow(0 0 3px currentColor)" : "none"}}>{icon}</span>
+                <span style={{fontSize: isBoss ? "24px" : "18px", lineHeight:1, filter: isActive ? "drop-shadow(0 0 4px currentColor)" : "none"}}>{icon}</span>
 
                 {/* Badge Elite */}
                 {isElite && (
@@ -292,7 +366,7 @@ export function MapView({ map, currentRow, visitedNodes, onSelectNode, reachable
                 )}
 
                 <span style={{
-                  fontSize: isBoss ? "8px" : "7px",
+                  fontSize: isBoss ? "9px" : "8px",
                   color: visited ? C.dim
                     : isBoss ? "#ff4466"
                     : isActive && dangerNode ? "#ff6666"
