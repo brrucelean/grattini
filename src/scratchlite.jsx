@@ -433,6 +433,11 @@ export default function Grattini() {
         @keyframes titleGlitter { 0% { opacity:0; transform:scale(0.4) translateY(0); } 25% { opacity:1; transform:scale(1.3) translateY(-3px); } 60% { opacity:0.5; transform:scale(0.9) translateY(-7px); } 100% { opacity:0; transform:scale(0.3) translateY(-14px); } }
         @keyframes bossGlow { 0%,100% { box-shadow:0 0 14px #ff2244aa,0 0 28px #ff224466,0 0 2px #fff; } 50% { box-shadow:0 0 28px #ff2244ff,0 0 56px #ff224499,0 0 4px #fff; } }
         @keyframes comboPulse { 0% { transform:translateX(-50%) scale(1); box-shadow:0 0 30px #ffaa0088,0 0 60px #ffaa0044; } 100% { transform:translateX(-50%) scale(1.06); box-shadow:0 0 50px #ffaa00cc,0 0 100px #ffaa0066; } }
+        @keyframes variantReveal { 0% { transform: scale(0.7) rotate(-8deg); filter: brightness(3) saturate(2); } 40% { transform: scale(1.15) rotate(2deg); filter: brightness(2) saturate(1.8); } 70% { transform: scale(0.96) rotate(-1deg); } 100% { transform: scale(1) rotate(0); filter: brightness(1) saturate(1); } }
+        @keyframes variantShimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+        @keyframes variantPulse { 0%,100% { filter: brightness(1) saturate(1); } 50% { filter: brightness(1.35) saturate(1.4); } }
+        @keyframes variantSparkle { 0% { opacity: 0; transform: scale(0.3) rotate(0); } 40% { opacity: 1; transform: scale(1.2) rotate(120deg); } 100% { opacity: 0; transform: scale(0.4) rotate(240deg); } }
+        @keyframes oroGlint { 0%,100% { box-shadow: 0 0 36px #ffd700ff, 0 0 64px #ffaa00aa, inset 0 0 36px #ffaa0099; } 50% { box-shadow: 0 0 52px #ffee44ff, 0 0 96px #ffcc00dd, inset 0 0 48px #ffcc00cc; } }
         html, body { margin: 0; padding: 0; overflow: hidden; background: #000; }
         * { box-sizing: border-box; }
         ::-webkit-scrollbar { width: 6px; height: 0px; }
@@ -2453,56 +2458,144 @@ export default function Grattini() {
       {/* ═══ VINTAGE COLLEZIONABILI (Sprint 5) ═══ */}
       {showVintage && (
         <div style={{
-          position:"fixed", inset:0, background:"rgba(0,0,0,0.92)", zIndex:9000,
+          position:"fixed", inset:0, background:"rgba(0,0,0,0.94)", zIndex:9000,
           display:"flex", alignItems:"center", justifyContent:"center",
-          fontFamily:FONT,
+          fontFamily:FONT, padding:"16px",
         }} onClick={() => setShowVintage(false)}>
           <div style={{
             background:"#08080f", border:"2px solid #ffaa88",
-            maxWidth:"480px", width:"92vw", maxHeight:"85vh", overflowY:"auto",
-            padding:"20px",
+            maxWidth:"640px", width:"96vw", maxHeight:"92vh", overflowY:"auto",
+            padding:"18px 20px 16px",
+            boxShadow:"0 0 40px #ffaa8844, inset 0 0 40px #ffaa8811",
           }} onClick={e => e.stopPropagation()}>
-            <div style={{color:"#ffaa88", fontSize:"16px", fontWeight:"bold", letterSpacing:"3px", textAlign:"center", marginBottom:"4px"}}>
+            {/* Header */}
+            <div style={{color:"#ffaa88", fontSize:"18px", fontWeight:"bold", letterSpacing:"4px", textAlign:"center", marginBottom:"2px", textShadow:"0 0 12px #ffaa8888"}}>
               🎨 VINTAGE COLLEZIONABILI
             </div>
-            <div style={{color:C.dim, fontSize:"10px", textAlign:"center", letterSpacing:"1px", marginBottom:"16px"}}>
-              Scoperte: {vintageCollected.length}/5 — Varianti rare carte combat
+            <div style={{color:C.dim, fontSize:"10px", textAlign:"center", letterSpacing:"1px", marginBottom:"4px"}}>
+              Varianti ULTRA-rare delle carte combat
             </div>
-            <div style={{display:"flex", flexDirection:"column", gap:"8px", marginBottom:"16px"}}>
+            {/* Progress bar */}
+            <div style={{margin:"8px auto 18px", maxWidth:"360px"}}>
+              <div style={{display:"flex", justifyContent:"space-between", fontSize:"9px", color:"#ffaa88", marginBottom:"3px", letterSpacing:"1px"}}>
+                <span>COLLEZIONE</span>
+                <span>{vintageCollected.length} / 5</span>
+              </div>
+              <div style={{height:"6px", background:"#1a1a22", border:"1px solid #2a2a3a", position:"relative"}}>
+                <div style={{
+                  height:"100%", width:`${(vintageCollected.length/5)*100}%`,
+                  background:"linear-gradient(90deg, #ffaa88, #ffd700)",
+                  boxShadow:"0 0 8px #ffaa88aa",
+                  transition:"width 0.4s",
+                }} />
+              </div>
+            </div>
+            {/* Grid cards — 2 colonne su mobile, 3 su desktop, con preview stile carta combat */}
+            <div style={{
+              display:"grid",
+              gridTemplateColumns:"repeat(auto-fit, minmax(170px, 1fr))",
+              gap:"12px", marginBottom:"16px",
+            }}>
               {Object.entries(CARD_VARIANTS).map(([id, v]) => {
                 const known = vintageCollected.includes(id);
+                const rarityPct = (v.chance * 100).toFixed(1);
                 return (
                   <div key={id} style={{
-                    display:"flex", alignItems:"center", gap:"12px",
-                    background: known ? v.color+"14" : "#0d0d1a",
-                    border: `1px solid ${known ? v.color+"88" : "#1a1a2a"}`,
-                    padding:"10px 12px",
-                    opacity: known ? 1 : 0.55,
+                    background: known ? "#0d0d14" : "#0a0a10",
+                    border: `2px solid ${known ? v.color : "#252538"}`,
+                    padding:"0", position:"relative",
+                    overflow:"hidden",
                     boxShadow: known ? v.glow : "none",
+                    opacity: known ? 1 : 0.72,
+                    display:"flex", flexDirection:"column",
                   }}>
-                    <div style={{fontSize:"22px", flexShrink:0, color: known ? v.color : "#3a3a5a",
-                      filter: known ? "none" : "grayscale(1) brightness(0.5)", fontWeight:"bold",
-                      letterSpacing:"1px", minWidth:"64px", textAlign:"center",
-                      border:`1px solid ${known ? v.color : "#3a3a5a"}`, padding:"6px 4px",
+                    {/* Preview — mini "carta combat" stilizzata */}
+                    <div style={{
+                      height:"92px", position:"relative",
+                      background: known
+                        ? (id === "ORO" ? "#2a1f00"
+                          : id === "BN" ? "#1a1a1a"
+                          : id === "STRAPPATO" ? "#1a1208"
+                          : id === "FOIL" ? "#0a1428"
+                          : id === "MULTI" ? "#1f0a1a"
+                          : "#0a0a12")
+                        : "#060608",
+                      borderBottom: `1px solid ${known ? v.color+"66" : "#1a1a28"}`,
+                      display:"flex", alignItems:"center", justifyContent:"center",
+                      filter: known ? (id === "BN" ? "grayscale(100%) contrast(1.2)" : id === "STRAPPATO" ? "saturate(0.55) brightness(0.82)" : "none") : "grayscale(100%) brightness(0.4)",
+                      overflow:"hidden",
                     }}>
-                      {known ? v.label : "???"}
-                    </div>
-                    <div style={{flex:1}}>
-                      {known ? (
-                        <div style={{color: v.color, fontSize:"11px"}}>
-                          {v.desc}<br/>
-                          <span style={{color:C.dim, fontSize:"9px"}}>× val: {(v.valueMult*100).toFixed(0)}% — chance drop: {(v.chance*100).toFixed(0)}%</span>
-                        </div>
-                      ) : (
-                        <div style={{color:"#2a2a4a", fontSize:"11px"}}>Scopri questa variante in combat per sbloccarla.</div>
+                      {/* Shimmer per foil/oro/multi */}
+                      {known && (id === "FOIL" || id === "ORO" || id === "MULTI") && (
+                        <div style={{
+                          position:"absolute", inset:0, pointerEvents:"none",
+                          background:`linear-gradient(110deg, transparent 30%, ${v.color}55 48%, ${v.color}aa 50%, ${v.color}55 52%, transparent 70%)`,
+                          backgroundSize:"200% 100%",
+                          animation:"variantShimmer 2.4s linear infinite",
+                          mixBlendMode:"screen",
+                        }} />
                       )}
+                      {/* Angolo strappato */}
+                      {known && id === "STRAPPATO" && (
+                        <div style={{position:"absolute", top:0, right:0, width:0, height:0,
+                          borderTop:"22px solid #1a1208", borderLeft:"22px solid transparent", zIndex:2}} />
+                      )}
+                      {/* Emoji centrale */}
+                      <div style={{
+                        fontSize:"36px", position:"relative", zIndex:2,
+                        color: known ? v.color : "#2a2a3a",
+                        textShadow: known ? `0 0 14px ${v.color}` : "none",
+                      }}>
+                        {known ? "🃏" : "❓"}
+                      </div>
+                      {/* Sparkle */}
+                      {known && (id === "ORO" || id === "FOIL") && (
+                        <div style={{
+                          position:"absolute", top:8, right:10, fontSize:"14px",
+                          color: v.color, zIndex:3,
+                          animation:"variantSparkle 1.6s ease-in-out infinite",
+                          textShadow:`0 0 8px ${v.color}`,
+                        }}>✦</div>
+                      )}
+                    </div>
+                    {/* Badge label — grosso sotto la preview */}
+                    <div style={{
+                      background: known ? v.color : "#1a1a28",
+                      color: known ? "#000" : "#3a3a52",
+                      padding:"4px 6px", fontSize:"11px", fontWeight:"bold",
+                      letterSpacing:"2px", textAlign:"center",
+                      textShadow: known && id === "ORO" ? "0 0 4px #fff8" : "none",
+                    }}>
+                      ★ {known ? v.label : "???"} ★
+                    </div>
+                    {/* Body: desc + stats */}
+                    <div style={{padding:"8px 8px 10px", flex:1, display:"flex", flexDirection:"column", gap:"6px"}}>
+                      <div style={{
+                        color: known ? v.color : "#2a2a4a",
+                        fontSize:"10px", lineHeight:"1.35", minHeight:"28px",
+                      }}>
+                        {known ? v.desc : "Scopri questa variante gratt­ando una carta in combat."}
+                      </div>
+                      <div style={{
+                        display:"flex", justifyContent:"space-between",
+                        fontSize:"9px", color:C.dim,
+                        borderTop:`1px solid ${known ? v.color+"33" : "#1a1a28"}`,
+                        paddingTop:"5px", letterSpacing:"0.5px",
+                      }}>
+                        <span>VAL <span style={{color: known ? (v.valueMult >= 1 ? C.green : C.red) : C.dim, fontWeight:"bold"}}>
+                          ×{known ? v.valueMult.toFixed(2) : "?"}
+                        </span></span>
+                        <span>DROP <span style={{color: known ? v.color : C.dim, fontWeight:"bold"}}>
+                          {known ? rarityPct+"%" : "?"}
+                        </span></span>
+                      </div>
                     </div>
                   </div>
                 );
               })}
             </div>
-            <div style={{color:"#ffaa88", fontSize:"10px", textAlign:"center", marginBottom:"10px"}}>
-              ✦ Collezionale tutte e 5 per l'achievement "Collezionista Vintage" ✦
+            <div style={{color:"#ffaa88", fontSize:"10px", textAlign:"center", marginBottom:"10px", letterSpacing:"1px"}}>
+              ✦ Collezionale tutte e 5 per "Collezionista Vintage" ✦
             </div>
             <div style={{textAlign:"center"}}>
               <Btn onClick={() => setShowVintage(false)} style={{borderColor:"#ffaa88", color:"#ffaa88", fontSize:"11px"}}>

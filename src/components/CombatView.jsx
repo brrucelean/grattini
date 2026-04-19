@@ -200,6 +200,8 @@ export function CombatView({ enemy, player, onEnd, onNailDamage, onCellScratch, 
   // Sprint 5: Mini-boss 3-combo challenge — traccia combo distinti raggiunti
   const [minibossCombosHit, setMinibossCombosHit] = useState([]); // array di nomi combo unici
   const [minibossBonusShown, setMinibossBonusShown] = useState(false);
+  // Sprint 5: flash quando una variante rara viene rivelata
+  const [variantFlash, setVariantFlash] = useState(null); // { label, color }
   // Unghie nemico: 5 vite proprio come il giocatore
   const [enemyNails, setEnemyNails] = useState(
     Array(5).fill(null).map(() => ({ state: "sana", scratchCount: 0 }))
@@ -1303,7 +1305,7 @@ export function CombatView({ enemy, player, onEnd, onNailDamage, onCellScratch, 
               const exhausted = !isScratched && scratchedHandIdxs.length >= 3;
               const col = catColors[cell.category] || C.dim;
               if (isScratched) {
-                // Sprint 5: variant visual overlay
+                // Sprint 5: variant visual overlay — DRAMATICO, le varianti sono rarissime
                 const vKey = cell.variant;
                 const v = vKey ? CARD_VARIANTS[vKey] : null;
                 const variantBorder = v ? v.color : col;
@@ -1311,13 +1313,22 @@ export function CombatView({ enemy, player, onEnd, onNailDamage, onCellScratch, 
                   ? "#1a1a1a"
                   : vKey === "ORO" ? "#2a1f00"
                   : vKey === "STRAPPATO" ? "#1a1208"
+                  : vKey === "FOIL" ? "#0a1428"
+                  : vKey === "MULTI" ? "#1f0a1a"
                   : CAT_BG[cell.category] || "#0a0a12";
                 const variantFilter = vKey === "BN" ? "grayscale(100%) contrast(1.2)"
-                  : vKey === "STRAPPATO" ? "saturate(0.5) brightness(0.85)"
+                  : vKey === "STRAPPATO" ? "saturate(0.55) brightness(0.82)"
+                  : "none";
+                // Animazione per ciascuna variante — tutte pulsano/brillano, si notano subito
+                const variantAnim = vKey === "ORO" ? "oroGlint 1.4s ease-in-out infinite, variantReveal 0.6s ease-out"
+                  : vKey === "FOIL" ? "variantPulse 1.4s ease-in-out infinite, variantReveal 0.6s ease-out"
+                  : vKey === "MULTI" ? "variantPulse 1.2s ease-in-out infinite, variantReveal 0.6s ease-out"
+                  : vKey === "BN" ? "variantReveal 0.6s ease-out"
+                  : vKey === "STRAPPATO" ? "variantReveal 0.6s ease-out"
                   : "none";
                 return (
                   <div key={i} style={{
-                    border:`2px solid ${variantBorder}`,
+                    border:`${v ? 3 : 2}px solid ${variantBorder}`,
                     borderRadius:"0",
                     background: variantBg,
                     textAlign:"center",
@@ -1329,7 +1340,8 @@ export function CombatView({ enemy, player, onEnd, onNailDamage, onCellScratch, 
                     padding:"6px 6px",
                     position:"relative",
                     filter: variantFilter,
-                    animation: vKey === "FOIL" || vKey === "MULTI" ? "pulse 1.6s ease-in-out infinite" : "none",
+                    animation: variantAnim,
+                    zIndex: v ? 3 : 1,
                   }}>
                     {/* Barra categoria in alto */}
                     <div style={{
@@ -1337,37 +1349,73 @@ export function CombatView({ enemy, player, onEnd, onNailDamage, onCellScratch, 
                       background:col+"22", borderBottom:`1px solid ${col}44`,
                       padding:"2px 0", fontSize:"8px", fontWeight:"bold",
                       color:col, letterSpacing:"1.5px", textTransform:"uppercase",
+                      zIndex: 2,
                     }}>
                       {CAT_EMOJI_MAP[cell.category]} {cell.category}
                     </div>
-                    {/* Variant badge in basso a destra */}
+                    {/* Shimmer iridescente per FOIL/ORO/MULTI — striscia diagonale che scorre */}
+                    {(vKey === "FOIL" || vKey === "ORO" || vKey === "MULTI") && (
+                      <div style={{
+                        position:"absolute", inset:0, pointerEvents:"none",
+                        background: `linear-gradient(110deg, transparent 30%, ${v.color}55 48%, ${v.color}aa 50%, ${v.color}55 52%, transparent 70%)`,
+                        backgroundSize: "200% 100%",
+                        animation: "variantShimmer 2.4s linear infinite",
+                        mixBlendMode: "screen",
+                        zIndex: 1,
+                      }} />
+                    )}
+                    {/* Variant badge grosso in basso — molto più visibile */}
                     {v && (
                       <div style={{
-                        position:"absolute", bottom:2, right:3,
-                        background: v.color+"22", border:`1px solid ${v.color}88`,
-                        padding:"1px 4px", fontSize:"8px", fontWeight:"bold",
-                        color: v.color, letterSpacing:"1px",
+                        position:"absolute", bottom:-1, left:-1, right:-1,
+                        background: v.color,
+                        color: vKey === "BN" || vKey === "FOIL" ? "#000" : "#000",
+                        padding:"2px 4px", fontSize:"10px", fontWeight:"bold",
+                        letterSpacing:"2px", textAlign:"center",
+                        boxShadow: `0 -2px 8px ${v.color}88`,
+                        zIndex: 4,
+                        textShadow: vKey === "ORO" ? "0 0 4px #fff8" : "none",
                       }}>
-                        {v.label}
+                        ★ {v.label} ★
                       </div>
+                    )}
+                    {/* Sparkle in alto a destra per i "positivi" */}
+                    {(vKey === "ORO" || vKey === "FOIL") && (
+                      <>
+                        <div style={{
+                          position:"absolute", top:14, right:6, fontSize:"14px",
+                          color: v.color, zIndex:5,
+                          animation: "variantSparkle 1.6s ease-in-out infinite",
+                          textShadow: `0 0 8px ${v.color}`,
+                        }}>✦</div>
+                        <div style={{
+                          position:"absolute", bottom:22, left:6, fontSize:"10px",
+                          color: v.color, zIndex:5,
+                          animation: "variantSparkle 1.8s ease-in-out infinite 0.4s",
+                          textShadow: `0 0 6px ${v.color}`,
+                        }}>✧</div>
+                      </>
                     )}
                     {/* Strappo visivo — angolo rotto per STRAPPATO */}
                     {vKey === "STRAPPATO" && (
                       <div style={{
                         position:"absolute", top:0, right:0,
                         width:0, height:0,
-                        borderTop:`20px solid #1a1208`,
-                        borderLeft:`20px solid transparent`,
+                        borderTop:`24px solid #1a1208`,
+                        borderLeft:`24px solid transparent`,
                         zIndex:2,
                       }} />
                     )}
-                    <div style={{fontSize:"30px", lineHeight:1, marginTop:"14px"}}>{cell.emoji}</div>
+                    <div style={{fontSize:"30px", lineHeight:1, marginTop:"14px", position:"relative", zIndex:2,
+                      textShadow: v ? `0 0 12px ${v.color}` : "none",
+                    }}>{cell.emoji}</div>
                     <div style={{
-                      fontSize:"11px", color:C.bright, fontWeight:"bold",
-                      lineHeight:"1.2",
+                      fontSize:"11px", color: v ? v.color : C.bright, fontWeight:"bold",
+                      lineHeight:"1.2", position:"relative", zIndex:2,
+                      textShadow: v ? `0 0 4px ${v.color}66` : "none",
                     }}>{cell.name}</div>
                     {cell.desc && (
-                      <div style={{fontSize:"9px", color:C.text, lineHeight:"1.3", opacity:0.8}}>
+                      <div style={{fontSize:"9px", color:C.text, lineHeight:"1.3", opacity:0.8, position:"relative", zIndex:2}}>
                         {cell.desc}
                       </div>
                     )}
@@ -1382,7 +1430,16 @@ export function CombatView({ enemy, player, onEnd, onNailDamage, onCellScratch, 
                     setScratchedHandIdxs(prev => [...prev, i]);
                     onCellScratch?.(false); // ogni carta grattata consuma 1 punto unghia
                     // Sprint 5: traccia varianti scoperte → Vintage Collezionabili
-                    if (cell.variant && onVariantRevealed) onVariantRevealed(cell.variant);
+                    if (cell.variant && onVariantRevealed) {
+                      onVariantRevealed(cell.variant);
+                      // Feedback audio + flash per variante rara
+                      try { AudioEngine.win(); } catch(e) {}
+                      const vInfo = CARD_VARIANTS[cell.variant];
+                      if (vInfo) {
+                        setVariantFlash({ label: vInfo.label, color: vInfo.color });
+                        setTimeout(() => setVariantFlash(null), 1600);
+                      }
+                    }
                   }}
                 />
               );
@@ -1925,6 +1982,37 @@ export function CombatView({ enemy, player, onEnd, onNailDamage, onCellScratch, 
           </div>
           <div style={{color:C.dim, fontSize:"9px", marginTop:"4px"}}>
             👥 {player?.streamerFollowers || 0} follower
+          </div>
+        </div>
+      )}
+
+      {/* ✦ VARIANT REVEAL FLASH ✦ — quando una variante rara appare */}
+      {variantFlash && (
+        <div style={{
+          position:"absolute", top:"40%", left:"50%",
+          transform:"translate(-50%, -50%)",
+          zIndex: 9999, pointerEvents:"none",
+          textAlign:"center",
+          animation: "variantReveal 0.5s ease-out",
+        }}>
+          <div style={{
+            fontSize:"10px", color: variantFlash.color,
+            letterSpacing:"4px", fontWeight:"bold",
+            textShadow: `0 0 10px ${variantFlash.color}, 0 0 24px ${variantFlash.color}88`,
+            marginBottom:"8px",
+          }}>
+            ✦ VARIANTE RARA ✦
+          </div>
+          <div style={{
+            fontSize:"42px", color: variantFlash.color,
+            letterSpacing:"6px", fontWeight:"bold",
+            textShadow: `0 0 16px ${variantFlash.color}, 0 0 40px ${variantFlash.color}bb, 0 0 80px ${variantFlash.color}66`,
+            padding:"12px 28px",
+            border: `3px solid ${variantFlash.color}`,
+            background: `${variantFlash.color}11`,
+            animation: "variantPulse 0.5s ease-in-out infinite",
+          }}>
+            ★ {variantFlash.label} ★
           </div>
         </div>
       )}
