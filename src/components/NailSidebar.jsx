@@ -1,9 +1,16 @@
 import { useState } from "react";
 import { C, FONT } from "../data/theme.js";
 import { NAIL_INFO, NAIL_ORDER } from "../data/nails.js";
-import { GRATTATORE_DEFS, ALL_IMPLANTS_META } from "../data/items.js";
+import { GRATTATORE_DEFS, ALL_IMPLANTS_META, CHIRURGO_IMPLANT_IDS } from "../data/items.js";
 import { makeNailCursor, NAIL_CURSOR, getNailVisual } from "../utils/nail.js";
 import { Tooltip } from "./Tooltip.jsx";
+
+// Chirurgo implants: slot totali e colore per tipo
+const CHIRURGO_SLOTS = {
+  plastica: { max: 2, color: "#44ddee", label: "PLASTICA" },
+  ferro:    { max: 4, color: "#c0c0d0", label: "FERRO" },
+  oro:      { max: 5, color: "#ffd700", label: "ORO" },
+};
 
 export function NailSidebar({ nails, activeNail, onSelectNail, locked=false, grattatori=[], equippedGrattatore=null, onEquipGrattatore=null }) {
   // Alive tiers in order worst→best (excluding morta)
@@ -64,10 +71,15 @@ export function NailSidebar({ nails, activeNail, onSelectNail, locked=false, gra
               }}>🔒</div>
             )}
             {(() => {
-              const tipLines = [
-                `${info.label} — x${(NAIL_INFO[n.state]?.mult||0).toFixed(1)} premio`,
-                `HP: ${aliveTiers}/5 tier · ${3 - dmgFilled}/3 grattate rimaste`,
-              ];
+              const chirurgo = !isDead && CHIRURGO_IMPLANT_IDS.has(n.implant) ? CHIRURGO_SLOTS[n.implant] : null;
+              const tipLines = [];
+              if (chirurgo) {
+                tipLines.push(`${chirurgo.label} — ${n.implantUses}/${chirurgo.max} slot rimasti`);
+                tipLines.push(`Non sanguina — si spezza a slot 0.`);
+              } else {
+                tipLines.push(`${info.label} — x${(NAIL_INFO[n.state]?.mult||0).toFixed(1)} premio`);
+                tipLines.push(`HP: ${aliveTiers}/5 tier · ${3 - dmgFilled}/3 grattate rimaste`);
+              }
               if (n.cremaHP > 0) tipLines.push(`🧴 Crema: ${n.cremaHP} colpi extra`);
               if (n.smalto > 0) tipLines.push(`💅 Smalto: ${n.smalto} colpi protetti`);
               if (n.implant) {
@@ -86,51 +98,78 @@ export function NailSidebar({ nails, activeNail, onSelectNail, locked=false, gra
                     </span>
                     <span style={{flex:1, minWidth:0}}>
                       <span style={{display:"flex", alignItems:"center", gap:"4px"}}>
-                        <span style={{color: isActive ? col : col+"88", fontSize:"9px", fontWeight: isActive ? "bold" : "normal", whiteSpace:"nowrap"}}>{info.label}</span>
+                        <span style={{color: isActive ? col : col+"88", fontSize:"9px", fontWeight: isActive ? "bold" : "normal", whiteSpace:"nowrap"}}>
+                          {chirurgo ? chirurgo.label : info.label}
+                        </span>
                       </span>
-                      {/* HP tier pips */}
-                      <span style={{display:"flex", gap:"2px", marginTop:"3px", alignItems:"center"}}>
-                        {TIER_ORDER.map((tier, ti) => {
-                          const filled = ti < aliveTiers;
-                          const pipCol = filled ? TIER_COLORS[tier] : "#222";
-                          return (
-                            <span key={ti} style={{
-                              display:"inline-block", width:"9px", height:"5px",
-                              background: filled ? pipCol : "#111",
-                              border: `1px solid ${filled ? pipCol+"aa" : "#2a2a2a"}`,
-                              boxShadow: filled && isActive ? `0 0 4px ${pipCol}88` : "none",
-                              flexShrink:0,
-                            }}/>
-                          );
-                        })}
-                        {/* CremaHP white pips (extra buffer beyond kawaii) */}
-                        {Array(n.cremaHP||0).fill(0).map((_,ci) => (
-                          <span key={"c"+ci} style={{
-                            display:"inline-block", width:"9px", height:"5px",
-                            background:"#ffffff",
-                            border:"1px solid #aaaaaa",
-                            boxShadow: isActive ? "0 0 4px #ffffff88" : "none",
-                            flexShrink:0,
-                          }}/>
-                        ))}
-                      </span>
-                      {/* Scratch damage ticks */}
-                      {!isDead && (
-                        <span style={{display:"flex", gap:"2px", marginTop:"2px", alignItems:"center"}}>
-                          {[0,1,2].map(t => {
-                            const remaining = 3 - dmgFilled;
-                            const filled = t < remaining;
+                      {chirurgo ? (
+                        // ─── CHIRURGO: slot fissi (2/4/5) colorati, niente bleeding ───
+                        <span style={{display:"flex", gap:"3px", marginTop:"4px", alignItems:"center", flexWrap:"wrap"}}>
+                          {Array(chirurgo.max).fill(0).map((_, si) => {
+                            const filled = si < (n.implantUses || 0);
                             return (
-                              <span key={t} style={{
-                                display:"inline-block", width:"9px", height:"3px",
-                                background: filled ? col+"cc" : "#111",
-                                border: `1px solid ${filled ? col+"55" : "#222"}`,
+                              <span key={si} style={{
+                                display:"inline-block",
+                                width: chirurgo.max === 2 ? "14px" : chirurgo.max === 4 ? "11px" : "9px",
+                                height: "8px",
+                                background: filled ? chirurgo.color : "#111",
+                                border: `1px solid ${filled ? chirurgo.color : "#2a2a2a"}`,
+                                boxShadow: filled && isActive ? `0 0 6px ${chirurgo.color}cc, inset 0 0 3px #fff3` : filled ? `0 0 3px ${chirurgo.color}66` : "none",
                                 flexShrink:0,
                               }}/>
                             );
                           })}
-                          <span style={{color:C.dim, fontSize:"7px", marginLeft:"2px", opacity:0.6}}>{3 - dmgFilled}/3</span>
+                          <span style={{color: chirurgo.color+"aa", fontSize:"7px", marginLeft:"2px", letterSpacing:"0.5px"}}>
+                            {n.implantUses || 0}/{chirurgo.max}
+                          </span>
                         </span>
+                      ) : (
+                        <>
+                          {/* HP tier pips */}
+                          <span style={{display:"flex", gap:"2px", marginTop:"3px", alignItems:"center"}}>
+                            {TIER_ORDER.map((tier, ti) => {
+                              const filled = ti < aliveTiers;
+                              const pipCol = filled ? TIER_COLORS[tier] : "#222";
+                              return (
+                                <span key={ti} style={{
+                                  display:"inline-block", width:"9px", height:"5px",
+                                  background: filled ? pipCol : "#111",
+                                  border: `1px solid ${filled ? pipCol+"aa" : "#2a2a2a"}`,
+                                  boxShadow: filled && isActive ? `0 0 4px ${pipCol}88` : "none",
+                                  flexShrink:0,
+                                }}/>
+                              );
+                            })}
+                            {/* CremaHP white pips (extra buffer beyond kawaii) */}
+                            {Array(n.cremaHP||0).fill(0).map((_,ci) => (
+                              <span key={"c"+ci} style={{
+                                display:"inline-block", width:"9px", height:"5px",
+                                background:"#ffffff",
+                                border:"1px solid #aaaaaa",
+                                boxShadow: isActive ? "0 0 4px #ffffff88" : "none",
+                                flexShrink:0,
+                              }}/>
+                            ))}
+                          </span>
+                          {/* Scratch damage ticks */}
+                          {!isDead && (
+                            <span style={{display:"flex", gap:"2px", marginTop:"2px", alignItems:"center"}}>
+                              {[0,1,2].map(t => {
+                                const remaining = 3 - dmgFilled;
+                                const filled = t < remaining;
+                                return (
+                                  <span key={t} style={{
+                                    display:"inline-block", width:"9px", height:"3px",
+                                    background: filled ? col+"cc" : "#111",
+                                    border: `1px solid ${filled ? col+"55" : "#222"}`,
+                                    flexShrink:0,
+                                  }}/>
+                                );
+                              })}
+                              <span style={{color:C.dim, fontSize:"7px", marginLeft:"2px", opacity:0.6}}>{3 - dmgFilled}/3</span>
+                            </span>
+                          )}
+                        </>
                       )}
                       {n.smalto > 0 && <span style={{display:"block", color:C.magenta, fontSize:"8px", marginTop:"1px"}}>💅×{n.smalto}</span>}
                     </span>

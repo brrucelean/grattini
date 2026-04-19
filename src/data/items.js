@@ -42,11 +42,17 @@ export const ANZIANA_IMPLANTS = [
 ];
 
 // ─── IMPIANTI CHIRURGO OSCURO (già esistenti) ────────────────
+// Unghie artificiali: NON sanguinano, non degradano. Hanno slot fissi;
+// a esaurimento slot l'unghia si spezza (muore).
 export const CHIRURGO_OSCURO_IMPLANTS = [
-  { id:"plastica", name:"Unghia di Plastica", emoji:"🧪", cost:10, desc:"3 grattate al 50% del premio.", rarity:"comune", uses:3, prizeMult:0.5 },
-  { id:"ferro",    name:"Unghia di Ferro",    emoji:"⚙️", cost:25, desc:"6 grattate al 100% del premio. Attira ladri.", rarity:"media", uses:6, prizeMult:1.0 },
-  { id:"oro",      name:"Unghia d'Oro",       emoji:"🥇", cost:50, desc:"9 grattate al 150% del premio. ALTO PERICOLO LADRI.", rarity:"rara", uses:9, prizeMult:1.5 },
+  { id:"plastica", name:"Unghia di Plastica", emoji:"🧪", cost:10, desc:"2 grattate al 50% del premio. Non sanguina.", rarity:"comune", uses:2, prizeMult:0.5 },
+  { id:"ferro",    name:"Unghia di Ferro",    emoji:"⚙️", cost:25, desc:"4 grattate al 100% del premio. Non sanguina. Attira ladri.", rarity:"media", uses:4, prizeMult:1.0 },
+  { id:"oro",      name:"Unghia d'Oro",       emoji:"🥇", cost:50, desc:"5 grattate al 150% del premio. Non sanguina. ALTO PERICOLO LADRI.", rarity:"rara", uses:5, prizeMult:1.5 },
 ];
+
+// Set di id degli impianti "artificiali" del chirurgo — non sanguinano,
+// hanno slot fissi e si spezzano a esaurimento.
+export const CHIRURGO_IMPLANT_IDS = new Set(["plastica", "ferro", "oro"]);
 
 // Meta unificata per il lookup nel sidebar/tooltip
 export const ALL_IMPLANTS_META = [

@@ -74,10 +74,17 @@ export function useScratchHandlers({
       }
     }
 
-    // ─── IMPIANTI A USI LIMITATI (Anziana: sacra | Macellaio: neonato/marcione/baddie) ───
-    // Consuma 1 uso per grattata. A esaurimento: sacra torna "sana"; gli altri muoiono.
+    // ─── IMPIANTI A USI LIMITATI ─────────────────────────────────
+    // Anziana (sacra): a esaurimento torna "sana".
+    // Macellaio (neonato/marcione/baddie): a esaurimento muore.
+    // Chirurgo (plastica/ferro/oro): NON sanguinano ma hanno slot fissi —
+    //   ogni grattata consuma 1 slot; a 0 slot si spezzano (morta).
     {
-      const IMPLANT_ON_EXHAUST = { sacra: "sana", neonato: "morta", marcione: "morta", baddie: "morta" };
+      const IMPLANT_ON_EXHAUST = {
+        sacra: "sana",
+        neonato: "morta", marcione: "morta", baddie: "morta",
+        plastica: "morta", ferro: "morta", oro: "morta",
+      };
       const active = player?.activeNail ?? 0;
       const nail = player?.nails?.[active];
       if (nail && IMPLANT_ON_EXHAUST[nail.implant] && (nail.implantUses || 0) > 0) {
@@ -89,10 +96,13 @@ export function useScratchHandlers({
             const exhaustState = IMPLANT_ON_EXHAUST[n.implant];
             const implName = n.implant;
             n.implant = null; n.implantUses = 0; n.state = exhaustState; n.scratchCount = 0;
+            const isChirurgo = implName === "plastica" || implName === "ferro" || implName === "oro";
             addLog(
               exhaustState === "sana"
                 ? `✨ L'Unghia Sacra si è consumata. L'unghia torna Sana.`
-                : `💀 L'impianto "${implName}" è esaurito — l'unghia muore.`,
+                : isChirurgo
+                  ? `💥 L'unghia di ${implName} si è spezzata! Slot esauriti.`
+                  : `💀 L'impianto "${implName}" è esaurito — l'unghia muore.`,
               exhaustState === "sana" ? C.gold : C.red
             );
           }

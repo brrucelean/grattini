@@ -1,6 +1,10 @@
 import { C, FONT } from "../data/theme.js";
 import { NAIL_INFO, NAIL_ORDER } from "../data/nails.js";
+import { CHIRURGO_IMPLANT_IDS } from "../data/items.js";
 import { getNailVisual } from "../utils/nail.js";
+
+// Slot totali per impianto chirurgo (deve matchare NailSidebar)
+const CHIRURGO_SLOT_MAX = { plastica: 2, ferro: 4, oro: 5 };
 
 export function NailDisplay({ nails, activeNail, compact=false, onSelectNail=null }) {
   if (compact) {
@@ -14,15 +18,18 @@ export function NailDisplay({ nails, activeNail, compact=false, onSelectNail=nul
           const isDead = n.state === "morta";
           const isActive = i === activeNail;
           const hasImplant = !!n.implant && (n.implantUses || 0) > 0;
+          const isChirurgo = hasImplant && CHIRURGO_IMPLANT_IDS.has(n.implant);
           // Colore dietro la batteria: prossimo stato peggiore, ma nero se marcia (ultima prima di morta)
           const nextIdx = NAIL_ORDER.indexOf(n.state) - 1;
           const nextColor = (isDead || n.state === "marcia" || nextIdx < 0)
             ? "#000"
             : NAIL_INFO[NAIL_ORDER[nextIdx]].color + "cc";
-          // Percentuale rimanente (1.0 = piena, 0.0 = sta per degradare)
-          const fillPct = isDead ? 0 : (THRESHOLD - n.scratchCount) / THRESHOLD;
+          // Percentuale rimanente: per chirurgo usa implantUses/max, altrimenti scratchCount
+          const fillPct = isDead ? 0
+            : isChirurgo ? (n.implantUses || 0) / (CHIRURGO_SLOT_MAX[n.implant] || 1)
+            : (THRESHOLD - n.scratchCount) / THRESHOLD;
           const hasSmalto = n.smalto && n.smalto > 0;
-          const title = `${info.label}${hasImplant ? ` + ${n.implant.toUpperCase()}` : ""}${!isDead ? ` (${n.scratchCount}/${THRESHOLD})` : ""}${hasSmalto ? ` 💅×${n.smalto}` : ""}`;
+          const title = `${isChirurgo ? n.implant.toUpperCase() : info.label}${hasImplant && !isChirurgo ? ` + ${n.implant.toUpperCase()}` : ""}${isChirurgo ? ` (${n.implantUses}/${CHIRURGO_SLOT_MAX[n.implant]} slot)` : !isDead ? ` (${n.scratchCount}/${THRESHOLD})` : ""}${hasSmalto ? ` 💅×${n.smalto}` : ""}`;
           return (
             <span key={i} title={title}
               style={{
@@ -66,6 +73,7 @@ export function NailDisplay({ nails, activeNail, compact=false, onSelectNail=nul
         const isDead = n.state === "morta";
         const canSwitch = onSelectNail && !isDead && !isActive;
         const hasImplant = !!n.implant && (n.implantUses || 0) > 0;
+        const isChirurgo = hasImplant && CHIRURGO_IMPLANT_IDS.has(n.implant);
         const cardBg = isDead ? "#0f0f18"
           : visual?.bg ? visual.bg
           : isActive ? col + "18" : "#0f0f18";
@@ -92,11 +100,13 @@ export function NailDisplay({ nails, activeNail, compact=false, onSelectNail=nul
               fontSize:"18px",
               filter: !isDead && visual?.glow && visual.glow !== "none" ? `drop-shadow(0 0 4px ${col})` : "none",
             }}>{visual?.emoji || "🖐"}</div>
-            <div style={{color: isActive ? col : isDead ? "#555" : col + "aa", fontSize:"10px", fontWeight: isActive ? "bold" : "normal"}}>{info.label}</div>
-            <div style={{color: isActive ? col + "cc" : C.dim, fontSize:"9px"}}>
-              {!isDead ? `${n.scratchCount}/3` : "---"}
+            <div style={{color: isActive ? col : isDead ? "#555" : col + "aa", fontSize:"10px", fontWeight: isActive ? "bold" : "normal"}}>
+              {isChirurgo ? n.implant.toUpperCase() : info.label}
             </div>
-            {hasImplant && <div style={{color: col, fontSize:"9px", fontWeight:"bold", letterSpacing:"0.5px"}}>{n.implant.toUpperCase()}</div>}
+            <div style={{color: isActive ? col + "cc" : C.dim, fontSize:"9px"}}>
+              {isDead ? "---" : isChirurgo ? `${n.implantUses}/${CHIRURGO_SLOT_MAX[n.implant]} slot` : `${n.scratchCount}/3`}
+            </div>
+            {hasImplant && !isChirurgo && <div style={{color: col, fontSize:"9px", fontWeight:"bold", letterSpacing:"0.5px"}}>{n.implant.toUpperCase()}</div>}
             {n.smalto > 0 && <div style={{color: C.magenta, fontSize:"9px", }}>💅×{n.smalto}</div>}
             {isActive && <div style={{color: col, fontSize:"9px", }}>▲ ATTIVA</div>}
             {canSwitch && <div style={{color: col + "88", fontSize:"9px"}}>↑ usa</div>}

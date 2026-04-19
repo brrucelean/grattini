@@ -1,6 +1,13 @@
 import { NAIL_ORDER, NAIL_INFO } from "../data/nails.js";
+import { CHIRURGO_IMPLANT_IDS } from "../data/items.js";
 
 export function nailStateIndex(state) { return NAIL_ORDER.indexOf(state); }
+
+// True se l'unghia ha un impianto del chirurgo (plastica/ferro/oro) ancora attivo
+// — questi impianti NON sanguinano, non degradano, hanno slot fissi (implantUses).
+export function hasChirurgoImplant(nail) {
+  return !!nail && CHIRURGO_IMPLANT_IDS.has(nail.implant) && (nail.implantUses || 0) > 0;
+}
 
 // ─── NAIL VISUAL THEMES ──────────────────────────────────────
 // Ogni impianto sovrascrive l'aspetto dell'unghia (emoji, colore,
@@ -75,6 +82,12 @@ export function degradeNail(state, amount=1) {
 export function degradeNailObj(nail, amount=1) {
   const newNail = {...nail};
   let dmg = amount;
+  // Impianti chirurgo (plastica/ferro/oro): NON sanguinano — ignorano completamente
+  // il danno da grattata. Gli slot vengono consumati separatamente per-carta nel
+  // flusso di useScratchHandlers (implantUses → morta a esaurimento).
+  if (CHIRURGO_IMPLANT_IDS.has(newNail.implant) && (newNail.implantUses || 0) > 0) {
+    return newNail;
+  }
   // CremaHP assorbe danni extra (cella bianca oltre kawaii)
   if (newNail.cremaHP && newNail.cremaHP > 0) {
     const absorbed = Math.min(newNail.cremaHP, dmg);

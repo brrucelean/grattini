@@ -137,11 +137,11 @@ export function useEventHandlers({
         updatePlayer(p => {
           const nails = [...p.nails];
           const worst = findWorstNailIdx(nails);
-          nails[worst] = {...nails[worst], state:"sana", implant:"plastica", implantUses:3, scratchCount:0};
+          nails[worst] = {...nails[worst], state:"sana", implant:"plastica", implantUses:2, scratchCount:0};
           return {...p, money: p.money - 10, nails};
         });
         setGameStats(s => { const n = (s._chirurgoUses || 0) + 1; if (n >= 3) unlockAchievement("surgeon"); return {...s, _chirurgoUses: n}; });
-        addLog("Unghia di Plastica impiantata! 3 grattate, 50% premio.", C.cyan);
+        addLog("Unghia di Plastica impiantata! 2 slot, 50% premio. Non sanguina.", C.cyan);
         setScreen("map");
         break;
       }
@@ -149,11 +149,11 @@ export function useEventHandlers({
         updatePlayer(p => {
           const nails = [...p.nails];
           const worst = findWorstNailIdx(nails);
-          nails[worst] = {...nails[worst], state:"sana", implant:"ferro", implantUses:6, scratchCount:0};
+          nails[worst] = {...nails[worst], state:"sana", implant:"ferro", implantUses:4, scratchCount:0};
           return {...p, money: p.money - 25, nails};
         });
         setGameStats(s => { const n = (s._chirurgoUses || 0) + 1; if (n >= 3) unlockAchievement("surgeon"); return {...s, _chirurgoUses: n}; });
-        addLog("Unghia di Ferro impiantata! 6 grattate, 100% premio. Attira ladri!", C.cyan);
+        addLog("Unghia di Ferro impiantata! 4 slot, 100% premio. Non sanguina. Attira ladri!", C.cyan);
         setScreen("map");
         break;
       }
@@ -161,11 +161,11 @@ export function useEventHandlers({
         updatePlayer(p => {
           const nails = [...p.nails];
           const worst = findWorstNailIdx(nails);
-          nails[worst] = {...nails[worst], state:"sana", implant:"oro", implantUses:9, scratchCount:0};
+          nails[worst] = {...nails[worst], state:"sana", implant:"oro", implantUses:5, scratchCount:0};
           return {...p, money: p.money - 50, nails};
         });
         setGameStats(s => { const n = (s._chirurgoUses || 0) + 1; if (n >= 3) unlockAchievement("surgeon"); return {...s, _chirurgoUses: n}; });
-        addLog("Unghia d'Oro impiantata! 9 grattate, 150% premio. ALTO PERICOLO LADRI!", C.gold);
+        addLog("Unghia d'Oro impiantata! 5 slot, 150% premio. Non sanguina. ALTO PERICOLO LADRI!", C.gold);
         setScreen("map");
         break;
       }
