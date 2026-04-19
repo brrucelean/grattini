@@ -4,7 +4,7 @@ import { ITEM_DEFS, GRATTATORE_DEFS } from "../data/items.js";
 import { generateCard } from "../utils/card.js";
 import { hasRelic } from "../utils/hasRelic.js";
 
-export function useShopHandlers({ player, updatePlayer, addLog, setGameStats, setCardSelectMode, setScreen, effectiveFortune, unlockAchievement }) {
+export function useShopHandlers({ player, updatePlayer, addLog, setGameStats, setCardSelectMode, setScreen, effectiveFortune, unlockAchievement, setItemFoundModal }) {
   const handleBuyCard = (cardId) => {
     const type = CARD_TYPES.find(t => t.id === cardId);
     if (!type || player.money < type.cost) return;
@@ -13,6 +13,11 @@ export function useShopHandlers({ player, updatePlayer, addLog, setGameStats, se
     updatePlayer(p => ({...p, money: p.money - type.cost, scratchCards: [...p.scratchCards, card]}));
     setGameStats(s => ({...s, moneySpent: (s.moneySpent || 0) + type.cost}));
     addLog(`Comprato: ${type.name} (€${type.cost})`, C.green);
+    if (setItemFoundModal) setItemFoundModal({
+      emoji: "🎟️", name: type.name,
+      desc: `${type.desc}\nCosto: €${type.cost} · Max vincita: €${type.maxPrize}`,
+      subtitle: "Acquistato dal Tabaccaio",
+    });
   };
 
   const handleBuyItem = (itemId) => {
@@ -31,6 +36,11 @@ export function useShopHandlers({ player, updatePlayer, addLog, setGameStats, se
     updatePlayer(p => ({...p, money: p.money - finalCost, items: [...p.items, itemId]}));
     setGameStats(s => ({...s, moneySpent: (s.moneySpent || 0) + finalCost}));
     addLog(`Comprato: ${item.emoji} ${item.name} (€${finalCost}${discount>0?` [-${Math.round(discount*100)}%]`:""})`, C.green);
+    if (setItemFoundModal) setItemFoundModal({
+      emoji: item.emoji, name: item.name,
+      desc: `${item.desc}\nPagato €${finalCost}${discount>0?` (sconto -${Math.round(discount*100)}%)`:""}.`,
+      subtitle: "Acquistato dal Tabaccaio",
+    });
   };
 
   const handleBuyGrattatore = (gratId) => {
@@ -39,6 +49,11 @@ export function useShopHandlers({ player, updatePlayer, addLog, setGameStats, se
     const newGrat = { id: gratId, name: def.name, emoji: def.emoji, effect: def.effect, value: def.value, usesLeft: def.maxUses };
     updatePlayer(p => ({...p, money: p.money - def.cost, grattatori: [...p.grattatori, newGrat]}));
     addLog(`Comprato grattatore: ${def.emoji} ${def.name} (€${def.cost})`, C.cyan);
+    if (setItemFoundModal) setItemFoundModal({
+      emoji: def.emoji, name: def.name,
+      desc: `${def.desc}\nPagato €${def.cost}.`,
+      subtitle: "Grattatore acquistato",
+    });
   };
 
   const handleSlotResult = ({ type, amount, isTriple7 }) => {

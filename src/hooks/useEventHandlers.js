@@ -143,6 +143,14 @@ export function useEventHandlers({
           return {...p, nails, grattatori:[...p.grattatori, newGrat]};
         });
         addLog("🦴 Hai pagato con un'unghia. Il Mendicante ti consegna il Bottone Magico.", C.cyan);
+        {
+          const def = GRATTATORE_DEFS["bottone"];
+          setItemFoundModal({
+            emoji: def.emoji, name: def.name,
+            desc: `${def.desc}\nPagato con un'unghia al Mendicante.`,
+            subtitle: "Baratto completato",
+          });
+        }
         setScreen("map"); break;
       }
       case "buyGrat_bottone":
@@ -154,6 +162,11 @@ export function useEventHandlers({
           const newGrat = { id: gratId, name: def.name, emoji: def.emoji, effect: def.effect, value: def.value, usesLeft: def.maxUses };
           updatePlayer(p => ({...p, money: p.money - def.cost, grattatori: [...p.grattatori, newGrat]}));
           addLog(`Comprato grattatore: ${def.emoji} ${def.name}!`, C.cyan);
+          setItemFoundModal({
+            emoji: def.emoji, name: def.name,
+            desc: `${def.desc}\nPagato €${def.cost}.`,
+            subtitle: "Grattatore acquistato",
+          });
         }
         setScreen("map");
         break;
