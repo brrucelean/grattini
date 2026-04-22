@@ -1895,7 +1895,7 @@ export default function Grattini() {
             ...S.pre, color:C.red, fontSize:"14px", marginBottom:"10px",
             border:`3px solid ${C.red}`, padding:"18px 28px",
             display:"inline-block", lineHeight:"1.3",
-            boxShadow:"none",
+            boxShadow:`0 0 32px ${C.red}aa, inset 0 0 24px ${C.red}22`,
           }}>{`
  ██████╗  █████╗ ██╗   ██╗
 ██╔════╝ ██╔══██╗╚██╗ ██╔╝
@@ -2104,7 +2104,7 @@ export default function Grattini() {
             background:C.card, border:`2px solid ${C.gold}`,
             borderRadius:"0", padding:"32px 40px",
             textAlign:"center", maxWidth:"340px", width:"90%",
-            boxShadow:"none",
+            boxShadow:`0 0 34px ${C.gold}66, inset 0 0 30px ${C.gold}14`,
             fontFamily:FONT,
           }}>
             <div style={{color:C.gold, fontSize:"11px", letterSpacing:"3px", marginBottom:"6px"}}>
@@ -2306,11 +2306,12 @@ export default function Grattini() {
           background:"rgba(0,0,0,0.85)", zIndex:99999,
           display:"flex", alignItems:"center", justifyContent:"center",
         }}>
+          {(() => { const smokeCol = smokeChoiceModal.itemType === "sigarettaErba" ? C.green : "#aaaaaa"; return (
           <div style={{
-            background:"#0d0d0d", border:`2px solid ${smokeChoiceModal.itemType === "sigarettaErba" ? C.green : "#888"}`,
+            background:"#0d0d0d", border:`2px solid ${smokeCol}`,
             borderRadius:"0", padding:"28px 36px",
             textAlign:"center", maxWidth:"320px", width:"90%",
-            fontFamily:FONT, boxShadow:"none",
+            fontFamily:FONT, boxShadow:`0 0 28px ${smokeCol}55, inset 0 0 22px ${smokeCol}14`,
           }}>
             <div style={{fontSize:"48px", marginBottom:"8px"}}>
               {smokeChoiceModal.itemType === "sigarettaErba" ? "🌿" : "🚬"}
@@ -2339,6 +2340,7 @@ export default function Grattini() {
               </Btn>
             </div>
           </div>
+          ); })()}
         </div>
       )}
 
@@ -2462,7 +2464,7 @@ export default function Grattini() {
             background:"#050510", border:`2px solid #3a2a6a`,
             borderRadius:"0", padding:"36px 44px",
             textAlign:"center", maxWidth:"360px", width:"90%",
-            boxShadow:"none",
+            boxShadow:"0 0 40px #5a3a9877, inset 0 0 40px #3a2a6a22",
           }}>
             <div style={{color:"#7a5ab8", fontSize:"11px", letterSpacing:"4px", marginBottom:"10px"}}>
               ✦ SOGNO... ✦
@@ -2824,7 +2826,7 @@ export default function Grattini() {
           background:"#0d0d1a", border:`2px solid ${C.gold}`,
           borderRadius:"0", padding:"10px 14px", maxWidth:"220px",
           animation:"achievementSlide 0.4s ease-out",
-          boxShadow:"none",
+          boxShadow:`0 0 24px ${C.gold}88, 0 6px 16px #000c, inset 0 0 18px ${C.gold}18`,
           fontFamily: FONT,
         }}>
           <div style={{color:C.gold, fontSize:"11px", fontWeight:"bold", marginBottom:"2px"}}>🏆 ACHIEVEMENT SBLOCCATO!</div>

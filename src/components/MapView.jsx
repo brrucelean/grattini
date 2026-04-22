@@ -358,11 +358,11 @@ export function MapView({ map, currentRow, visitedNodes, onSelectNode, reachable
 
                 {/* Badge Elite */}
                 {isElite && (
-                  <span style={{position:"absolute", top:-6, right:-6, fontSize:"9px", background:C.orange, color:"#000", borderRadius:"0", width:"14px", height:"14px", display:"flex", alignItems:"center", justifyContent:"center", fontWeight:"bold", boxShadow:"none"}}>★</span>
+                  <span style={{position:"absolute", top:-6, right:-6, fontSize:"9px", background:C.orange, color:"#000", borderRadius:"0", width:"14px", height:"14px", display:"flex", alignItems:"center", justifyContent:"center", fontWeight:"bold", boxShadow:`0 0 6px ${C.orange}cc, 0 0 12px ${C.orange}55`}}>★</span>
                 )}
                 {/* Badge Shortcut */}
                 {isShortcutNode && (
-                  <span style={{position:"absolute", top:-6, left:-6, fontSize:"9px", background:C.magenta, color:"#fff", borderRadius:"0", width:"14px", height:"14px", display:"flex", alignItems:"center", justifyContent:"center", boxShadow:"none"}}>⚡</span>
+                  <span style={{position:"absolute", top:-6, left:-6, fontSize:"9px", background:C.magenta, color:"#fff", borderRadius:"0", width:"14px", height:"14px", display:"flex", alignItems:"center", justifyContent:"center", boxShadow:`0 0 6px ${C.magenta}cc, 0 0 12px ${C.magenta}55`}}>⚡</span>
                 )}
 
                 <span style={{

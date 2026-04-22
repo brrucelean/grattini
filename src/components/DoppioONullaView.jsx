@@ -110,9 +110,9 @@ export function DoppioONullaView({ prize, onDecline, onResult }) {
         width: "160px", height: "120px",
         margin: "0 auto 16px auto",
         border: `2px solid ${C.gold}`,
-        borderRadius: "8px",
+        borderRadius: "0",
         overflow: "hidden",
-        boxShadow:"none",
+        boxShadow:`0 0 22px ${C.gold}66, inset 0 0 18px ${C.gold}14`,
         background: C.card,
       }}>
         {/* Result underneath — hidden until revealed to prevent spoiler */}

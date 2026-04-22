@@ -956,9 +956,9 @@ export function ScratchCardView({ card, onDone, nailState, nailImplant=null, for
           border:`1px solid ${C.gold}88`, background:"#1a1200",
           textAlign:"center",
           animation:"pulse 0.6s infinite",
-          boxShadow:"none",
+          boxShadow:`0 0 18px ${C.gold}aa, 0 0 44px ${C.gold}44, inset 0 0 12px ${C.gold}22`,
         }}>
-          <span style={{color:C.gold, fontSize:"13px", fontWeight:"bold"}}>
+          <span style={{color:C.gold, fontSize:"13px", fontWeight:"bold", textShadow:`0 0 6px ${C.gold}88`}}>
             ✨ QUASI VINCITA! Manca solo 1 simbolo! ✨
           </span>
         </div>

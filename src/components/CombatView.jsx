@@ -1138,7 +1138,6 @@ export function CombatView({ enemy, player, onEnd, onNailDamage, onCellScratch, 
           borderRadius:"0",
           padding:"10px 28px",
           textAlign:"center",
-          boxShadow:"none",
           animation:"comboPulse 0.4s ease-in-out infinite alternate",
         }}>
           <div style={{
