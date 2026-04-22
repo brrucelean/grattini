@@ -6,6 +6,21 @@ import { S } from "../utils/styles.js";
 import { Btn } from "./Btn.jsx";
 import { Tooltip } from "./Tooltip.jsx";
 
+// ─── Vintage corner brackets (come MapView/ScratchCardView) ────────────
+function cornerBrackets(color, size = 12, inset = -2, borderW = 2, shadow = null) {
+  const sh = shadow || `0 0 6px ${color}66`;
+  const base = {
+    position:"absolute", width:`${size}px`, height:`${size}px`,
+    borderColor: color, boxShadow: sh, pointerEvents:"none",
+  };
+  return {
+    tl: {...base, top:inset, left:inset, borderTop:`${borderW}px solid ${color}`, borderLeft:`${borderW}px solid ${color}`},
+    tr: {...base, top:inset, right:inset, borderTop:`${borderW}px solid ${color}`, borderRight:`${borderW}px solid ${color}`},
+    bl: {...base, bottom:inset, left:inset, borderBottom:`${borderW}px solid ${color}`, borderLeft:`${borderW}px solid ${color}`},
+    br: {...base, bottom:inset, right:inset, borderBottom:`${borderW}px solid ${color}`, borderRight:`${borderW}px solid ${color}`},
+  };
+}
+
 export function EventView({ node, player, onChoice }) {
   // Variante evento: ogni variante ha testo E scelte coerenti
   const eventoVariant = useRef((() => {
@@ -401,28 +416,54 @@ export function EventView({ node, player, onChoice }) {
     } catch {}
   }, [typedChars]);
 
+  // ─── Vintage brackets: outer panel (pal[0]), portrait (pal[2]), dialog (pal[1]) ───
+  const panelCorners = cornerBrackets(pal[0], 14, -3, 2, `0 0 8px ${pal[0]}88`);
+  const portraitCorners = cornerBrackets(pal[2], 9, -2, 1, `0 0 4px ${pal[2]}66`);
+  const dialogCorners = cornerBrackets(pal[1], 9, -2, 1, `0 0 4px ${pal[1]}66`);
+
   return (
-    <div style={{...S.panel, maxWidth:"900px", margin:"10px auto", padding:"16px"}}>
-      {/* Title bar */}
-      <div style={{
-        border:`2px solid ${pal[0]}`, padding:"4px 12px", marginBottom:"12px",
-        background:"#000000", textAlign:"center",
-      }}>
-        <span style={{color:pal[0], fontSize:"14px", fontWeight:"bold", letterSpacing:"2px"}}>
-          {ev.title}
-        </span>
+    <div style={{
+      ...S.panel, maxWidth:"900px", margin:"10px auto", padding:"18px 20px",
+      position:"relative",
+      boxShadow:`0 0 18px ${pal[0]}33, inset 0 0 24px #00000088`,
+    }}>
+      {/* Corner brackets outer panel */}
+      <span style={panelCorners.tl} /><span style={panelCorners.tr} />
+      <span style={panelCorners.bl} /><span style={panelCorners.br} />
+
+      {/* ─── Vintage title bar: solid badge + neon title ─── */}
+      <div style={{textAlign:"center", marginBottom:"14px"}}>
+        <div style={{
+          display:"inline-block", background:pal[0], color:"#000",
+          padding:"3px 14px", fontSize:"10px", fontWeight:"bold",
+          letterSpacing:"3px", fontFamily:FONT,
+          boxShadow:`0 0 8px ${pal[0]}88`,
+          marginBottom:"6px",
+        }}>
+          ★ EVENTO ★
+        </div>
+        <div style={{
+          color:pal[0], fontSize:"16px", fontWeight:"bold",
+          letterSpacing:"2px", fontFamily:FONT,
+          textShadow:`0 0 8px ${pal[0]}, 0 0 14px ${pal[0]}66`,
+        }}>
+          ⬡ {ev.title} ⬡
+        </div>
       </div>
 
       {/* 2-column layout: portrait left, dialog right */}
-      <div style={{display:"flex", gap:"12px", alignItems:"flex-start", justifyContent:"center"}}>
+      <div style={{display:"flex", gap:"16px", alignItems:"flex-start", justifyContent:"center"}}>
         {/* Portrait — multicolore se disponibile */}
         {bigArt && (
-          <div style={{flexShrink:0, width:"190px"}}>
+          <div style={{flexShrink:0, width:"200px", position:"relative"}}>
+            <span style={portraitCorners.tl} /><span style={portraitCorners.tr} />
+            <span style={portraitCorners.bl} /><span style={portraitCorners.br} />
             <pre style={{
               ...S.pre, fontSize:"8px", lineHeight:"1.15",
-              border:`1px solid ${pal[2]}44`, padding:"4px 6px",
+              border:`1px solid ${pal[2]}55`, padding:"8px 8px",
               background:"#000000", whiteSpace:"pre", overflow:"hidden",
-              boxShadow:`0 0 12px ${pal[0]}22`,
+              boxShadow:`inset 0 0 18px ${pal[0]}22`,
+              margin:0,
             }}>
               {SPR_COLOR[node.type]
                 ? SPR_COLOR[node.type].map((row, i) => (
@@ -441,41 +482,77 @@ export function EventView({ node, player, onChoice }) {
                   })
               }
             </pre>
+            {/* Nameplate sotto il ritratto */}
+            <div style={{
+              marginTop:"6px", textAlign:"center",
+              fontSize:"9px", color:pal[2], letterSpacing:"2px",
+              fontFamily:FONT, opacity:0.85,
+            }}>
+              ─ RITRATTO ─
+            </div>
           </div>
         )}
 
         {/* Dialog + choices */}
-        <div style={{flex:1, minWidth:0, maxWidth:"460px"}}>
-          {/* Dialog text with typing */}
-          <div style={{
-            border:`2px solid ${pal[1]}`, padding:"10px 12px",
-            background:"#000000", marginBottom:"12px",
-            minHeight:"60px", cursor:"pointer",
-          }} onClick={() => { if (!typingDone) setTypedChars(fullText.length); }}>
-            <div style={{color:C.text, fontSize:"12px", lineHeight:"1.6", fontStyle:"italic"}}>
-              {fullText.slice(0, typedChars)}
-              {!typingDone && <span style={{color:pal[0], animation:"blink 0.5s infinite"}}>▌</span>}
-            </div>
-            {!typingDone && (
-              <div style={{color:C.dim, fontSize:"9px", marginTop:"6px"}}>
-                [click per completare]
+        <div style={{flex:1, minWidth:0, maxWidth:"480px"}}>
+          {/* Dialog blockquote con typing */}
+          <div style={{position:"relative", marginBottom:"14px"}}>
+            <span style={dialogCorners.tl} /><span style={dialogCorners.tr} />
+            <span style={dialogCorners.bl} /><span style={dialogCorners.br} />
+            <div style={{
+              border:`1px solid ${pal[1]}66`, padding:"12px 14px",
+              background:"#000000",
+              minHeight:"70px", cursor:"pointer",
+              boxShadow:`inset 0 0 16px ${pal[1]}11`,
+            }} onClick={() => { if (!typingDone) setTypedChars(fullText.length); }}>
+              {/* Apri virgolette ornamentali */}
+              <div style={{
+                color:pal[1], fontSize:"18px", lineHeight:"0.8",
+                opacity:0.7, marginBottom:"2px",
+              }}>❝</div>
+              <div style={{
+                color:C.text, fontSize:"12px", lineHeight:"1.65",
+                fontStyle:"italic", padding:"0 6px",
+              }}>
+                {fullText.slice(0, typedChars)}
+                {!typingDone && <span style={{color:pal[0], animation:"blink 0.5s infinite"}}>▌</span>}
               </div>
-            )}
+              {/* Chiudi virgolette quando typing è completo */}
+              {typingDone && (
+                <div style={{
+                  color:pal[1], fontSize:"18px", lineHeight:"0.8",
+                  opacity:0.7, textAlign:"right", marginTop:"2px",
+                }}>❞</div>
+              )}
+              {!typingDone && (
+                <div style={{color:C.dim, fontSize:"9px", marginTop:"8px", textAlign:"right"}}>
+                  [click per completare]
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Choices — shown only when typing is done */}
           {typingDone && (
-            <div style={{display:"flex", flexDirection:"column", gap:"6px"}}>
-              {ev.choices.map((ch, i) => (
-                <Tooltip key={i} text={ch.tooltip || ""}>
-                  <Btn onClick={() => onChoice(ch.action)}
-                    disabled={ch.condition === false}
-                    variant={ch.action === "fight" ? "danger" : ch.action === "leave" ? "normal" : "gold"}
-                    style={{fontSize:"11px", padding:"6px 10px", width:"100%", textAlign:"left"}}>
-                    [{i+1}] {ch.label}
-                  </Btn>
-                </Tooltip>
-              ))}
+            <div>
+              <div style={{
+                fontSize:"9px", color:pal[2], letterSpacing:"2px",
+                fontFamily:FONT, marginBottom:"6px", opacity:0.85,
+              }}>
+                ─ SCELTE ─
+              </div>
+              <div style={{display:"flex", flexDirection:"column", gap:"6px"}}>
+                {ev.choices.map((ch, i) => (
+                  <Tooltip key={i} text={ch.tooltip || ""}>
+                    <Btn onClick={() => onChoice(ch.action)}
+                      disabled={ch.condition === false}
+                      variant={ch.action === "fight" ? "danger" : ch.action === "leave" ? "normal" : "gold"}
+                      style={{fontSize:"11px", padding:"6px 10px", width:"100%", textAlign:"left"}}>
+                      [{i+1}] {ch.label}
+                    </Btn>
+                  </Tooltip>
+                ))}
+              </div>
             </div>
           )}
         </div>
