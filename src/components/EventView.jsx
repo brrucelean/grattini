@@ -335,10 +335,9 @@ export function EventView({ node, player, onChoice }) {
       const hasGuanto = (player.grattatori || []).some(g => g.id === "guantoBoss");
       return {
         title: "🧤 Il Guantaio",
-        art: `  ╭──╮\n  │🧤│\n  │◐ │\n  ╰┬─╯\n  /│\\\n   ✋`,
         text: hasGuanto
           ? "\"Hai già il mio pezzo migliore. Usalo bene contro il boss — non ne faccio altri fino al prossimo bioma.\""
-          : "\"Signore... le mani sono strumenti. E gli strumenti vanno protetti. Ho un pezzo raro — il GUANTO DA BOSS. Fatto con pelle di unghia marcia ingrassata. Protegge da TUTTI i danni fisici nel prossimo combattimento.\"",
+          : "\"Signore... le mani sono strumenti. E gli strumenti vanno protetti. Ho un pezzo raro — il GUANTO DA BOSS. Fatto con pelle di unghia marcia ingrassata. SOLO CONTRO IL BOSS: copre TUTTE le dita per l'intera fight. A fine battaglia si sgretola — e tu passi al bioma successivo.\"",
         choices: hasGuanto
           ? [{ label: "Grazie, torno dopo aver grattato", action: "leave" }]
           : [

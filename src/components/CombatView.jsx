@@ -177,7 +177,11 @@ export function CombatView({ enemy, player, onEnd, onNailDamage, onCellScratch, 
   const [playerCells, setPlayerCells] = useState([]);
   const [enemyCells, setEnemyCells] = useState([]);
   const [enemyCard, setEnemyCard] = useState(null);
-  const walletBonus = Math.min(Math.floor(playerWallet * 0.3), 150);
+  // Wallet bonus: il player porta in combat una % del wallet. Nei boss è più generoso
+  // (40% cap €250) per compensare il round extra e le carte DENARO alte del boss.
+  const walletBonus = enemy.isBoss
+    ? Math.min(Math.floor(playerWallet * 0.40), 250)
+    : Math.min(Math.floor(playerWallet * 0.30), 150);
   const [playerMoney, setPlayerMoney] = useState(walletBonus);
   const [enemyMoney, setEnemyMoney] = useState(0);
   const [revealSeq, setRevealSeq] = useState([]); // [{flipSide:"player"|"enemy", flipIdx:n, entries:[{text,color,pTotal,eTotal}]}]
@@ -233,8 +237,10 @@ export function CombatView({ enemy, player, onEnd, onNailDamage, onCellScratch, 
 
   // Premi pieni in combattimento — il rischio è già perdere soldi e danni alle unghie
   const moneyMult = 1;
-  // Moltiplicatore posta: ogni round la posta aumenta
-  const roundMult = 1 + (round - 1) * 0.4; // round1=1.0, round2=1.4, round3=1.8
+  // Moltiplicatore posta: ogni round la posta aumenta, ma CAP a 1.8 per evitare
+  // che al round 4 (boss-only) i valori nemici esplodano (es. IPO €120 × 2.2 = €264).
+  // Ora: round1=1.0, round2=1.4, round3=1.8, round4=1.8 (stesso di round 3).
+  const roundMult = Math.min(1.8, 1 + (round - 1) * 0.4);
   const catColors = { COMBATTIMENTO: C.red, DIFESA: C.blue, DENARO: C.gold };
   const enemyIcon = enemy.isBoss ? "👹" : enemy.isMiniboss ? "💀" : "🗡️";
 
@@ -419,7 +425,10 @@ export function CombatView({ enemy, player, onEnd, onNailDamage, onCellScratch, 
 
     // Difesa giocatore — pre-calcolata, usata come reazione agli attacchi
     const playerHasFullBlock = pCells.some(c => c.effect === "block" || c.effect === "fortress");
-    const hasGuantoBoss = player.guantoBossActive === true || player.equippedGrattatore?.effect === "bossShield";
+    // Guanto da BOSS: vale SOLO contro il boss (non miniboss, non ladri, non spacciatori).
+    // Copre tutte le unghie per l'intera fight; si sgretola a fine combattimento (gestito in handleCombatEnd).
+    const isBossFight = enemy?.isBoss === true;
+    const hasGuantoBoss = isBossFight && (player.guantoBossActive === true || player.equippedGrattatore?.effect === "bossShield");
     let dodgesLeft = pCells.filter(c => c.effect === "dodge").length;
     const blockCard = pCells.find(c => c.effect === "block" || c.effect === "fortress");
 
@@ -1436,7 +1445,7 @@ export function CombatView({ enemy, player, onEnd, onNailDamage, onCellScratch, 
                   nailState={activeNailState}
                   onRevealed={() => {
                     setScratchedHandIdxs(prev => [...prev, i]);
-                    onCellScratch?.(false); // ogni carta grattata consuma 1 punto unghia
+                    onCellScratch?.(false); // se grattatore equipaggiato: assorbe danno e consuma 1 uso; altrimenti unghia attiva prende 1 punto
                     // Sprint 5: traccia varianti scoperte → Vintage Collezionabili
                     if (cell.variant && onVariantRevealed) {
                       onVariantRevealed(cell.variant);
@@ -1769,29 +1778,108 @@ export function CombatView({ enemy, player, onEnd, onNailDamage, onCellScratch, 
             {/* Bottone continua — solo quando tutto risolto */}
             {allDone && (
               phase === "end" ? (
-                <div style={{textAlign:"center"}}>
-                  <div style={{
-                    color: won ? C.green : C.red, fontSize:"22px", fontWeight:"bold", marginBottom:"6px",
-                    textShadow:"none",
-                    animation: "pulse 0.5s ease-in-out",
-                  }}>
-                    {won ? "🏆 HAI VINTO!" : "💀 HAI PERSO!"}
-                  </div>
-                  <div style={{color:C.dim, fontSize:"11px", marginBottom:"8px"}}>
-                    {won ? `€${playerMoney} vs €${enemyMoney} — vittoria!` : `€${playerMoney} vs €${enemyMoney} — sconfitta.`}
-                  </div>
-                  <div style={{
-                    color: won ? C.green : C.red, fontSize:"11px", fontWeight:"bold", marginBottom:"12px",
-                    padding:"5px 10px", borderRadius:"0",
-                    background: won ? "#001a00" : "#1a0000",
-                    border:`1px solid ${won ? C.green : C.red}44`,
-                  }}>
-                    {won ? "✨ Unghia nemica presa — una tua torna in vita!" : "💀 Ti strappano un'unghia — una muore."}
-                  </div>
-                  <Btn variant={won ? "gold" : "danger"} onClick={finish} style={{fontSize:"14px", padding:"10px 24px"}}>
-                    {won ? "💰 Incassa il bottino" : "😔 Subisci le conseguenze"}
-                  </Btn>
-                </div>
+                (() => {
+                  const resultColor = won ? C.green : C.red;
+                  return (
+                    <div style={{
+                      textAlign: "center",
+                      maxWidth: "420px", margin: "0 auto",
+                      background: won
+                        ? `linear-gradient(180deg, #001208 0%, #05050b 100%)`
+                        : `linear-gradient(180deg, #180000 0%, #05050b 100%)`,
+                      border: `2px solid ${resultColor}`,
+                      boxShadow: `0 0 22px ${resultColor}66, inset 0 0 22px ${resultColor}14`,
+                      padding: "16px 18px",
+                      position: "relative",
+                    }}>
+                      {/* Sparkles ai lati (solo vittoria) */}
+                      {won && (
+                        <>
+                          <div style={{
+                            position: "absolute", top: "8px", right: "12px", fontSize: "14px", color: C.gold,
+                            animation: "variantSparkle 1.8s ease-in-out infinite",
+                          }}>✦</div>
+                          <div style={{
+                            position: "absolute", top: "18px", left: "12px", fontSize: "10px", color: C.gold,
+                            animation: "variantSparkle 2.4s ease-in-out 0.4s infinite",
+                          }}>✦</div>
+                        </>
+                      )}
+
+                      {/* Badge risultato */}
+                      <div style={{
+                        display: "inline-block",
+                        background: resultColor, color: "#000",
+                        fontSize: "10px", fontWeight: "bold", letterSpacing: "3px",
+                        padding: "3px 12px", marginBottom: "8px",
+                        boxShadow: `0 0 10px ${resultColor}aa`,
+                      }}>
+                        ★ {won ? "VITTORIA" : "SCONFITTA"} ★
+                      </div>
+
+                      {/* Title grande */}
+                      <div style={{
+                        color: resultColor, fontSize: "28px", fontWeight: "bold",
+                        letterSpacing: "4px", marginBottom: "6px",
+                        textShadow: `0 0 16px ${resultColor}aa, 0 0 32px ${resultColor}44`,
+                        animation: "pulse 1.2s ease-in-out infinite",
+                      }}>
+                        {won ? "🏆 HAI VINTO!" : "💀 HAI PERSO!"}
+                      </div>
+
+                      {/* Score comparison */}
+                      <div style={{
+                        display: "flex", justifyContent: "center", alignItems: "center", gap: "14px",
+                        marginBottom: "12px",
+                      }}>
+                        <div style={{textAlign: "center"}}>
+                          <div style={{color: C.cyan, fontSize: "9px", letterSpacing: "2px", marginBottom: "2px"}}>TU</div>
+                          <div style={{
+                            color: won ? C.green : C.dim, fontSize: "18px", fontWeight: "bold",
+                            background: won ? `${C.green}18` : "#0f0f18",
+                            border: `1px solid ${won ? C.green : C.dim}`,
+                            padding: "4px 12px",
+                            textShadow: won ? `0 0 10px ${C.green}88` : "none",
+                          }}>€{playerMoney}</div>
+                        </div>
+                        <div style={{color: C.dim, fontSize: "14px", letterSpacing: "2px"}}>VS</div>
+                        <div style={{textAlign: "center"}}>
+                          <div style={{color: C.orange, fontSize: "9px", letterSpacing: "2px", marginBottom: "2px"}}>NEMICO</div>
+                          <div style={{
+                            color: !won ? C.red : C.dim, fontSize: "18px", fontWeight: "bold",
+                            background: !won ? `${C.red}18` : "#0f0f18",
+                            border: `1px solid ${!won ? C.red : C.dim}`,
+                            padding: "4px 12px",
+                            textShadow: !won ? `0 0 10px ${C.red}88` : "none",
+                          }}>€{enemyMoney}</div>
+                        </div>
+                      </div>
+
+                      {/* Conseguenza unghie */}
+                      <div style={{
+                        display: "flex", alignItems: "center", gap: "10px",
+                        padding: "8px 12px", marginBottom: "14px",
+                        background: won ? "#001208" : "#180000",
+                        border: `1px solid ${resultColor}66`,
+                        boxShadow: `inset 0 0 10px ${resultColor}22`,
+                      }}>
+                        <div style={{fontSize: "22px"}}>{won ? "✨" : "💀"}</div>
+                        <div style={{flex: 1, textAlign: "left"}}>
+                          <div style={{color: resultColor, fontSize: "11px", fontWeight: "bold", letterSpacing: "1px", marginBottom: "2px"}}>
+                            {won ? "BOTTINO UNGHIA" : "PENALITÀ UNGHIA"}
+                          </div>
+                          <div style={{color: C.text, fontSize: "10px", lineHeight: 1.4}}>
+                            {won ? "Strappi un'unghia al nemico — una tua torna in vita." : "Ti strappano un'unghia — una muore."}
+                          </div>
+                        </div>
+                      </div>
+
+                      <Btn variant={won ? "gold" : "danger"} onClick={finish} style={{fontSize: "14px", padding: "10px 28px", letterSpacing: "2px"}}>
+                        {won ? "💰 INCASSA IL BOTTINO" : "😔 SUBISCI LE CONSEGUENZE"}
+                      </Btn>
+                    </div>
+                  );
+                })()
               ) : (
                 <div style={{textAlign:"center"}}>
                   <Btn onClick={nextRound} style={{fontSize:"13px"}}>

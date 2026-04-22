@@ -102,6 +102,35 @@ export function useNailHandlers({ player, updatePlayer, triggerNpcComment, scrat
 
   const handleCombatCellScratch = useCallback(() => {
     updatePlayer(p => {
+      // ── GRATTATORE EQUIPAGGIATO: assorbe il danno alle unghie anche in combat ──
+      // Come per ScratchCardView, il grattatore protegge l'unghia attiva e viene
+      // consumato di 1 uso per cella grattata in combat. Se esaurisce i suoi usi,
+      // viene rimosso dall'inventario.
+      if (p.equippedGrattatore) {
+        // bossShield (Guanto da BOSS): NON consuma per singola cella — resta
+        // intatto durante tutta la fight e viene sgretolato solo da handleCombatEnd
+        // al termine di un boss combat (non contro miniboss/ladri).
+        if (p.equippedGrattatore.effect === "bossShield") {
+          // Ignora il danno all'unghia (la protezione è globale in combat boss,
+          // gestita direttamente da CombatView per aggiungere il messaggio).
+          return p;
+        }
+        const idx = p.equippedGrattatore.inventoryIdx;
+        const grattatori = [...(p.grattatori || [])];
+        if (grattatori[idx]) {
+          const g = {...grattatori[idx]};
+          g.usesLeft -= 1;
+          if (g.usesLeft <= 0) {
+            grattatori.splice(idx, 1);
+            setTimeout(() => addLog(`${g.name} consumato!`, C.dim), 0);
+            return {...p, grattatori, equippedGrattatore: null};
+          }
+          grattatori[idx] = g;
+          return {...p, grattatori, equippedGrattatore: {...p.equippedGrattatore, usesLeft: g.usesLeft}};
+        }
+      }
+
+      // ── Nessun grattatore: danno normale all'unghia attiva ──
       const nails = [...p.nails];
       const active = p.activeNail;
       let nail = {...nails[active]};
@@ -122,7 +151,7 @@ export function useNailHandlers({ player, updatePlayer, triggerNpcComment, scrat
       }
       return {...p, nails, activeNail: newActive};
     });
-  }, [updatePlayer, setScreen]);
+  }, [updatePlayer, setScreen, addLog]);
 
   return {
     playerRelicEffects,

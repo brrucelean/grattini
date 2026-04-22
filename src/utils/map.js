@@ -68,6 +68,64 @@ export function generateMap(biomeIdx = 0) {
     });
   }
 
+  // ── DISTRIBUZIONE / SPACING ─────────────────────────────────
+  // Fix: "?" eventi, stregoni e NPC rari si ammassavano.
+  //  · UNIQUE_PER_ROW: al massimo 1 per riga per i tipi "speciali"
+  //  · MIN_ROW_GAP: distanza minima tra occorrenze dello stesso tipo su righe vicine
+  //  · NO_ADJACENT_SAME: nella stessa riga, due nodi vicini non possono avere lo stesso tipo
+  const UNIQUE_PER_ROW = new Set([
+    "evento","stregone","miniboss","chirurgo","spacciatore","ladro",
+    "poliziotto","anziana","bambino","streamer","macellaio","maestroTe","sacerdote"
+  ]);
+  // Gap minimo tra occorrenze su righe vicine (verticale/diagonale).
+  // spacciatore/ladro/poliziotto hanno gap 2 per evitare che si ammassino su 3+
+  // righe consecutive anche se ogni riga ne ha al massimo 1.
+  const MIN_ROW_GAP = {
+    evento: 2, stregone: 3,
+    miniboss: 2, chirurgo: 2, macellaio: 2,
+    spacciatore: 2, ladro: 2, poliziotto: 2,
+    anziana: 2, bambino: 2, streamer: 2, sacerdote: 2,
+  };
+  const lastSeenRow = {};
+
+  const replacementFor = (x, forbidden) => {
+    const pool = (x < 0.25 ? LEFT_POOL : x > 0.75 ? RIGHT_POOL : MID_POOL)
+      .filter(e => !forbidden.has(e.type));
+    if (pool.length === 0) return "tabaccaio";
+    for (let tries = 0; tries < 6; tries++) {
+      const t = weightedPick(pool);
+      if (!forbidden.has(t)) return t;
+    }
+    return pool[0].type;
+  };
+
+  for (let rIdx = 1; rIdx < rows.length - 1; rIdx++) {
+    const row = [...rows[rIdx]].sort((a, b) => a.x - b.x);
+    const seenInRow = new Set();
+    for (let i = 0; i < row.length; i++) {
+      const n = row[i];
+      const prevType = i > 0 ? row[i - 1].type : null;
+      const buildForbidden = () => {
+        const f = new Set();
+        seenInRow.forEach(t => { if (UNIQUE_PER_ROW.has(t)) f.add(t); });
+        if (prevType) f.add(prevType); // no-adjacent-same
+        Object.entries(MIN_ROW_GAP).forEach(([t, gap]) => {
+          if (lastSeenRow[t] != null && rIdx - lastSeenRow[t] < gap) f.add(t);
+        });
+        return f;
+      };
+      let tries = 0;
+      while (tries < 5) {
+        const forbidden = buildForbidden();
+        if (!forbidden.has(n.type)) break;
+        n.type = replacementFor(n.x, forbidden);
+        tries++;
+      }
+      seenInRow.add(n.type);
+      lastSeenRow[n.type] = rIdx;
+    }
+  }
+
   // ── GUANTAIO: 1 nodo per mappa nelle righe pre-boss (7-9) ──
   // Vende il Guanto da BOSS — protezione unica contro il combattimento finale.
   const guantaioCandidates = rows.slice(7, 10).flat().filter(n =>

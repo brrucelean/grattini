@@ -92,6 +92,24 @@ export function useNodeHandlers({
         addLog(`👑 ${bossName}: ${entry.quote}`, C.red);
         addLog(`❌ Rispedito all'inizio — ti serve almeno €${entry.min}.`, C.orange);
         unlockAchievement("broke");
+        const shortfall = entry.min - player.money;
+        // Modal esplicativo — prima di sbattere il giocatore a inizio mappa
+        if (setItemFoundModal) {
+          setItemFoundModal({
+            emoji: "🚫",
+            name: `${bossName} ti caccia via`,
+            desc:
+              `${entry.quote}\n\n` +
+              `💰 Avevi: €${player.money}\n` +
+              `🎯 Soglia minima: €${entry.min}\n` +
+              `📉 Ti mancavano: €${shortfall}\n\n` +
+              `Sei stato RISPEDITO all'inizio della mappa.\n` +
+              `Riparti dalla riga 1 — grattini, mappa e nodi visitati azzerati.\n\n` +
+              `Prossima volta porta più soldi.`,
+            subtitle: "ACCESSO NEGATO",
+            buttonLabel: "Torno più forte →",
+          });
+        }
         setCurrentRow(0);
         setVisitedNodes([]);
         setCurrentNode(null);
@@ -137,6 +155,7 @@ export function useNodeHandlers({
       return;
     }
     setCardSelectMode(true);
+    setReturnScreen("preScratch");
     setScreen("selectCard");
   };
 
@@ -164,7 +183,8 @@ export function useNodeHandlers({
     }
     setScratchingCard(card);
     setPreScratchCount(c => c + 1);
-    setReturnScreen("preScratch");
+    // returnScreen è già stato impostato dal chiamante (handlePreScratch → "preScratch",
+    // handleShopScratch → "shop"). Non sovrascriverlo qui.
 
     // Route special mechanic cards to dedicated screens
     if (card.mechanic === "labirinto") {
@@ -395,14 +415,18 @@ export function useNodeHandlers({
   // ─── COMBAT HANDLERS ───────────────────────────────────────
   const handleCombatEnd = (result) => {
     setCombatEnemy(null);
-    // Consuma guantoBoss dopo qualsiasi combattimento (sia come flag che come grattatore)
-    if (player.guantoBossActive) {
-      updatePlayer(p => ({...p, guantoBossActive: false}));
-      addLog("🧤 Guanto da BOSS consumato!", C.dim);
-    }
-    if (player.equippedGrattatore?.effect === "bossShield") {
-      consumeGrattatore();
-      addLog("🧤 Guanto da BOSS consumato!", C.dim);
+    // Guanto da BOSS: si sgretola SOLO dopo un boss fight (non dopo miniboss/ladri).
+    // Altrimenti resta in inventario/equipaggiato per il vero boss.
+    const wasBossFight = currentNode?.type === "boss";
+    if (wasBossFight) {
+      if (player.guantoBossActive) {
+        updatePlayer(p => ({...p, guantoBossActive: false}));
+        addLog("🧤 Il Guanto da BOSS si sgretola in mille pezzi. Ha retto fino all'ultimo.", C.gold);
+      }
+      if (player.equippedGrattatore?.effect === "bossShield") {
+        consumeGrattatore();
+        addLog("🧤 Il Guanto da BOSS si sgretola in mille pezzi. Ha retto fino all'ultimo.", C.gold);
+      }
     }
     if (result.won) {
       setGameStats(s => ({...s, combatsWon: (s.combatsWon || 0) + 1}));

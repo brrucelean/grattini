@@ -293,7 +293,9 @@ export function useScratchHandlers({
           setTimeout(() => {
             setPlayer(p => {
               if (!isAlive(p.nails)) { setScreen("gameOver"); return p; }
-              if (currentNode) setScreen("preScratch"); else setScreen("map");
+              if (returnScreen === "shop") setScreen("shop");
+              else if (currentNode) setScreen("preScratch");
+              else setScreen("map");
               return p;
             });
           }, 100);
@@ -311,8 +313,10 @@ export function useScratchHandlers({
       }
     }
 
-    // Consume grattatore use (skip for portaChiavi which has its own logic)
-    if (player?.equippedGrattatore?.effect !== "portaChiavi") consumeGrattatore();
+    // Consume grattatore use (skip for portaChiavi which has its own logic,
+    // e bossShield che va speso SOLO dentro la boss-fight, mai su grattini normali)
+    const gEff = player?.equippedGrattatore?.effect;
+    if (gEff !== "portaChiavi" && gEff !== "bossShield") consumeGrattatore();
 
     // Traccia la carta grattata per il Bambino Collezionista (storico)
     if (scratchingCard && returnScreen !== "introScratch") {
@@ -368,6 +372,11 @@ export function useScratchHandlers({
           setCardSelectMode(false);
           setSelectedCardIdx(null);
           setScreen("map");
+        } else if (returnScreen === "shop") {
+          // Grattata fatta dentro al Tabaccaio: resta nello shop
+          setCardSelectMode(false);
+          setSelectedCardIdx(null);
+          setScreen("shop");
         } else {
           setCardSelectMode(false);
           setSelectedCardIdx(null);
@@ -389,9 +398,10 @@ export function useScratchHandlers({
     setDoppioONulla(null);
     setCardSelectMode(false);
     setSelectedCardIdx(null);
-    if (currentNode) setScreen("preScratch");
+    if (returnScreen === "shop") setScreen("shop");
+    else if (currentNode) setScreen("preScratch");
     else setScreen("map");
-  }, [currentNode, addLog]);
+  }, [currentNode, returnScreen, addLog]);
 
   const handleDoppioResult = useCallback((won) => {
     if (!doppioONulla) return;
@@ -408,10 +418,11 @@ export function useScratchHandlers({
     setTimeout(() => {
       setCardSelectMode(false);
       setSelectedCardIdx(null);
-      if (currentNode) setScreen("preScratch");
+      if (returnScreen === "shop") setScreen("shop");
+      else if (currentNode) setScreen("preScratch");
       else setScreen("map");
     }, 1500);
-  }, [doppioONulla, currentNode, updatePlayer, addLog]);
+  }, [doppioONulla, currentNode, returnScreen, updatePlayer, addLog]);
 
   return { doppioONulla, setDoppioONulla, handleScratchDone, handleDoppioDecline, handleDoppioResult };
 }

@@ -196,9 +196,10 @@ export function ScratchCardView({ card, onDone, nailState, nailImplant=null, for
   const doScratch = (idx) => {
     if (cells[idx].scratched || finished) return;
     if (!equippedGrattatore && nailState === "marcia") scratchedWhileMarcia.current = true;
-    // Macchia visiva: se stai grattando con unghia sanguinante/marcia (e senza grattatore),
-    // questa cella resta sporca di sangue per tutta la vita della schedina.
-    if (!equippedGrattatore && (nailState === "marcia" || nailState === "sanguinante")) {
+    // Macchia visiva: SOLO con unghia marcia (rosso) e senza grattatore.
+    // Sanguinante (arancione) è uno stato "dolore" — ha già il suo penalty al premio,
+    // ma non sporca ancora visivamente la schedina. Solo marcia = sangue vero sulla carta.
+    if (!equippedGrattatore && nailState === "marcia") {
       setBloodyCells(prev => { if (prev.has(idx)) return prev; const next = new Set(prev); next.add(idx); return next; });
     }
 
@@ -401,8 +402,9 @@ export function ScratchCardView({ card, onDone, nailState, nailImplant=null, for
     const newCells = cells.map(c => ({...c, scratched: true}));
     setCells(newCells);
     if (!equippedGrattatore && nailState === "marcia") scratchedWhileMarcia.current = true;
-    // Macchia TUTTE le celle appena grattate se l'unghia è marcia/sanguinante
-    if (!equippedGrattatore && (nailState === "marcia" || nailState === "sanguinante")) {
+    // Macchia TUTTE le celle appena grattate SOLO se l'unghia è marcia (rosso).
+    // Sanguinante (arancione) non sporca la carta visivamente.
+    if (!equippedGrattatore && nailState === "marcia") {
       setBloodyCells(prev => {
         const next = new Set(prev);
         cells.forEach((c, i) => { if (!c.scratched) next.add(i); });
@@ -516,7 +518,19 @@ export function ScratchCardView({ card, onDone, nailState, nailImplant=null, for
     }
   };
 
-  const catColor = card.theme?.border || (card.cost <= 1 ? C.green : card.cost <= 5 ? C.gold : card.cost <= 20 ? C.orange : C.red);
+  // ── Tier / accent resolution ──────────────────────────────────
+  // Preserves `card.theme?.border` (used by special mechanic cards: labirinto, combina, tesoro).
+  const TIER_META = {
+    1: { label: "COMUNE",      color: C.green,   emoji: "🎫" },
+    2: { label: "MEDIA",       color: C.cyan,    emoji: "🎟️" },
+    3: { label: "RARA",        color: C.magenta, emoji: "💎" },
+    4: { label: "LEGGENDARIA", color: C.gold,    emoji: "👑" },
+  };
+  const tier = Math.min(4, Math.max(1, card.tier || 1));
+  const tierMeta = TIER_META[tier];
+  const accent = card.theme?.border || tierMeta.color;
+  // Legacy: keep catColor name for anywhere else it's referenced
+  const catColor = accent;
 
   // Count matching symbols for highlighting
   const revealedCounts = {};
@@ -524,68 +538,225 @@ export function ScratchCardView({ card, onDone, nailState, nailImplant=null, for
     revealedCounts[c.symbol] = (revealedCounts[c.symbol] || 0) + 1;
   });
 
+  // Corner brackets helper (JSX fragment, not component — keeps the rest simple)
+  const cornerBrackets = (color, size = 12, inset = 6, glow = true) =>
+    ["tl","tr","bl","br"].map(pos => {
+      const [v, h] = pos.split("");
+      return (
+        <div key={pos} style={{
+          position: "absolute",
+          [v === "t" ? "top" : "bottom"]: `${inset}px`,
+          [h === "l" ? "left" : "right"]: `${inset}px`,
+          width: `${size}px`, height: `${size}px`,
+          borderTop: v === "t" ? `2px solid ${color}` : "none",
+          borderBottom: v === "b" ? `2px solid ${color}` : "none",
+          borderLeft: h === "l" ? `2px solid ${color}` : "none",
+          borderRight: h === "r" ? `2px solid ${color}` : "none",
+          boxShadow: glow ? `0 0 8px ${color}88` : "none",
+          pointerEvents: "none",
+        }}/>
+      );
+    });
+
+  const panelBorder = winFound ? C.green : accent;
+
   return (
-    <div style={{...S.panel, textAlign:"center", maxWidth:"420px", margin:"10px auto",
-      border:`2px solid ${winFound ? C.green : catColor}`, background: "#000000",
+    <div style={{
+      ...S.panel, textAlign:"center",
+      maxWidth:"440px", margin:"10px auto",
+      position: "relative",
+      border:`2px solid ${panelBorder}`,
+      background: "#05050b",
+      boxShadow: `0 0 22px ${panelBorder}33, inset 0 0 28px ${panelBorder}0a`,
       transition:"none",
-      animation: winFound ? "winFlash 1.5s ease-out" : "none"}}>
+      animation: winFound ? "winFlash 1.5s ease-out" : "none",
+    }}>
+      {cornerBrackets(panelBorder, 12, 6, true)}
 
       {<>
-      <div style={{color:catColor, fontWeight:"bold", fontSize:"14px", marginBottom:"2px"}}>
-        ✦ {card.name} ✦
-      </div>
-      <div style={{color:C.dim, fontSize:"11px", marginBottom:"4px"}}>
-        €{card.cost} · {card.desc} · Max: €{card.maxPrize}
+      {/* ═══ CARD HEADER — Vintage neon title + tier badge + meta pills ═══ */}
+      <div style={{
+        position: "relative",
+        paddingBottom: "8px", marginBottom: "8px",
+        borderBottom: `1px solid ${accent}33`,
+        background: `linear-gradient(180deg, ${accent}10 0%, transparent 100%)`,
+      }}>
+        {/* Sparkle for legendary */}
+        {tier >= 4 && (
+          <>
+            <div style={{
+              position: "absolute", top: "-4px", left: "8px",
+              fontSize: "11px", color: accent,
+              animation: "variantSparkle 2.4s ease-in-out infinite",
+            }}>✦</div>
+            <div style={{
+              position: "absolute", top: "-4px", right: "8px",
+              fontSize: "11px", color: accent,
+              animation: "variantSparkle 2.4s ease-in-out infinite",
+              animationDelay: "1.2s",
+            }}>✦</div>
+          </>
+        )}
+
+        {/* Tier badge */}
+        <div style={{
+          display: "inline-block",
+          background: accent, color: "#000",
+          padding: "2px 7px", fontSize: "8px", fontWeight: "bold",
+          letterSpacing: "2px", marginBottom: "4px",
+          boxShadow: `0 0 8px ${accent}aa`,
+        }}>
+          ★ {tierMeta.emoji} {tierMeta.label} ★
+        </div>
+
+        {/* Name */}
+        <div style={{
+          color: accent, fontWeight: "bold", fontSize: "17px",
+          letterSpacing: "2px", marginBottom: "4px",
+          textShadow: `0 0 10px ${accent}aa, 0 0 22px ${accent}44`,
+          fontFamily: FONT,
+        }}>
+          {card.name}
+        </div>
+
+        {/* Description */}
+        {card.desc && (
+          <div style={{
+            color: C.text, fontSize: "10px",
+            lineHeight: 1.4, marginBottom: "6px",
+            fontStyle: "italic",
+            padding: "0 8px",
+          }}>
+            {card.desc}
+          </div>
+        )}
+
+        {/* Cost / Max pills */}
+        <div style={{
+          display: "flex", justifyContent: "center", gap: "5px",
+          flexWrap: "wrap",
+        }}>
+          <span style={{
+            fontSize: "10px", color: C.gold, fontWeight: "bold",
+            background: `${C.gold}14`,
+            border: `1px solid ${C.gold}66`,
+            padding: "2px 7px", letterSpacing: "1px",
+          }}>COSTO €{card.cost}</span>
+          <span style={{
+            fontSize: "10px", color: C.green, fontWeight: "bold",
+            background: `${C.green}14`,
+            border: `1px solid ${C.green}66`,
+            padding: "2px 7px", letterSpacing: "1px",
+          }}>MAX €{card.maxPrize}</span>
+        </div>
       </div>
 
-      {/* 🎲 DoppioOnulla banner */}
+      {/* 🎲 DoppioOnulla banner — Vintage */}
       {card.mechanic === "doppioOnulla" && (
         <div style={{
-          background:"#1a0018", border:`2px solid ${C.magenta}`,
-          borderRadius:"0", padding:"8px 12px", marginBottom:"8px",
-          animation:"pulse 1.5s ease-in-out infinite",
+          position: "relative",
+          background: "#1a0018", border: `2px solid ${C.magenta}`,
+          padding: "10px 14px", marginBottom: "8px",
+          boxShadow: `0 0 14px ${C.magenta}55, inset 0 0 16px ${C.magenta}14`,
+          animation: "pulse 1.8s ease-in-out infinite",
         }}>
-          <div style={{color:C.magenta, fontWeight:"bold", fontSize:"12px"}}>
-            🎲 DOPPIO O NULLA — gratta e scopri il destino del tuo ultimo premio!
+          {cornerBrackets(C.magenta, 10, 4, false)}
+          <div style={{
+            display: "inline-block",
+            background: C.magenta, color: "#000",
+            padding: "2px 8px", fontSize: "9px", fontWeight: "bold",
+            letterSpacing: "2px", marginBottom: "5px",
+            boxShadow: `0 0 8px ${C.magenta}aa`,
+          }}>
+            ★ 🎲 DOPPIO O NULLA ★
+          </div>
+          <div style={{color: C.text, fontSize: "10px", lineHeight: 1.5, marginBottom: lastWonPrize > 0 ? "4px" : 0}}>
+            Gratta e scopri il destino del tuo ultimo premio!
           </div>
           {lastWonPrize > 0 && (
-            <div style={{color:C.gold, fontSize:"11px", marginTop:"3px"}}>
-              Ultimo premio: <strong>€{lastWonPrize}</strong> → Vinci: <strong style={{color:C.green}}>€{lastWonPrize * 2}</strong> · Perdi: <strong style={{color:C.red}}>€0</strong>
+            <div style={{
+              display: "flex", justifyContent: "center", gap: "6px", flexWrap: "wrap",
+              fontSize: "10px", marginTop: "4px",
+            }}>
+              <span style={{color: C.dim, padding: "1px 6px"}}>€{lastWonPrize}</span>
+              <span style={{color: C.magenta}}>→</span>
+              <span style={{color: C.green, background: `${C.green}14`, border: `1px solid ${C.green}66`, padding: "1px 6px"}}>VINCI €{lastWonPrize * 2}</span>
+              <span style={{color: C.dim}}>/</span>
+              <span style={{color: C.red, background: `${C.red}14`, border: `1px solid ${C.red}66`, padding: "1px 6px"}}>PERDI €0</span>
             </div>
           )}
         </div>
       )}
-      {card.malus && card.malus.type !== "nailBleed" && <div style={{color:C.red, fontSize:"10px", marginBottom:"4px"}}>⚠ {card.malus.desc}</div>}
 
-      {/* ⚠ Avviso unghia danneggiata */}
-      {(nailState === "sanguinante" || nailState === "marcia") && !finished && scratched === 0 && (
+      {card.malus && card.malus.type !== "nailBleed" && (
         <div style={{
-          background: nailState === "marcia" ? "#1a0000" : "#1a0800",
-          border:`2px solid ${nailState === "marcia" ? C.red : C.orange}`,
-          borderRadius:"0", padding:"8px 12px", marginBottom:"8px",
-          animation:"pulse 1.2s infinite",
+          color: C.red, fontSize: "10px", marginBottom: "6px",
+          background: "#0a0004", border: `1px dashed ${C.red}66`,
+          padding: "3px 8px", display: "inline-block",
+          letterSpacing: "0.5px",
         }}>
-          <div style={{color: nailState === "marcia" ? C.red : C.orange, fontWeight:"bold", fontSize:"12px", marginBottom:"3px"}}>
-            🩸 UNGHIA {nailState === "marcia" ? "MARCIA" : "SANGUINANTE"} — ATTENZIONE!
-          </div>
-          <div style={{color:C.text, fontSize:"11px", lineHeight:"1.5"}}>
-            I premi vengono ridotti al <strong style={{color:C.gold}}>{nailState === "marcia" ? "20%" : "35%"}</strong> del valore nominale.
-            {nailState === "marcia" && " Considera di usare un'altra unghia o curati prima."}
-          </div>
+          ⚠ {card.malus.desc}
         </div>
       )}
 
-      {/* ⚡ Avviso GrattaMania */}
+      {/* ⚠ Avviso unghia danneggiata — Vintage */}
+      {(nailState === "sanguinante" || nailState === "marcia") && !finished && scratched === 0 && (() => {
+        const isMarcia = nailState === "marcia";
+        const warnCol = isMarcia ? C.red : C.orange;
+        const pct = isMarcia ? "20%" : "35%";
+        return (
+          <div style={{
+            position: "relative",
+            background: isMarcia ? "#1a0000" : "#1a0a00",
+            border: `2px solid ${warnCol}`,
+            padding: "10px 14px", marginBottom: "8px",
+            boxShadow: `0 0 16px ${warnCol}55, inset 0 0 16px ${warnCol}18`,
+            animation: "pulse 1.2s infinite",
+          }}>
+            {cornerBrackets(warnCol, 10, 4, false)}
+            <div style={{
+              display: "inline-block",
+              background: warnCol, color: "#000",
+              padding: "2px 8px", fontSize: "9px", fontWeight: "bold",
+              letterSpacing: "2px", marginBottom: "5px",
+              boxShadow: `0 0 8px ${warnCol}aa`,
+            }}>
+              ★ 🩸 UNGHIA {isMarcia ? "MARCIA" : "SANGUINANTE"} ★
+            </div>
+            <div style={{color: C.text, fontSize: "10px", lineHeight: 1.5}}>
+              Premi ridotti al <strong style={{color: C.gold}}>{pct}</strong> del valore nominale.
+              {isMarcia && " Cambia unghia o curati prima."}
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ⚡ Avviso GrattaMania — Vintage */}
       {grattaMania && !finished && (
         <div style={{
-          background:"#1a0011", border:`2px solid ${C.red}`,
-          borderRadius:"0", padding:"7px 12px", marginBottom:"8px",
-          display:"flex", alignItems:"center", gap:"8px",
+          position: "relative",
+          background: "#1a0011", border: `2px solid ${C.red}`,
+          padding: "10px 14px", marginBottom: "8px",
+          boxShadow: `0 0 16px ${C.red}55, inset 0 0 16px ${C.red}18`,
         }}>
-          <span style={{fontSize:"18px", animation:"pulse 0.5s infinite"}}>⚡</span>
-          <div>
-            <div style={{color:C.red, fontWeight:"bold", fontSize:"11px"}}>GRATTAMANIA ATTIVA — PERICOLO UNGHIE</div>
-            <div style={{color:C.text, fontSize:"10px"}}>Premio x2 · Ogni cella grattata danneggia <strong style={{color:C.red}}>TUTTE e 5</strong> le unghie</div>
+          {cornerBrackets(C.red, 10, 4, false)}
+          <div style={{
+            display: "flex", alignItems: "center", gap: "8px",
+            justifyContent: "center", marginBottom: "4px",
+          }}>
+            <span style={{fontSize: "18px", animation: "pulse 0.5s infinite", filter: `drop-shadow(0 0 6px ${C.red})`}}>⚡</span>
+            <div style={{
+              display: "inline-block",
+              background: C.red, color: "#000",
+              padding: "2px 8px", fontSize: "9px", fontWeight: "bold",
+              letterSpacing: "2px",
+              boxShadow: `0 0 8px ${C.red}aa`,
+            }}>
+              ★ GRATTAMANIA ATTIVA ★
+            </div>
+          </div>
+          <div style={{color: C.text, fontSize: "10px", textAlign: "center"}}>
+            Premio <strong style={{color: C.gold}}>x2</strong> · ogni cella grattata danneggia <strong style={{color: C.red}}>TUTTE e 5</strong> le unghie
           </div>
         </div>
       )}
@@ -703,12 +874,42 @@ export function ScratchCardView({ card, onDone, nailState, nailImplant=null, for
         </div>
       )}
 
-      {/* Grattatore indicator */}
+      {/* Grattatore indicator — Vintage tile */}
       {equippedGrattatore && (
-        <div style={{color:C.cyan, fontSize:"11px", marginBottom:"6px",
-          background:"#001a2a", padding:"3px 8px", borderRadius:"0", display:"inline-block"}}>
-          {GRATTATORE_DEFS[equippedGrattatore.id]?.emoji} Grattatore: {equippedGrattatore.name}
-          {" · Unghia protetta!"}
+        <div style={{
+          display: "inline-flex", alignItems: "center", gap: "8px",
+          background: "#001a22",
+          border: `2px solid ${C.cyan}88`,
+          boxShadow: `0 0 10px ${C.cyan}44, inset 0 0 12px ${C.cyan}14`,
+          padding: "4px 10px", marginBottom: "6px",
+        }}>
+          <span style={{
+            fontSize: "18px",
+            textShadow: `0 0 8px ${C.cyan}`,
+            filter: `drop-shadow(0 0 4px ${C.cyan}aa)`,
+          }}>
+            {GRATTATORE_DEFS[equippedGrattatore.id]?.emoji || "🔧"}
+          </span>
+          <span style={{
+            display: "inline-block",
+            background: C.cyan, color: "#000",
+            padding: "1px 6px", fontSize: "8px", fontWeight: "bold",
+            letterSpacing: "2px",
+            boxShadow: `0 0 6px ${C.cyan}88`,
+          }}>
+            ★ GRATTATORE ★
+          </span>
+          <span style={{color: C.bright, fontSize: "10px", fontWeight: "bold"}}>
+            {equippedGrattatore.name}
+          </span>
+          <span style={{
+            color: C.cyan, fontSize: "9px",
+            background: `${C.cyan}14`,
+            border: `1px solid ${C.cyan}66`,
+            padding: "1px 5px",
+          }}>
+            {equippedGrattatore.usesLeft} usi
+          </span>
         </div>
       )}
 
@@ -775,7 +976,7 @@ export function ScratchCardView({ card, onDone, nailState, nailImplant=null, for
             <ScratchCell key={idx} cell={cell} idx={idx}
               onScratch={doScratch} finished={finished}
               isWinSymbol={isWinSymbol} isPartialMatch={isPartialMatch}
-              bloodMode={nailState === "sanguinante" || nailState === "marcia"}
+              bloodMode={nailState === "marcia"}
               isBloody={bloodyCells.has(idx)}
               ambidestri={ambidestri} themeColor={card.theme?.border} />
           );
@@ -812,14 +1013,33 @@ export function ScratchCardView({ card, onDone, nailState, nailImplant=null, for
         </div>
       )}
 
-      {/* Status bar */}
-      <div style={{display:"flex", justifyContent:"space-between", alignItems:"center",
-        fontSize:"11px", margin:"4px 0 8px", padding:"0 4px"}}>
-        <span style={{color:C.dim}}>Grattate: {scratched}/{totalCells}</span>
-        {!equippedGrattatore
-          ? <span style={{color:C.orange, fontSize:"10px"}}>🖐 Trascina per grattare!</span>
-          : <span style={{color:C.cyan, fontSize:"10px"}}>🛡️ Unghia protetta</span>
-        }
+      {/* Status — progress bar + hint */}
+      <div style={{margin: "6px auto 10px", maxWidth: "300px"}}>
+        <div style={{
+          display: "flex", justifyContent: "space-between", alignItems: "center",
+          fontSize: "9px", marginBottom: "3px", letterSpacing: "1px",
+        }}>
+          <span style={{color: C.dim}}>
+            GRATTATE <strong style={{color: C.bright}}>{scratched}</strong>/{totalCells}
+          </span>
+          {!equippedGrattatore
+            ? <span style={{color: C.orange}}>🖐 TRASCINA PER GRATTARE</span>
+            : <span style={{color: C.cyan}}>🛡️ UNGHIA PROTETTA</span>
+          }
+        </div>
+        <div style={{
+          height: "6px", background: "#0a0a14",
+          border: `1px solid ${accent}44`,
+          position: "relative", overflow: "hidden",
+        }}>
+          <div style={{
+            width: `${totalCells > 0 ? (scratched / totalCells) * 100 : 0}%`,
+            height: "100%",
+            background: `linear-gradient(90deg, ${accent}88, ${accent})`,
+            boxShadow: `0 0 8px ${accent}`,
+            transition: "width 0.2s ease-out",
+          }}/>
+        </div>
       </div>
 
       {revealMsg && (
@@ -870,26 +1090,45 @@ export function ScratchCardView({ card, onDone, nailState, nailImplant=null, for
       )}
       </>}
 
-      {/* WIN FOUND - CLAIM BUTTON */}
+      {/* WIN FOUND - CLAIM BUTTON — Vintage */}
       {winFound && !finished && (() => {
         const isDirty = !cancelled && (nailState === "marcia" || scratchedWhileMarcia.current);
         const borderCol = cancelled ? C.red : isDirty ? C.red : C.green;
         const prizeCol  = cancelled ? C.red : isDirty ? C.orange : C.green;
+        const badgeLabel = cancelled ? "VINCITA ANNULLATA"
+          : isDirty ? "VINCITA SPORCA"
+          : "VINCITA!";
         return (
           <div style={{
-            background: isDirty ? "#1a0000" : "#001a00",
-            border:`2px solid ${borderCol}`, borderRadius:"0",
-            padding:"10px", marginBottom:"8px", animation:"pulse 1s infinite",
+            position: "relative",
+            background: isDirty ? "#1a0000" : cancelled ? "#1a0000" : "#001a0a",
+            border: `2px solid ${borderCol}`,
+            padding: "12px 14px", marginBottom: "8px",
+            boxShadow: `0 0 18px ${borderCol}66, inset 0 0 16px ${borderCol}18`,
+            animation: "pulse 1s infinite",
           }}>
+            {cornerBrackets(borderCol, 10, 4, false)}
+            <div style={{
+              display: "inline-block",
+              background: borderCol, color: "#000",
+              padding: "3px 10px", fontSize: "10px", fontWeight: "bold",
+              letterSpacing: "3px", marginBottom: "8px",
+              boxShadow: `0 0 10px ${borderCol}aa`,
+            }}>
+              ★ {cancelled ? "💀" : isDirty ? "🩸" : "💰"} {badgeLabel} ★
+            </div>
             {isDirty && (
-              <div style={{color:C.red, fontSize:"11px", marginBottom:"5px", letterSpacing:"0.5px"}}>
-                🩸 Unghia insanguinata ha sporcato la schedina — vinci solo il 25%
+              <div style={{color: C.red, fontSize: "10px", marginBottom: "6px", letterSpacing: "0.5px", fontStyle: "italic"}}>
+                L'unghia insanguinata ha sporcato la schedina — vinci solo il 25%
               </div>
             )}
-            <div style={{color: prizeCol, fontSize:"18px", fontWeight:"bold", marginBottom:"6px",
-              textShadow: cancelled ? "none" : `0 0 15px ${prizeCol}`}}>
+            <div style={{color: prizeCol, fontSize:"20px", fontWeight:"bold", marginBottom:"6px",
+              textShadow: cancelled ? "none" : `0 0 15px ${prizeCol}`,
+              letterSpacing: "1px",
+              fontFamily: FONT,
+            }}>
               {(() => {
-                if (cancelled) return "VINCITA ANNULLATA!";
+                if (cancelled) return "€0";
                 if (isDirty) return <span><span style={{textDecoration:"line-through", color:C.dim, fontSize:"15px"}}>€{winPrizeFull}</span>{" → "}🩸 €{winPrize}</span>;
                 const eff = equippedGrattatore?.effect;
                 const base = eff === "doublePrize" ? Math.round(winPrize / 2)
@@ -902,7 +1141,7 @@ export function ScratchCardView({ card, onDone, nailState, nailImplant=null, for
                 if (card.mechanic === "sum13") return `🎯 TREDICI ESATTO! €${displayP}`;
                 if (card.mechanic === "collect") return `💰 TUTTO ACCUMULATO: €${displayP}!`;
                 if (card.mechanic === "setteemezzo") return `🃏 BANCO BATTUTO! €${displayP}`;
-                return `💰 COMBO TROVATA: €${displayP}!`;
+                return `€${displayP}`;
               })()}
             </div>
             {equippedGrattatore && !cancelled && winPrize > 0 && (() => {
@@ -964,38 +1203,61 @@ export function ScratchCardView({ card, onDone, nailState, nailImplant=null, for
         </div>
       )}
 
-      {/* NO WIN */}
+      {/* NO WIN — Vintage */}
       {showNoWin && !finished && (
         <div style={{
-          marginTop:"6px", padding:"8px 12px", borderRadius:"0",
-          border:`2px solid ${C.red}`, background:"#1a0000",
-          display:"flex", alignItems:"center", gap:"12px",
+          position: "relative",
+          marginTop: "6px", padding: "10px 14px",
+          border: `2px solid ${C.red}`, background: "#1a0000",
+          display: "flex", alignItems: "center", gap: "12px",
+          boxShadow: `0 0 14px ${C.red}55, inset 0 0 16px ${C.red}18`,
         }}>
-          <div style={{fontSize:"20px", flexShrink:0}}>😔</div>
-          <div style={{flex:1}}>
-            <div style={{color:C.red, fontSize:"13px", fontWeight:"bold"}}>Nessuna vincita.</div>
-            <div style={{color:C.dim, fontSize:"10px"}}>Sarà per la prossima...</div>
+          {cornerBrackets(C.red, 10, 4, false)}
+          <div style={{fontSize: "28px", flexShrink: 0, filter: `drop-shadow(0 0 6px ${C.red}aa)`}}>😔</div>
+          <div style={{flex: 1, textAlign: "left"}}>
+            <div style={{
+              display: "inline-block",
+              background: C.red, color: "#000",
+              padding: "2px 8px", fontSize: "9px", fontWeight: "bold",
+              letterSpacing: "2px", marginBottom: "4px",
+              boxShadow: `0 0 8px ${C.red}aa`,
+            }}>
+              ★ NESSUNA VINCITA ★
+            </div>
+            <div style={{color: C.dim, fontSize: "10px", fontStyle: "italic"}}>
+              Sarà per la prossima...
+            </div>
           </div>
           <Btn variant="default" onClick={() => handleFinish(false)}
-            style={{fontSize:"11px", padding:"5px 14px", flexShrink:0}}>
+            style={{fontSize: "11px", padding: "5px 14px", flexShrink: 0}}>
             OK →
           </Btn>
         </div>
       )}
 
-      {/* FINISHED RESULT */}
-      {finished && (
-        <div style={{marginTop:"6px"}}>
-          <div style={{
-            color: winFound && !cancelled ? C.green : C.red,
-            fontSize:"16px", fontWeight:"bold", marginBottom:"6px",
-          }}>
-            {winFound && !cancelled ? `HAI VINTO €${winPrize}!` :
-             winFound && cancelled ? "VINCITA ANNULLATA dall'unghia!" :
-             scratched >= totalCells ? "Niente… prossima volta!" : "Biglietto abbandonato."}
+      {/* FINISHED RESULT — Vintage hero */}
+      {finished && (() => {
+        const didWin = winFound && !cancelled;
+        const resultCol = didWin ? C.green : C.red;
+        const label = didWin ? `HAI VINTO €${winPrize}!`
+          : winFound && cancelled ? "VINCITA ANNULLATA DALL'UNGHIA"
+          : scratched >= totalCells ? "NIENTE… PROSSIMA VOLTA!"
+          : "BIGLIETTO ABBANDONATO";
+        return (
+          <div style={{marginTop: "8px", textAlign: "center"}}>
+            <div style={{
+              display: "inline-block",
+              background: resultCol, color: "#000",
+              padding: "4px 14px", fontSize: "11px", fontWeight: "bold",
+              letterSpacing: "3px",
+              boxShadow: `0 0 14px ${resultCol}aa`,
+              textShadow: "none",
+            }}>
+              ★ {didWin ? "🎉" : "💀"} {label} ★
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 }

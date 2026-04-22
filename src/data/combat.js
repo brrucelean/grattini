@@ -93,26 +93,29 @@ export const ENEMY_COMBAT_POOLS = {
     ],
   },
   "Il Broker": {
+    // BILANCIAMENTO boss 1 (più accessibile): valori DENARO abbassati (era 40/80/120),
+    // steal ridotti (erano 30/50). Il player deve poter vincere il primo boss.
     COMBATTIMENTO: [
-      { name:"Commissione", effect:"stealMoney", value:30, emoji:"📊" },
+      { name:"Commissione", effect:"stealMoney", value:20, emoji:"📊" },
       { name:"Margin Call", effect:"damageNail",  emoji:"📉" },
-      { name:"Shorting",    effect:"stealMoney", value:50, emoji:"🩳" },
+      { name:"Shorting",    effect:"stealMoney", value:30, emoji:"🩳" },
     ],
     DIFESA: [
       { name:"Hedge",       effect:"block",  emoji:"🛡" },
       { name:"Diversifica", effect:"dodge",  emoji:"📁" },
     ],
     DENARO: [
-      { name:"Dividendo",   effect:"money", value:40, emoji:"💼" },
-      { name:"Bull Run",    effect:"money", value:80, emoji:"📈" },
-      { name:"IPO",         effect:"money", value:120, emoji:"🏦" },
+      { name:"Dividendo",   effect:"money", value:25, emoji:"💼" },
+      { name:"Bull Run",    effect:"money", value:55, emoji:"📈" },
+      { name:"IPO",         effect:"money", value:80, emoji:"🏦" },
     ],
   },
   "Il Romanaccio": {
+    // BILANCIAMENTO boss 2: valori leggermente ridotti
     COMBATTIMENTO: [
-      { name:"Tassametro",   effect:"stealMoney", value:40, emoji:"🚕" },
+      { name:"Tassametro",   effect:"stealMoney", value:30, emoji:"🚕" },
       { name:"Manomissione", effect:"damageNail",  emoji:"🔧" },
-      { name:"Fregatura",    effect:"stealMoney", value:25, emoji:"😏" },
+      { name:"Fregatura",    effect:"stealMoney", value:20, emoji:"😏" },
       { name:"Spallata",     effect:"lightDamage", emoji:"💢" },
     ],
     DIFESA: [
@@ -120,34 +123,36 @@ export const ENEMY_COMBAT_POOLS = {
       { name:"Scappa in Vespa",effect:"dodge", emoji:"🛵" },
     ],
     DENARO: [
-      { name:"Bar Sport",    effect:"money", value:60, emoji:"☕" },
-      { name:"Giro del Colosseo",effect:"money", value:90, emoji:"🏟" },
-      { name:"Mancia Grossa",effect:"money", value:50, emoji:"💶" },
-      { name:"Spicci",       effect:"money", value:30, emoji:"🪙" },
+      { name:"Bar Sport",    effect:"money", value:45, emoji:"☕" },
+      { name:"Giro del Colosseo",effect:"money", value:70, emoji:"🏟" },
+      { name:"Mancia Grossa",effect:"money", value:40, emoji:"💶" },
+      { name:"Spicci",       effect:"money", value:25, emoji:"🪙" },
     ],
   },
   "Il Napoletano": {
+    // BILANCIAMENTO boss 3: valori ridotti rispetto a prima
     COMBATTIMENTO: [
       { name:"'O Scippo",     effect:"damageNail",  emoji:"🗝" },
       { name:"'A Guapparia",  effect:"lightDamage", emoji:"🔪" },
-      { name:"'O Pizzo",      effect:"stealMoney", value:35, emoji:"📜" },
+      { name:"'O Pizzo",      effect:"stealMoney", value:25, emoji:"📜" },
     ],
     DIFESA: [
       { name:"'O Munaciello",  effect:"block",  emoji:"👻" },
       { name:"Tarantella",     effect:"dodge",  emoji:"💃" },
     ],
     DENARO: [
-      { name:"Lotto Clandestino",effect:"money", value:70, emoji:"🎟" },
-      { name:"'A Parulana",    effect:"money", value:50, emoji:"🥖" },
-      { name:"Tesoro 'e San Gennaro",effect:"money", value:100, emoji:"💎" },
+      { name:"Lotto Clandestino",effect:"money", value:55, emoji:"🎟" },
+      { name:"'A Parulana",    effect:"money", value:40, emoji:"🥖" },
+      { name:"Tesoro 'e San Gennaro",effect:"money", value:80, emoji:"💎" },
     ],
   },
   "Il Drago d'Oro": {
+    // BILANCIAMENTO boss 4 (finale): il più duro, ma non impossibile
     COMBATTIMENTO: [
-      { name:"Soffio di Fuoco",   effect:"damage", value:50,  emoji:"🔥" },
+      { name:"Soffio di Fuoco",   effect:"damage", value:40,  emoji:"🔥" },
       { name:"Artiglio del Drago",effect:"killNail",           emoji:"🐲" },
-      { name:"Tempesta di Fiamme",effect:"damage", value:35,  emoji:"☄️" },
-      { name:"Morso Velenoso",    effect:"steal",  value:40,  emoji:"🐍" },
+      { name:"Tempesta di Fiamme",effect:"damage", value:28,  emoji:"☄️" },
+      { name:"Morso Velenoso",    effect:"steal",  value:30,  emoji:"🐍" },
     ],
     DIFESA: [
       { name:"Scaglie d'Oro",    effect:"block",  emoji:"🛡" },
@@ -155,10 +160,10 @@ export const ENEMY_COMBAT_POOLS = {
       { name:"Muro di Giada",     effect:"block",  emoji:"🟢" },
     ],
     DENARO: [
-      { name:"Perla del Drago",   effect:"money", value:80,  emoji:"🔮" },
-      { name:"Lingotto d'Oro",    effect:"money", value:60,  emoji:"🥇" },
-      { name:"Tesoro Imperiale",  effect:"money", value:120, emoji:"🏯" },
-      { name:"Seta Preziosa",     effect:"money", value:45,  emoji:"🧧" },
+      { name:"Perla del Drago",   effect:"money", value:65,  emoji:"🔮" },
+      { name:"Lingotto d'Oro",    effect:"money", value:50,  emoji:"🥇" },
+      { name:"Tesoro Imperiale",  effect:"money", value:95,  emoji:"🏯" },
+      { name:"Seta Preziosa",     effect:"money", value:35,  emoji:"🧧" },
     ],
   },
 };

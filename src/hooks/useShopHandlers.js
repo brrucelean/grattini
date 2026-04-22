@@ -4,7 +4,7 @@ import { ITEM_DEFS, GRATTATORE_DEFS } from "../data/items.js";
 import { generateCard } from "../utils/card.js";
 import { hasRelic } from "../utils/hasRelic.js";
 
-export function useShopHandlers({ player, updatePlayer, addLog, setGameStats, setCardSelectMode, setScreen, effectiveFortune, unlockAchievement, setItemFoundModal }) {
+export function useShopHandlers({ player, updatePlayer, addLog, setGameStats, setCardSelectMode, setScreen, setReturnScreen, effectiveFortune, unlockAchievement, setItemFoundModal }) {
   const handleBuyCard = (cardId) => {
     const type = CARD_TYPES.find(t => t.id === cardId);
     if (!type || player.money < type.cost) return;
@@ -79,6 +79,7 @@ export function useShopHandlers({ player, updatePlayer, addLog, setGameStats, se
   const handleShopScratch = () => {
     if (player.scratchCards.length === 0) return;
     setCardSelectMode(true);
+    if (setReturnScreen) setReturnScreen("shop");
     setScreen("selectCard");
   };
 

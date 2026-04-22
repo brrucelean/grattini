@@ -1,7 +1,27 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { C, FONT } from "../data/theme.js";
-import { SYMBOLS } from "../data/cards.js";
 import { S } from "../utils/styles.js";
+
+// ─── Corner brackets helper ────────────────────────────────────
+function CornerBrackets({ color, size = 14, inset = 10, borderW = 2, shadow = true }) {
+  return ["tl","tr","bl","br"].map(pos => {
+    const [v, h] = pos.split("");
+    return (
+      <div key={pos} style={{
+        position: "absolute",
+        [v === "t" ? "top" : "bottom"]: `${inset}px`,
+        [h === "l" ? "left" : "right"]: `${inset}px`,
+        width: `${size}px`, height: `${size}px`,
+        borderTop: v === "t" ? `${borderW}px solid ${color}` : "none",
+        borderBottom: v === "b" ? `${borderW}px solid ${color}` : "none",
+        borderLeft: h === "l" ? `${borderW}px solid ${color}` : "none",
+        borderRight: h === "r" ? `${borderW}px solid ${color}` : "none",
+        boxShadow: shadow ? `0 0 8px ${color}88` : "none",
+        pointerEvents: "none",
+      }}/>
+    );
+  });
+}
 
 // ─── DOPPIO O NULLA COMPONENT ──────────────────────────────────
 export function DoppioONullaView({ prize, onDecline, onResult }) {
@@ -51,7 +71,7 @@ export function DoppioONullaView({ prize, onDecline, onResult }) {
       setWon(w);
       // Clear remaining scratch layer
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      setTimeout(() => onResult(w), 1200);
+      setTimeout(() => onResult(w), 1400);
     }
   }, [revealed, onResult]);
 
@@ -88,60 +108,181 @@ export function DoppioONullaView({ prize, onDecline, onResult }) {
   const resultSymbol = outcomeRef.current ? "💰" : "💀";
   const resultText = outcomeRef.current ? `€${prize * 2}` : "€0";
   const resultColor = outcomeRef.current ? C.gold : C.red;
+  const accent = C.gold; // gambling → gold theme
 
   return (
-    <div style={{...S.panel, textAlign: "center", maxWidth: "450px", margin: "10px auto"}}>
-      <div style={{...S.h2, fontSize: "18px", marginBottom: "4px",
-        textShadow:"none",
-        animation: "pulse 1.5s ease-in-out infinite"
-      }}>
-        🎰 DOPPIO O NULLA 🎰
-      </div>
-      <div style={{color: C.dim, fontSize: "10px", marginBottom: "6px", letterSpacing: "1px"}}>
-        ✦ EVENTO CASUALE ✦
-      </div>
-      <div style={{color: C.bright, marginBottom: "12px", fontSize: "14px"}}>
-        Hai vinto <span style={{color: C.gold, fontWeight: "bold"}}>€{prize}</span> —
-        rischi per <span style={{color: C.gold, fontWeight: "bold"}}>€{prize * 2}</span>?
-      </div>
+    <div style={{
+      ...S.panel,
+      position: "relative",
+      background: "#05050b",
+      border: `2px solid ${accent}66`,
+      boxShadow: `0 0 28px ${accent}33, inset 0 0 32px ${accent}0a`,
+      maxWidth: "480px", margin: "10px auto",
+      textAlign: "center",
+      paddingTop: "18px", paddingBottom: "14px",
+    }}>
+      <CornerBrackets color={accent} />
 
+      {/* ═══ HEADER ═══ */}
       <div style={{
         position: "relative",
-        width: "160px", height: "120px",
-        margin: "0 auto 16px auto",
-        border: `2px solid ${C.gold}`,
-        borderRadius: "0",
+        borderBottom: `1px solid ${accent}33`,
+        paddingBottom: "10px", marginBottom: "14px",
+        background: `linear-gradient(180deg, ${accent}10 0%, transparent 100%)`,
+      }}>
+        {/* Sparkle decor */}
+        <div style={{
+          position: "absolute", top: "-4px", left: "10px",
+          fontSize: "12px", color: accent,
+          animation: "variantSparkle 2.4s ease-in-out infinite",
+        }}>✦</div>
+        <div style={{
+          position: "absolute", top: "-4px", right: "10px",
+          fontSize: "12px", color: accent,
+          animation: "variantSparkle 2.4s ease-in-out infinite",
+          animationDelay: "1.2s",
+        }}>✦</div>
+
+        <div style={{
+          fontSize: "22px", fontWeight: "bold", color: accent,
+          letterSpacing: "5px", marginBottom: "4px",
+          textShadow: `0 0 14px ${accent}aa, 0 0 30px ${accent}55`,
+          fontFamily: FONT,
+          animation: "pulse 1.8s ease-in-out infinite",
+        }}>
+          🎰 DOPPIO O NULLA 🎰
+        </div>
+        <div style={{
+          display: "inline-block",
+          color: "#000", background: accent,
+          fontSize: "9px", letterSpacing: "3px", fontWeight: "bold",
+          padding: "2px 10px",
+          boxShadow: `0 0 8px ${accent}aa`,
+        }}>
+          ≋ EVENTO CASUALE · ODDS 50/50 ≋
+        </div>
+      </div>
+
+      {/* ═══ STAKES DISPLAY ═══ */}
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: "1fr auto 1fr",
+        gap: "10px",
+        alignItems: "center",
+        padding: "10px 8px",
+        marginBottom: "14px",
+        background: "#0a0a14",
+        border: `1px solid ${accent}44`,
+        boxShadow: `inset 0 0 16px ${accent}0c`,
+      }}>
+        {/* Current prize */}
+        <div style={{textAlign: "center"}}>
+          <div style={{
+            color: C.dim, fontSize: "9px", letterSpacing: "2px",
+            marginBottom: "4px",
+          }}>HAI IN MANO</div>
+          <div style={{
+            color: C.green, fontSize: "20px", fontWeight: "bold",
+            textShadow: `0 0 10px ${C.green}66`,
+            fontFamily: FONT,
+          }}>€{prize}</div>
+        </div>
+
+        {/* Arrow */}
+        <div style={{
+          color: accent, fontSize: "22px",
+          textShadow: `0 0 10px ${accent}`,
+          fontWeight: "bold",
+        }}>→</div>
+
+        {/* Stakes */}
+        <div style={{textAlign: "center"}}>
+          <div style={{
+            color: C.dim, fontSize: "9px", letterSpacing: "2px",
+            marginBottom: "4px",
+          }}>RISCHI PER</div>
+          <div style={{
+            display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
+          }}>
+            <span style={{
+              color: accent, fontSize: "20px", fontWeight: "bold",
+              textShadow: `0 0 10px ${accent}aa`,
+              fontFamily: FONT,
+            }}>€{prize * 2}</span>
+            <span style={{color: C.dim, fontSize: "10px"}}>/</span>
+            <span style={{
+              color: C.red, fontSize: "14px", fontWeight: "bold",
+              textShadow: `0 0 8px ${C.red}88`,
+              fontFamily: FONT,
+            }}>€0</span>
+          </div>
+        </div>
+      </div>
+
+      {/* ═══ SCRATCH ZONE ═══ */}
+      <div style={{
+        position: "relative",
+        width: "200px", height: "140px",
+        margin: "0 auto 12px auto",
+        border: `2px solid ${accent}`,
         overflow: "hidden",
-        boxShadow:`0 0 22px ${C.gold}66, inset 0 0 18px ${C.gold}14`,
+        boxShadow: `0 0 22px ${accent}66, inset 0 0 18px ${accent}14`,
         background: C.card,
       }}>
-        {/* Result underneath — hidden until revealed to prevent spoiler */}
+        {/* Inner corner ticks */}
+        {["tl","tr","bl","br"].map(pos => {
+          const [v, h] = pos.split("");
+          return (
+            <div key={pos} style={{
+              position: "absolute",
+              [v === "t" ? "top" : "bottom"]: "4px",
+              [h === "l" ? "left" : "right"]: "4px",
+              width: "10px", height: "10px",
+              borderTop: v === "t" ? `1px solid ${accent}aa` : "none",
+              borderBottom: v === "b" ? `1px solid ${accent}aa` : "none",
+              borderLeft: h === "l" ? `1px solid ${accent}aa` : "none",
+              borderRight: h === "r" ? `1px solid ${accent}aa` : "none",
+              zIndex: 3, pointerEvents: "none",
+            }}/>
+          );
+        })}
+
+        {/* Result underneath — hidden until revealed */}
         <div style={{
           position: "absolute", top: 0, left: 0, width: "100%", height: "100%",
           display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-          fontSize: "36px", zIndex: 1,
+          fontSize: "48px", zIndex: 1,
           opacity: revealed ? 1 : 0,
+          background: revealed ? `radial-gradient(circle at center, ${resultColor}22 0%, transparent 70%)` : "none",
         }}>
-          <div>{resultSymbol}</div>
           <div style={{
-            fontSize: "16px", fontWeight: "bold", color: resultColor, fontFamily: FONT,
+            textShadow: revealed ? `0 0 20px ${resultColor}` : "none",
+            filter: revealed ? `drop-shadow(0 0 10px ${resultColor}aa)` : "none",
+            animation: revealed ? "pulse 0.6s ease-in-out" : "none",
+          }}>{resultSymbol}</div>
+          <div style={{
+            fontSize: "22px", fontWeight: "bold", color: resultColor, fontFamily: FONT,
+            letterSpacing: "2px", marginTop: "4px",
+            textShadow: `0 0 14px ${resultColor}aa`,
           }}>{resultText}</div>
         </div>
-        {/* Placeholder text when not yet revealed */}
+
+        {/* Placeholder text */}
         {!revealed && (
           <div style={{
             position: "absolute", top: 0, left: 0, width: "100%", height: "100%",
             display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: "11px", color: "#444", fontFamily: FONT, zIndex: 0,
-            pointerEvents: "none",
+            fontSize: "12px", color: "#444", fontFamily: FONT, zIndex: 0,
+            pointerEvents: "none", letterSpacing: "2px",
           }}>
-            GRATTA QUI
+            ?
           </div>
         )}
+
         {/* Scratch layer on top */}
         <canvas
           ref={canvasRef}
-          width={160} height={120}
+          width={200} height={140}
           style={{
             position: "absolute", top: 0, left: 0, width: "100%", height: "100%",
             zIndex: 2, cursor: revealed ? "default" : "crosshair",
@@ -157,35 +298,71 @@ export function DoppioONullaView({ prize, onDecline, onResult }) {
         />
       </div>
 
-      {revealed && (
+      {/* ═══ PROGRESS BAR ═══ */}
+      {!revealed && scratchProgress > 0 && (
         <div style={{
-          fontSize: "20px", fontWeight: "bold",
-          color: won ? C.gold : C.red,
-          textShadow:"none",
-          marginBottom: "8px",
-          animation: "pulse 0.5s ease-in-out",
+          width: "200px", margin: "0 auto 10px",
+          background: "#0a0a14",
+          border: `1px solid ${accent}44`,
+          height: "8px",
+          position: "relative", overflow: "hidden",
         }}>
-          {won ? "🎉 RADDOPPIATO!" : "💀 PERSO TUTTO!"}
-        </div>
-      )}
-
-      {!scratching && !revealed && (
-        <div style={{display: "flex", gap: "10px", justifyContent: "center"}}>
-          <button
-            style={{...S.btn, color: C.green, borderColor: C.green}}
-            onClick={onDecline}
-          >
-            ✋ Intasca €{prize}
-          </button>
-          <div style={{color: C.dim, fontSize: "11px", alignSelf: "center"}}>
-            oppure gratta la cella!
+          <div style={{
+            width: `${Math.min(100, scratchProgress / 0.45)}%`,
+            height: "100%",
+            background: `linear-gradient(90deg, ${accent}88, ${accent})`,
+            boxShadow: `0 0 8px ${accent}`,
+            transition: "width 0.15s ease-out",
+          }}/>
+          <div style={{
+            position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: "8px", color: C.bright, letterSpacing: "2px",
+            fontWeight: "bold", mixBlendMode: "difference",
+          }}>
+            {scratchProgress}%
           </div>
         </div>
       )}
 
-      {scratchProgress > 0 && !revealed && (
-        <div style={{color: C.dim, fontSize: "10px", marginTop: "6px"}}>
-          {scratchProgress}% grattato...
+      {/* ═══ RESULT HERO BANNER ═══ */}
+      {revealed && (
+        <div style={{
+          display: "inline-block",
+          background: won ? C.gold : C.red, color: "#000",
+          padding: "5px 14px", fontSize: "12px", fontWeight: "bold",
+          letterSpacing: "3px", marginBottom: "8px",
+          boxShadow: `0 0 16px ${won ? C.gold : C.red}aa`,
+          animation: "pulse 0.5s ease-in-out",
+        }}>
+          ★ {won ? `🎉 RADDOPPIATO — €${prize * 2}!` : "💀 PERSO TUTTO!"} ★
+        </div>
+      )}
+
+      {/* ═══ CTAs ═══ */}
+      {!scratching && !revealed && (
+        <div style={{
+          display: "flex", gap: "10px", justifyContent: "center",
+          alignItems: "center", flexWrap: "wrap",
+          borderTop: `1px solid ${accent}33`, paddingTop: "12px", marginTop: "4px",
+        }}>
+          <button
+            style={{
+              ...S.btn, color: C.green, borderColor: C.green,
+              background: `${C.green}10`,
+              boxShadow: `0 0 10px ${C.green}33`,
+              letterSpacing: "1px", fontWeight: "bold",
+            }}
+            onClick={onDecline}
+          >
+            ✋ INTASCA €{prize}
+          </button>
+          <div style={{
+            color: C.dim, fontSize: "10px",
+            letterSpacing: "1px", fontStyle: "italic",
+          }}>
+            oppure gratta →
+          </div>
         </div>
       )}
     </div>

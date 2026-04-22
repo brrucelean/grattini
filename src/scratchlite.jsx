@@ -301,7 +301,7 @@ export default function Grattini() {
 
   // ─── HOOK: useShopHandlers ───
   const { handleBuyCard, handleBuyItem, handleBuyGrattatore, handleSlotResult, handleShopScratch } = useShopHandlers({
-    player, updatePlayer, addLog, setGameStats, setCardSelectMode, setScreen, effectiveFortune, unlockAchievement,
+    player, updatePlayer, addLog, setGameStats, setCardSelectMode, setScreen, setReturnScreen, effectiveFortune, unlockAchievement,
     setItemFoundModal,
   });
 
@@ -441,21 +441,11 @@ export default function Grattini() {
         @keyframes foilShine { 0% { background-position: -150% 0; } 100% { background-position: 250% 0; } }
         @keyframes foilHue { 0%,100% { filter: hue-rotate(0deg) saturate(1); } 50% { filter: hue-rotate(18deg) saturate(1.3); } }
         @keyframes asciiFlicker { 0%,100% { text-shadow: 0 0 14px currentColor, 0 0 40px currentColor55; } 47% { text-shadow: 0 0 14px currentColor, 0 0 40px currentColor55; } 48% { text-shadow: 0 0 2px currentColor, 0 0 6px currentColor44; } 52% { text-shadow: 0 0 2px currentColor, 0 0 6px currentColor44; } 53% { text-shadow: 0 0 14px currentColor, 0 0 40px currentColor55; } }
+        /* .foil-ascii::after rimosso — il shimmer diagonale con mix-blend-mode:screen
+           creava un "contorno brillante" deformato sulle lettere box-drawing del titolo.
+           Il class resta no-op per back-compat; il titolo ora si affida solo al gold
+           base + text-shadow + asciiFlicker. */
         .foil-ascii { position: relative; display: inline-block; }
-        .foil-ascii::after {
-          content: ""; position: absolute; inset: 0; pointer-events: none;
-          background: linear-gradient(110deg,
-            transparent 20%,
-            rgba(255,255,255,0.0) 38%,
-            rgba(255,240,150,0.28) 46%,
-            rgba(255,255,255,0.55) 50%,
-            rgba(255,140,220,0.28) 54%,
-            rgba(255,255,255,0.0) 62%,
-            transparent 80%);
-          background-size: 220% 100%;
-          mix-blend-mode: screen;
-          animation: foilShine 3.2s linear infinite;
-        }
         html, body { margin: 0; padding: 0; overflow: hidden; background: #000; }
         * { box-sizing: border-box; }
         ::-webkit-scrollbar { width: 6px; height: 0px; }
@@ -635,10 +625,10 @@ export default function Grattini() {
               const relicMax = Object.keys(RELIC_DEFS).length;
               const vintageCount = vintageCollected.length;
               const cards = [
-                { onClick: () => setShowTrophies(true), accent: C.gold, emoji: "🏆", label: "TROFEI", count: trophyCount, max: trophyMax, ascii: "╔═╗\n╚╦╝\n ▀" , shimmer: trophyCount > 0 },
-                { onClick: () => setShowReliquie(true), accent: "#c060ff", emoji: "🏺", label: "RELIQUIE", count: relicCount, max: relicMax, ascii: "╭─╮\n│ │\n╰─╯", shimmer: relicCount > 0 },
-                { onClick: () => setShowVintage(true), accent: "#ffaa88", emoji: "🎨", label: "VINTAGE", count: vintageCount, max: 5, ascii: "┌─┐\n│J│\n└─┘", shimmer: vintageCount > 0 },
-                { onClick: () => setShowAllTimeStats(true), accent: C.cyan, emoji: "📊", label: "STATS", count: null, max: null, ascii: "▁▃▅▇\n▇▅▃▁\n▃▇▁▅", shimmer: true },
+                { onClick: () => setShowTrophies(true), accent: C.gold, emoji: "🏆", label: "TROFEI", count: trophyCount, max: trophyMax, shimmer: trophyCount > 0 },
+                { onClick: () => setShowReliquie(true), accent: "#c060ff", emoji: "🏺", label: "RELIQUIE", count: relicCount, max: relicMax, shimmer: relicCount > 0 },
+                { onClick: () => setShowVintage(true), accent: "#ffaa88", emoji: "🎨", label: "VINTAGE", count: vintageCount, max: 5, shimmer: vintageCount > 0 },
+                { onClick: () => setShowAllTimeStats(true), accent: C.cyan, emoji: "📊", label: "STATS", count: null, max: null, shimmer: true },
               ];
               return cards.map((c, ci) => {
                 const pct = c.max ? (c.count / c.max) : 1;
@@ -661,7 +651,7 @@ export default function Grattini() {
                     e.currentTarget.style.boxShadow = `0 0 18px ${c.accent}44, inset 0 0 22px ${c.accent}14`;
                   }}
                   >
-                    {/* Preview tile — ASCII + emoji + foil shimmer */}
+                    {/* Preview tile — emoji + foil shimmer */}
                     <div style={{
                       position:"relative", height:"74px",
                       background: `linear-gradient(135deg, ${c.accent}15, ${c.accent}08)`,
@@ -669,14 +659,23 @@ export default function Grattini() {
                       display:"flex", alignItems:"center", justifyContent:"center",
                       overflow:"hidden",
                     }}>
-                      {/* ASCII frame dietro */}
-                      <pre style={{
-                        position:"absolute", inset:0,
-                        display:"flex", alignItems:"center", justifyContent:"center",
-                        color: `${c.accent}55`, fontSize:"14px", lineHeight:"1.05",
-                        margin:0, fontFamily:FONT, letterSpacing:"2px",
-                        textShadow:`0 0 6px ${c.accent}88`,
-                      }}>{c.ascii}</pre>
+                      {/* Corner brackets decorativi — NON si sovrappongono all'emoji */}
+                      {["tl","tr","bl","br"].map(pos => {
+                        const [v, h] = pos.split("");
+                        return (
+                          <div key={pos} style={{
+                            position:"absolute",
+                            [v === "t" ? "top" : "bottom"]: "5px",
+                            [h === "l" ? "left" : "right"]: "5px",
+                            width:"10px", height:"10px",
+                            borderTop: v === "t" ? `1px solid ${c.accent}aa` : "none",
+                            borderBottom: v === "b" ? `1px solid ${c.accent}aa` : "none",
+                            borderLeft: h === "l" ? `1px solid ${c.accent}aa` : "none",
+                            borderRight: h === "r" ? `1px solid ${c.accent}aa` : "none",
+                            zIndex:1,
+                          }}/>
+                        );
+                      })}
                       {/* Emoji centrale */}
                       <div style={{
                         fontSize:"32px", position:"relative", zIndex:2,
@@ -1079,99 +1078,497 @@ export default function Grattini() {
       )}
 
       {/* ═══ SELECT CARD TO SCRATCH ═══ */}
-      {screen === "selectCard" && player && (
-        <div style={{maxWidth:"900px", width:"100%"}}>
-          <div style={{...S.panel, textAlign:"center"}}>
-            <div style={{...S.h2}}>Scegli un biglietto da grattare</div>
-            <div style={{display:"flex", flexWrap:"wrap", justifyContent:"center", gap:"8px", marginBottom:"10px"}}>
+      {screen === "selectCard" && player && (() => {
+        const TIER_META = {
+          1: { label: "COMUNE",       accent: C.green,   emoji: "🎫" },
+          2: { label: "MEDIA",        accent: C.cyan,    emoji: "🎟️" },
+          3: { label: "RARA",         accent: C.magenta, emoji: "💎" },
+          4: { label: "LEGGENDARIA",  accent: C.gold,    emoji: "👑" },
+        };
+        const MECH_BADGE = {
+          trap: "💣 TRAPPOLE", sum13: "🃏 SOMMA 13", ruota: "🎡 RUOTA",
+          doppioOnulla: "🎲 DOPPIO", labirinto: "🗺️ LABIRINTO",
+          combina: "🧩 COMBINA", tesoro: "🗺️ TESORO", jolly: "✨ JOLLY",
+          setteemezzo: "🃏 7½", collect: "💰 COLLECT", mahjong: "🀄 MAHJONG",
+        };
+        return (
+        <div style={{maxWidth:"760px", width:"100%", margin: "10px auto"}}>
+          <div style={{
+            ...S.panel, background: "#05050b",
+            border: `2px solid ${C.gold}55`,
+            boxShadow: `0 0 22px ${C.gold}22, inset 0 0 28px ${C.gold}08`,
+            position: "relative",
+          }}>
+            {/* Corner brackets */}
+            {["tl","tr","bl","br"].map(pos => {
+              const [v, h] = pos.split("");
+              return (
+                <div key={pos} style={{
+                  position: "absolute",
+                  [v === "t" ? "top" : "bottom"]: "10px",
+                  [h === "l" ? "left" : "right"]: "10px",
+                  width: "14px", height: "14px",
+                  borderTop: v === "t" ? `2px solid ${C.gold}` : "none",
+                  borderBottom: v === "b" ? `2px solid ${C.gold}` : "none",
+                  borderLeft: h === "l" ? `2px solid ${C.gold}` : "none",
+                  borderRight: h === "r" ? `2px solid ${C.gold}` : "none",
+                  boxShadow: `0 0 8px ${C.gold}88`,
+                  pointerEvents: "none",
+                }}/>
+              );
+            })}
+
+            {/* Header */}
+            <div style={{
+              textAlign:"center", marginBottom:"16px",
+              paddingBottom:"10px", borderBottom:`1px solid ${C.gold}33`,
+              background: `linear-gradient(180deg, ${C.gold}08 0%, transparent 100%)`,
+              position: "relative",
+            }}>
+              <div style={{
+                position: "absolute", top: "-2px", right: "10px",
+                fontSize: "12px", color: C.gold,
+                animation: "variantSparkle 2.4s ease-in-out infinite",
+              }}>✦</div>
+              <div style={{
+                fontSize: "22px", fontWeight: "bold", color: C.gold,
+                letterSpacing: "4px", marginBottom: "4px",
+                textShadow: `0 0 12px ${C.gold}aa, 0 0 26px ${C.gold}55`,
+                fontFamily: FONT,
+              }}>
+                🎫 I TUOI BIGLIETTI
+              </div>
+              <div style={{
+                display: "inline-block",
+                color: "#000", background: C.gold,
+                fontSize: "9px", letterSpacing: "3px", fontWeight: "bold",
+                padding: "2px 8px", marginBottom: "8px",
+                boxShadow: `0 0 8px ${C.gold}aa`,
+              }}>
+                ≋ SCEGLI COSA GRATTARE ≋
+              </div>
+              <div style={{color:C.text, fontSize:"11px", fontStyle:"italic"}}>
+                {player.scratchCards.length} biglietto{player.scratchCards.length === 1 ? "" : "i"} in mano
+              </div>
+            </div>
+
+            {/* Card grid */}
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
+              gap: "10px",
+              marginBottom: "14px",
+            }}>
               {player.scratchCards.map((card, idx) => {
-                const catColor = card.cost <= 1 ? C.green : card.cost <= 5 ? C.gold : C.orange;
+                const tier = Math.min(4, Math.max(1, card.tier || 1));
+                const meta = TIER_META[tier];
+                const accent = meta.accent;
+                const tierLabel = meta.label;
+                const cardEmoji = meta.emoji;
+                const mechBadge = MECH_BADGE[card.mechanic];
                 return (
                   <div key={idx} onClick={() => handleSelectCard(idx)} style={{
-                    border:`1px solid ${catColor}`, background:C.card,
-                    padding:"10px", borderRadius:"0", cursor:"pointer",
-                    minWidth:"120px", textAlign:"center", transition:"all 0.2s",
+                    position: "relative",
+                    background: "#0a0a14",
+                    border: `2px solid ${accent}88`,
+                    boxShadow: `0 0 10px ${accent}44, inset 0 0 14px ${accent}12`,
+                    padding: "10px 10px 12px", cursor: "pointer",
+                    textAlign: "center",
+                    transition: "transform 0.12s, box-shadow 0.15s",
+                    overflow: "hidden",
                   }}
-                  onMouseEnter={e => e.currentTarget.style.borderColor=C.bright}
-                  onMouseLeave={e => e.currentTarget.style.borderColor=catColor}>
-                    <div style={{color:catColor, fontWeight:"bold", fontSize:"13px"}}>{card.name}</div>
-                    <div style={{color:C.dim, fontSize:"11px"}}>€{card.cost} · Max €{card.maxPrize}</div>
-                    {card.malus && <div style={{color:C.red, fontSize:"9px"}}>⚠ {card.malus.desc}</div>}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.transform = "translateY(-3px)";
+                    e.currentTarget.style.boxShadow = `0 0 18px ${accent}aa, 0 4px 12px #000a, inset 0 0 18px ${accent}22`;
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.transform = "translateY(0)";
+                    e.currentTarget.style.boxShadow = `0 0 10px ${accent}44, inset 0 0 14px ${accent}12`;
+                  }}>
+                    {/* Preview tile */}
+                    <div style={{
+                      position: "relative",
+                      width: "64px", height: "64px", margin: "0 auto 8px",
+                      background: `linear-gradient(135deg, ${accent}22, ${accent}05)`,
+                      border: `1px solid ${accent}66`,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      boxShadow: `inset 0 0 12px ${accent}22`,
+                    }}>
+                      {["tl","tr","bl","br"].map(pos => {
+                        const [v, h] = pos.split("");
+                        return (
+                          <div key={pos} style={{
+                            position: "absolute",
+                            [v === "t" ? "top" : "bottom"]: "3px",
+                            [h === "l" ? "left" : "right"]: "3px",
+                            width: "8px", height: "8px",
+                            borderTop: v === "t" ? `1px solid ${accent}` : "none",
+                            borderBottom: v === "b" ? `1px solid ${accent}` : "none",
+                            borderLeft: h === "l" ? `1px solid ${accent}` : "none",
+                            borderRight: h === "r" ? `1px solid ${accent}` : "none",
+                          }}/>
+                        );
+                      })}
+                      <div style={{
+                        fontSize: "30px",
+                        textShadow: `0 0 14px ${accent}`,
+                      }}>{cardEmoji}</div>
+                      {tier >= 4 && (
+                        <div style={{
+                          position: "absolute", inset: 0,
+                          background: `linear-gradient(110deg, transparent 30%, ${accent}55 50%, transparent 70%)`,
+                          backgroundSize: "200% 100%",
+                          animation: "variantShimmer 2.4s linear infinite",
+                          mixBlendMode: "screen",
+                          pointerEvents: "none",
+                        }}/>
+                      )}
+                    </div>
+
+                    {/* Tier badge */}
+                    <div style={{
+                      display: "inline-block",
+                      background: accent, color: "#000",
+                      padding: "2px 6px", fontSize: "8px", fontWeight: "bold",
+                      letterSpacing: "2px", marginBottom: "4px",
+                      boxShadow: `0 0 6px ${accent}88`,
+                    }}>
+                      ★ {tierLabel} ★
+                    </div>
+
+                    {/* Name */}
+                    <div style={{
+                      color: C.bright, fontSize: "12px", fontWeight: "bold",
+                      marginBottom: "5px", lineHeight: 1.2,
+                    }}>
+                      {card.name}
+                    </div>
+
+                    {/* Cost + Max pills */}
+                    <div style={{display:"flex", justifyContent:"center", gap:"4px", marginBottom:"4px", flexWrap:"wrap"}}>
+                      <div style={{
+                        fontSize:"9px", color: C.gold,
+                        background: `${C.gold}14`,
+                        border: `1px solid ${C.gold}66`,
+                        padding: "1px 5px", letterSpacing: "0.5px",
+                      }}>€{card.cost}</div>
+                      <div style={{
+                        fontSize:"9px", color: C.green,
+                        background: `${C.green}14`,
+                        border: `1px solid ${C.green}66`,
+                        padding: "1px 5px", letterSpacing: "0.5px",
+                      }}>max €{card.maxPrize}</div>
+                    </div>
+
+                    {/* Mechanic badge */}
+                    {mechBadge && (
+                      <div style={{
+                        color: accent, fontSize: "8px", letterSpacing: "1px",
+                        fontWeight: "bold", marginBottom: "3px",
+                      }}>
+                        {mechBadge}
+                      </div>
+                    )}
+
+                    {/* Malus warning */}
+                    {card.malus && (
+                      <div style={{
+                        color:C.red, fontSize:"9px", letterSpacing:"0.3px",
+                        lineHeight: 1.3, marginTop: "4px",
+                        borderTop: `1px dashed ${C.red}55`, paddingTop: "4px",
+                      }}>
+                        ⚠ {card.malus.desc}
+                      </div>
+                    )}
+
+                    {/* Requires grattatore flag */}
+                    {card.requiresGrattatore && (
+                      <div style={{
+                        position: "absolute", top: "6px", right: "6px",
+                        color: C.cyan, fontSize: "9px",
+                        background: "#000a",
+                        padding: "1px 4px",
+                        border: `1px solid ${C.cyan}88`,
+                        letterSpacing: "0.5px", fontWeight: "bold",
+                      }}>
+                        🔧
+                      </div>
+                    )}
                   </div>
                 );
               })}
             </div>
-            <Btn onClick={() => { setCardSelectMode(false); setScreen(currentNode ? "preScratch" : "map"); }}>
-              ← Torna indietro
-            </Btn>
+
+            {/* Back button */}
+            <div style={{
+              display: "flex", justifyContent: "center",
+              borderTop: `1px solid ${C.gold}33`, paddingTop: "12px",
+            }}>
+              <Btn onClick={() => {
+                setCardSelectMode(false);
+                setReturnScreen(null);
+                if (returnScreen === "shop") setScreen("shop");
+                else if (currentNode) setScreen("preScratch");
+                else setScreen("map");
+              }}>← Torna indietro</Btn>
+            </div>
           </div>
         </div>
-      )}
+        );
+      })()}
 
       {/* ═══ PRE-SCRATCH (before entering node) ═══ */}
-      {screen === "preScratch" && player && currentNode && (
-        <div style={{maxWidth:"900px", width:"100%"}}>
-          {/* ── BOX AVVISO BOSS ────────────────────────────────── */}
-          {currentNode.type === "boss" && (() => {
+      {screen === "preScratch" && player && currentNode && (() => {
+        const NODE_ACCENT = {
+          tabaccaio: C.gold, locanda: C.pink, spacciatore: C.green,
+          chirurgo: C.red, ladro: C.orange, mendicante: C.blue,
+          zaino: C.cyan, miniboss: C.orange, boss: C.red,
+          evento: C.magenta, stregone: C.magenta, poliziotto: C.blue,
+          anziana: C.pink, sacerdote: C.gold, bambino: C.cyan,
+          streamer: C.pink, macellaio: C.red,
+          maestroTe: C.green, guantaio: C.gold, start: C.dim,
+        };
+        const NODE_NAMES = {
+          tabaccaio: "TABACCAIO", locanda: "LOCANDA", spacciatore: "SPACCIATORE",
+          chirurgo: "CHIRURGO", ladro: "LADRO", mendicante: "MENDICANTE",
+          zaino: "ZAINO", miniboss: "MINI-BOSS", boss: "BOSS",
+          evento: "EVENTO", stregone: "STREGONE", poliziotto: "POLIZIOTTO",
+          anziana: "ANZIANA", sacerdote: "SACERDOTE", bambino: "BAMBINO",
+          streamer: "STREAMER", macellaio: "MACELLAIO",
+          maestroTe: "MAESTRO DEL TÈ", guantaio: "GUANTAIO", start: "INIZIO",
+        };
+        const accent = NODE_ACCENT[currentNode.type] || C.cyan;
+        const nodeName = NODE_NAMES[currentNode.type] || currentNode.type.toUpperCase();
+        const nodeIcon = NODE_ICONS[currentNode.type] || "?";
+        const isBoss = currentNode.type === "boss";
+        const isElite = !!currentNode.elite;
+
+        // Corner brackets helper
+        const CornerBrackets = ({ color = accent, size = 14, inset = 10, shadow = true }) => (
+          <>{["tl","tr","bl","br"].map(pos => {
+            const [v, h] = pos.split("");
+            return (
+              <div key={pos} style={{
+                position: "absolute",
+                [v === "t" ? "top" : "bottom"]: `${inset}px`,
+                [h === "l" ? "left" : "right"]: `${inset}px`,
+                width: `${size}px`, height: `${size}px`,
+                borderTop: v === "t" ? `2px solid ${color}` : "none",
+                borderBottom: v === "b" ? `2px solid ${color}` : "none",
+                borderLeft: h === "l" ? `2px solid ${color}` : "none",
+                borderRight: h === "r" ? `2px solid ${color}` : "none",
+                boxShadow: shadow ? `0 0 8px ${color}88` : "none",
+                pointerEvents: "none",
+              }}/>
+            );
+          })}</>
+        );
+
+        return (
+        <div style={{maxWidth:"760px", width:"100%", margin:"10px auto"}}>
+
+          {/* ═══ BOSS ENTRY WARNING ═══ */}
+          {isBoss && (() => {
             const bossName = currentNode.bossName || "Il Broker";
             const BOSS_ENTRY = {
-              "Il Broker":             { min: 200 },
-              "Il Romanaccio":         { min: 300 },
-              "Il Napoletano":         { min: 500 },
-              "Il Drago d'Oro":        { min: 400 },
+              "Il Broker":     { min: 200 },
+              "Il Romanaccio": { min: 300 },
+              "Il Napoletano": { min: 500 },
+              "Il Drago d'Oro":{ min: 400 },
             };
             const req = BOSS_ENTRY[bossName];
             if (!req) return null;
             const canEnter = player.money >= req.min;
+            const gateColor = canEnter ? C.green : C.red;
             return (
               <div style={{
-                background: canEnter ? "#001a00" : "#1a0000",
-                border: `2px solid ${canEnter ? C.green : C.red}`,
-                borderRadius:"0", padding:"10px 16px", marginBottom:"8px",
-                textAlign:"center", animation: canEnter ? "none" : "pulse 1.2s infinite",
+                position: "relative",
+                background: canEnter ? "#001a0a" : "#1a0000",
+                border: `2px solid ${gateColor}`,
+                padding: "14px 20px", marginBottom: "10px",
+                textAlign: "center",
+                boxShadow: canEnter
+                  ? `0 0 16px ${gateColor}44, inset 0 0 16px ${gateColor}12`
+                  : `0 0 20px ${gateColor}66, inset 0 0 20px ${gateColor}22`,
+                animation: canEnter ? "none" : "pulse 1.2s infinite",
               }}>
-                <div style={{color: canEnter ? C.green : C.red, fontWeight:"bold", fontSize:"13px", marginBottom:"4px"}}>
-                  {canEnter ? "✅ ACCESSO CONSENTITO" : "🚫 ACCESSO NEGATO"}
+                <CornerBrackets color={gateColor} size={12} inset={6} />
+                <div style={{
+                  display: "inline-block",
+                  background: gateColor, color: "#000",
+                  padding: "3px 10px", fontSize: "10px", fontWeight: "bold",
+                  letterSpacing: "3px", marginBottom: "8px",
+                  boxShadow: `0 0 8px ${gateColor}aa`,
+                }}>
+                  ★ {canEnter ? "ACCESSO CONSENTITO" : "ACCESSO NEGATO"} ★
                 </div>
-                <div style={{color:C.text, fontSize:"11px", lineHeight:"1.6"}}>
-                  {bossName} richiede almeno{" "}
-                  <strong style={{color:C.gold}}>€{req.min}</strong> per entrare.
+                <div style={{color: C.text, fontSize: "12px", lineHeight: 1.6}}>
+                  <strong style={{color: gateColor, fontSize: "13px"}}>{bossName}</strong> richiede almeno{" "}
+                  <strong style={{color: C.gold}}>€{req.min}</strong>.
                   {" "}Hai{" "}
-                  <strong style={{color: canEnter ? C.green : C.red}}>€{player.money}</strong>.
-                  {!canEnter && (
-                    <span style={{color:C.orange, display:"block", marginTop:"4px"}}>
-                      ⚠ Se entri ora verrai rispedito all'inizio della mappa.
-                    </span>
-                  )}
+                  <strong style={{color: gateColor}}>€{player.money}</strong>.
                 </div>
+                {!canEnter && (
+                  <div style={{
+                    marginTop: "8px", padding: "6px 10px",
+                    background: "#0a0004",
+                    border: `1px dashed ${C.orange}66`,
+                    color: C.orange, fontSize: "10px",
+                    letterSpacing: "1px", fontStyle: "italic",
+                  }}>
+                    ⚠ Se entri ora verrai rispedito all'inizio della mappa
+                  </div>
+                )}
               </div>
             );
           })()}
 
-          <div style={{...S.panel, textAlign:"center"}}>
-            <div style={{...S.h2}}>
-              Prossimo nodo: {NODE_ICONS[currentNode.type]} {currentNode.type}
+          {/* ═══ MAIN PANEL — node preview + actions ═══ */}
+          <div style={{
+            ...S.panel, position: "relative",
+            background: "#05050b",
+            border: `2px solid ${accent}55`,
+            boxShadow: `0 0 22px ${accent}22, inset 0 0 28px ${accent}08`,
+          }}>
+            <CornerBrackets />
+
+            {/* Header: icon tile + title */}
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "80px 1fr",
+              gap: "16px", alignItems: "center",
+              padding: "8px 8px 14px",
+              borderBottom: `1px solid ${accent}33`,
+              marginBottom: "14px",
+              background: `linear-gradient(180deg, ${accent}08 0%, transparent 100%)`,
+            }}>
+              {/* Icon tile */}
+              <div style={{
+                position: "relative",
+                width: "72px", height: "72px",
+                background: `linear-gradient(135deg, ${accent}22, ${accent}05)`,
+                border: `1px solid ${accent}66`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                boxShadow: `inset 0 0 16px ${accent}22, 0 0 14px ${accent}44`,
+              }}>
+                {["tl","tr","bl","br"].map(pos => {
+                  const [v, h] = pos.split("");
+                  return (
+                    <div key={pos} style={{
+                      position: "absolute",
+                      [v === "t" ? "top" : "bottom"]: "4px",
+                      [h === "l" ? "left" : "right"]: "4px",
+                      width: "10px", height: "10px",
+                      borderTop: v === "t" ? `1px solid ${accent}` : "none",
+                      borderBottom: v === "b" ? `1px solid ${accent}` : "none",
+                      borderLeft: h === "l" ? `1px solid ${accent}` : "none",
+                      borderRight: h === "r" ? `1px solid ${accent}` : "none",
+                    }}/>
+                  );
+                })}
+                <div style={{
+                  fontSize: "38px",
+                  textShadow: `0 0 16px ${accent}`,
+                  filter: `drop-shadow(0 0 8px ${accent}aa)`,
+                }}>{nodeIcon}</div>
+                {(isBoss || isElite) && (
+                  <div style={{
+                    position: "absolute", inset: 0,
+                    background: `linear-gradient(110deg, transparent 30%, ${accent}55 50%, transparent 70%)`,
+                    backgroundSize: "200% 100%",
+                    animation: "variantShimmer 2.4s linear infinite",
+                    mixBlendMode: "screen", pointerEvents: "none",
+                  }}/>
+                )}
+              </div>
+
+              {/* Title block */}
+              <div>
+                <div style={{
+                  color: C.dim, fontSize: "9px",
+                  letterSpacing: "4px", marginBottom: "2px",
+                }}>
+                  ≋ PROSSIMO NODO ≋
+                </div>
+                <div style={{
+                  fontSize: "22px", fontWeight: "bold", color: accent,
+                  letterSpacing: "3px", marginBottom: "4px",
+                  textShadow: `0 0 12px ${accent}aa, 0 0 26px ${accent}55`,
+                  fontFamily: FONT,
+                }}>
+                  {nodeName}
+                </div>
+                {isElite && (
+                  <div style={{
+                    display: "inline-block",
+                    color: "#000", background: C.orange,
+                    fontSize: "9px", letterSpacing: "3px", fontWeight: "bold",
+                    padding: "1px 7px", marginRight: "4px",
+                    boxShadow: `0 0 8px ${C.orange}aa`,
+                  }}>
+                    ★ ELITE ★
+                  </div>
+                )}
+                {isBoss && (
+                  <div style={{
+                    display: "inline-block",
+                    color: "#000", background: C.red,
+                    fontSize: "9px", letterSpacing: "3px", fontWeight: "bold",
+                    padding: "1px 7px",
+                    boxShadow: `0 0 8px ${C.red}aa`,
+                    animation: "pulse 1.2s infinite",
+                  }}>
+                    ⚠ BOSS ⚠
+                  </div>
+                )}
+              </div>
             </div>
+
+            {/* Body: tickets info OR empty state */}
             {player.scratchCards.length > 0 ? (
-              <div style={{color:C.dim, marginBottom:"10px", fontSize:"12px"}}>
-                Puoi grattare fino a {3 - preScratchCount} biglietti prima di entrare.
+              <div style={{
+                textAlign: "center",
+                background: `${accent}0c`,
+                border: `1px solid ${accent}33`,
+                padding: "10px 14px",
+                marginBottom: "14px",
+                fontSize: "11px", color: C.text, letterSpacing: "0.5px",
+              }}>
+                🎫 Puoi grattare fino a <strong style={{color: C.gold}}>
+                {3 - preScratchCount}</strong> biglietto{(3 - preScratchCount) === 1 ? "" : "i"} prima di entrare
               </div>
             ) : (
-              <div style={{marginBottom:"10px", textAlign:"center"}}>
-                <pre style={{...S.pre, display:"block", margin:"0 auto 12px", fontSize:"22px", color:C.dim}}>{`( ._.)
+              <div style={{
+                textAlign: "center", marginBottom: "14px",
+                padding: "14px 10px",
+                background: "#0a0508",
+                border: `1px dashed ${C.red}55`,
+              }}>
+                <pre style={{...S.pre, display:"block", margin:"0 auto 10px", fontSize:"20px", color:C.dim}}>{`( ._.)
  ﾉ   )`}</pre>
-                <div style={{color:C.red, fontSize:"13px", marginBottom:"5px", fontWeight:"bold", letterSpacing:"1px"}}>
-                  — nessun grattino —
+                <div style={{
+                  display: "inline-block",
+                  background: C.red, color: "#000",
+                  padding: "2px 8px", fontSize: "9px", fontWeight: "bold",
+                  letterSpacing: "3px", marginBottom: "8px",
+                  boxShadow: `0 0 8px ${C.red}aa`,
+                }}>
+                  ★ NESSUN GRATTINO ★
                 </div>
-                <div style={{color:C.dim, fontSize:"11px", marginBottom:"6px", lineHeight:"1.5"}}>
+                <div style={{color: C.dim, fontSize: "11px", lineHeight: 1.5, marginBottom: "4px"}}>
                   Di solito qui ci si ferma a grattare<br/>i biglietti comprati al Tabaccaio.
                 </div>
-                <div style={{color:C.gold, fontSize:"12px"}}>
+                <div style={{color: C.gold, fontSize: "11px", fontStyle: "italic"}}>
                   Comprane al prossimo 🏪 Tabaccaio!
                 </div>
               </div>
             )}
-            <div style={{display:"flex", justifyContent:"center", gap:"10px", flexWrap:"wrap"}}>
+
+            {/* CTAs */}
+            <div style={{
+              display: "flex", justifyContent: "center", gap: "10px", flexWrap: "wrap",
+              borderTop: `1px solid ${accent}33`, paddingTop: "12px",
+            }}>
               {preScratchCount < 3 && player.scratchCards.length > 0 && (
                 <Btn variant="gold" onClick={handlePreScratch}>
                   🎫 Gratta ({3 - preScratchCount} rimasti)
@@ -1183,24 +1580,60 @@ export default function Grattini() {
             </div>
           </div>
 
-          {/* Grattatori */}
+          {/* ═══ GRATTATORI ═══ */}
           {player.grattatori.length > 0 && (
-            <div style={{...S.panel, borderColor: C.cyan+"44"}}>
-              <div style={{...S.h3, color:C.cyan}}>🔧 Grattatori</div>
-              <div style={{color:C.dim, fontSize:"10px", marginBottom:"6px"}}>
-                Equipaggia un grattatore per proteggere le unghie durante la grattata.
+            <div style={{
+              ...S.panel, position: "relative",
+              background: "#05080a",
+              border: `2px solid ${C.cyan}44`,
+              boxShadow: `0 0 14px ${C.cyan}20, inset 0 0 20px ${C.cyan}06`,
+            }}>
+              {/* Section header */}
+              <div style={{
+                display: "flex", alignItems: "center", gap: "10px",
+                borderBottom: `1px solid ${C.cyan}44`,
+                paddingBottom: "6px", marginBottom: "10px",
+              }}>
+                <div style={{
+                  background: C.cyan, color: "#000",
+                  padding: "3px 10px", fontSize: "10px", fontWeight: "bold",
+                  letterSpacing: "2px",
+                  boxShadow: `0 0 8px ${C.cyan}88`,
+                }}>
+                  ★ 🔧 GRATTATORI ★
+                </div>
+                <div style={{color: C.dim, fontSize: "10px", letterSpacing: "1px", fontStyle: "italic"}}>
+                  proteggono le unghie durante la grattata
+                </div>
+                <div style={{marginLeft: "auto", color: C.cyan, fontSize: "10px", letterSpacing: "1px"}}>
+                  {player.grattatori.length} {player.grattatori.length === 1 ? "pezzo" : "pezzi"}
+                </div>
               </div>
+
+              {/* Equipped indicator */}
               {player.equippedGrattatore && (
-                <div style={{color:C.green, fontSize:"11px", marginBottom:"6px",
-                  background:"#001a00", padding:"4px 8px", borderRadius:"0"}}>
-                  ✓ Equipaggiato: {player.equippedGrattatore.emoji} {player.equippedGrattatore.name}
-                  ({player.equippedGrattatore.usesLeft} usi)
-                  <Btn onClick={unequipGrattatore} style={{fontSize:"10px", marginLeft:"8px", padding:"2px 6px"}}>
+                <div style={{
+                  display: "flex", alignItems: "center", gap: "8px",
+                  color: C.green, fontSize: "11px", marginBottom: "8px",
+                  background: "#001a0a",
+                  border: `1px solid ${C.green}66`,
+                  padding: "5px 10px",
+                  boxShadow: `inset 0 0 10px ${C.green}14`,
+                }}>
+                  <span style={{fontSize: "14px"}}>✓</span>
+                  <span style={{letterSpacing: "1px"}}>EQUIPAGGIATO:</span>
+                  <strong style={{color: C.bright}}>
+                    {player.equippedGrattatore.emoji} {player.equippedGrattatore.name}
+                  </strong>
+                  <span style={{color: C.dim}}>({player.equippedGrattatore.usesLeft} usi)</span>
+                  <Btn onClick={unequipGrattatore} style={{fontSize: "10px", marginLeft: "auto", padding: "2px 8px"}}>
                     ✗ Rimuovi
                   </Btn>
                 </div>
               )}
-              <div style={{display:"flex", flexWrap:"wrap", gap:"4px"}}>
+
+              {/* Grattatori list */}
+              <div style={{display: "flex", flexWrap: "wrap", gap: "5px"}}>
                 {player.grattatori.map((g, idx) => {
                   const def = GRATTATORE_DEFS[g.id];
                   return (
@@ -1208,8 +1641,8 @@ export default function Grattini() {
                       <Btn
                         onClick={() => equipGrattatore(idx)}
                         variant={player.equippedGrattatore?.inventoryIdx === idx ? "gold" : "normal"}
-                        style={{fontSize:"11px"}}>
-                        {g.emoji} {g.name} ({g.usesLeft} usi)
+                        style={{fontSize: "11px"}}>
+                        {g.emoji} {g.name} ({g.usesLeft})
                       </Btn>
                     </Tooltip>
                   );
@@ -1218,16 +1651,41 @@ export default function Grattini() {
             </div>
           )}
 
-          {/* Inventory */}
+          {/* ═══ CONSUMABILI ═══ */}
           {player.items.length > 0 && (
-            <div style={{...S.panel}}>
-              <div style={S.h3}>💊 Consumabili</div>
-              <div style={{display:"flex", flexWrap:"wrap", gap:"4px"}}>
+            <div style={{
+              ...S.panel, position: "relative",
+              background: "#05080a",
+              border: `2px solid ${C.green}44`,
+              boxShadow: `0 0 14px ${C.green}20, inset 0 0 20px ${C.green}06`,
+            }}>
+              <div style={{
+                display: "flex", alignItems: "center", gap: "10px",
+                borderBottom: `1px solid ${C.green}44`,
+                paddingBottom: "6px", marginBottom: "10px",
+              }}>
+                <div style={{
+                  background: C.green, color: "#000",
+                  padding: "3px 10px", fontSize: "10px", fontWeight: "bold",
+                  letterSpacing: "2px",
+                  boxShadow: `0 0 8px ${C.green}88`,
+                }}>
+                  ★ 💊 CONSUMABILI ★
+                </div>
+                <div style={{color: C.dim, fontSize: "10px", letterSpacing: "1px", fontStyle: "italic"}}>
+                  click per usare
+                </div>
+                <div style={{marginLeft: "auto", color: C.green, fontSize: "10px", letterSpacing: "1px"}}>
+                  {player.items.length}/{MAX_ITEMS}
+                </div>
+              </div>
+
+              <div style={{display: "flex", flexWrap: "wrap", gap: "5px"}}>
                 {player.items.map((itemId, idx) => {
                   const item = ITEM_DEFS[itemId];
                   return item ? (
                     <Tooltip key={idx} text={item.desc}>
-                      <Btn onClick={() => useItem(idx)} style={{fontSize:"11px"}}>
+                      <Btn onClick={() => useItem(idx)} style={{fontSize: "11px"}}>
                         {item.emoji} {item.name}
                       </Btn>
                     </Tooltip>
@@ -1237,9 +1695,9 @@ export default function Grattini() {
             </div>
           )}
 
-
         </div>
-      )}
+        );
+      })()}
 
       {/* ═══ MAP ═══ */}
       {screen === "map" && player && map && (
@@ -1890,55 +2348,155 @@ export default function Grattini() {
 
       {/* ═══ GAME OVER ═══ */}
       {screen === "gameOver" && (
-        <div style={{textAlign:"center", maxWidth:"500px"}}>
-          <pre style={{
-            ...S.pre, color:C.red, fontSize:"14px", marginBottom:"10px",
-            border:`3px solid ${C.red}`, padding:"18px 28px",
-            display:"inline-block", lineHeight:"1.3",
-            boxShadow:`0 0 32px ${C.red}aa, inset 0 0 24px ${C.red}22`,
-          }}>{`
- ██████╗  █████╗ ██╗   ██╗
+        <div style={{
+          textAlign: "center", maxWidth: "560px", width: "100%",
+          background: "linear-gradient(180deg, #100000 0%, #05050b 100%)",
+          border: `2px solid ${C.red}`,
+          boxShadow: `0 0 28px ${C.red}77, inset 0 0 32px ${C.red}14`,
+          padding: "18px",
+          position: "relative",
+        }}>
+          {/* Corner brackets decorativi grandi */}
+          {["tl","tr","bl","br"].map(pos => {
+            const [v, h] = pos.split("");
+            return (
+              <div key={pos} style={{
+                position: "absolute",
+                [v === "t" ? "top" : "bottom"]: "6px",
+                [h === "l" ? "left" : "right"]: "6px",
+                width: "18px", height: "18px",
+                borderTop: v === "t" ? `2px solid ${C.red}` : "none",
+                borderBottom: v === "b" ? `2px solid ${C.red}` : "none",
+                borderLeft: h === "l" ? `2px solid ${C.red}` : "none",
+                borderRight: h === "r" ? `2px solid ${C.red}` : "none",
+                boxShadow: `0 0 8px ${C.red}88`,
+              }}/>
+            );
+          })}
+
+          {/* ASCII GAY OVER — wrapper block-level per evitare flow inline col badge */}
+          <div style={{marginBottom: "12px"}}>
+            <pre style={{
+              ...S.pre, color: C.red, fontSize: "12px",
+              display: "inline-block", lineHeight: 1.2,
+              textShadow: `0 0 12px ${C.red}aa, 0 0 28px ${C.red}55`,
+              margin: 0,
+              textAlign: "left", // importante: preserva indent interno dell'ASCII
+            }}>{` ██████╗  █████╗ ██╗   ██╗
 ██╔════╝ ██╔══██╗╚██╗ ██╔╝
 ██║  ███╗███████║ ╚████╔╝
 ██║   ██║██╔══██║  ╚██╔╝
 ╚██████╔╝██║  ██║   ██║
  ╚═════╝ ╚═╝  ╚═╝   ╚═╝
-
-    O  V  E  R`}
-          </pre>
-          <div style={{
-            color:"#881122", fontSize:"12px", fontStyle:"italic",
-            marginBottom:"10px", letterSpacing:"1px",
-          }}>
-            "Le tue unghie si sono consumate fino all'osso."
+      O   V   E   R`}
+            </pre>
           </div>
-          <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:"6px", marginBottom:"16px", textAlign:"left", maxWidth:"320px", margin:"0 auto 16px"}}>
+
+          {/* Badge di morte — sotto l'ASCII per gerarchia visiva */}
+          <div style={{marginBottom: "12px"}}>
+            <div style={{
+              display: "inline-block",
+              background: C.red, color: "#000",
+              fontSize: "10px", fontWeight: "bold", letterSpacing: "4px",
+              padding: "3px 14px",
+              boxShadow: `0 0 12px ${C.red}aa`,
+            }}>
+              ★ FINE DELLA RUN ★
+            </div>
+          </div>
+
+          <div style={{
+            color: "#cc6677", fontSize: "12px", fontStyle: "italic",
+            marginBottom: "14px", letterSpacing: "1px",
+            background: "#1a0005",
+            border: `1px solid ${C.red}44`,
+            padding: "6px 12px",
+            display: "inline-block",
+            boxShadow: `inset 0 0 10px ${C.red}14`,
+          }}>
+            <span style={{color: C.red, marginRight: "6px"}}>❝</span>
+            Le tue unghie si sono consumate fino all'osso.
+            <span style={{color: C.red, marginLeft: "6px"}}>❞</span>
+          </div>
+
+          {/* Section header */}
+          <div style={{
+            display: "flex", alignItems: "center", gap: "10px",
+            borderBottom: `1px solid ${C.gold}44`,
+            paddingBottom: "6px", marginBottom: "10px",
+            maxWidth: "420px", margin: "0 auto 10px",
+          }}>
+            <div style={{
+              background: C.gold, color: "#000",
+              padding: "2px 10px", fontSize: "9px", fontWeight: "bold",
+              letterSpacing: "2px",
+              boxShadow: `0 0 6px ${C.gold}88`,
+            }}>
+              ★ 📊 DIARIO DI RUN ★
+            </div>
+            <div style={{marginLeft: "auto", color: C.gold, fontSize: "9px", letterSpacing: "1px"}}>
+              12 metriche
+            </div>
+          </div>
+
+          {/* Stats grid — tile foil con icon centrale */}
+          <div style={{
+            display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "6px",
+            marginBottom: "16px", maxWidth: "420px", margin: "0 auto 16px",
+          }}>
             {[
-              ["🖐️ Carte grattate", gameStats.cardsScratched, C.magenta],
-              ["✅ Grattate vincenti", gameStats.scratchWins||0, C.green],
-              ["❌ Grattate perdenti", gameStats.scratchLosses||0, C.red],
-              ["💰 Guadagnato", `€${gameStats.moneyEarned}`, C.gold],
-              ["🗺️ Nodi visitati", gameStats.nodesVisited, C.cyan],
-              ["💸 Speso", `€${gameStats.moneySpent||0}`, C.orange],
-              ["⚔️ Combat vinti", gameStats.combatsWon||0, C.green],
-              ["💀 Combat persi", gameStats.combatsLost||0, C.red],
-              ["🌙 Sogni", gameStats.dreamsHad||0, C.magenta],
-              ["🎰 Slot plays", gameStats.slotPlays||0, C.gold],
-              ["🏆 Miglior premio", `€${gameStats.bestPrize||0}`, C.gold],
-              ["⚡ Combo", gameStats.combosFired||0, C.cyan],
-            ].map(([label, val, color]) => (
-              <div key={label} style={{background:"#0d0d18", border:"1px solid #2a2a3a", borderRadius:"0", padding:"5px 8px"}}>
-                <div style={{color:C.dim, fontSize:"9px"}}>{label}</div>
-                <div style={{color, fontSize:"12px", fontWeight:"bold"}}>{val}</div>
+              { icon: "🖐️", label: "GRATTATE", val: gameStats.cardsScratched, color: C.magenta },
+              { icon: "✅", label: "VINTE", val: gameStats.scratchWins || 0, color: C.green },
+              { icon: "❌", label: "PERSE", val: gameStats.scratchLosses || 0, color: C.red },
+              { icon: "💰", label: "GUADAGNATO", val: `€${gameStats.moneyEarned}`, color: C.gold },
+              { icon: "💸", label: "SPESO", val: `€${gameStats.moneySpent || 0}`, color: C.orange },
+              { icon: "🗺️", label: "NODI", val: gameStats.nodesVisited, color: C.cyan },
+              { icon: "⚔️", label: "COMBAT ✓", val: gameStats.combatsWon || 0, color: C.green },
+              { icon: "💀", label: "COMBAT ✗", val: gameStats.combatsLost || 0, color: C.red },
+              { icon: "⚡", label: "COMBO", val: gameStats.combosFired || 0, color: C.cyan },
+              { icon: "🌙", label: "SOGNI", val: gameStats.dreamsHad || 0, color: C.magenta },
+              { icon: "🎰", label: "SLOT", val: gameStats.slotPlays || 0, color: C.gold },
+              { icon: "🏆", label: "MIGLIOR €", val: `€${gameStats.bestPrize || 0}`, color: C.gold },
+            ].map(s => (
+              <div key={s.label} style={{
+                background: "#07070d",
+                border: `1px solid ${s.color}66`,
+                boxShadow: `inset 0 0 8px ${s.color}18`,
+                padding: "6px 4px 5px",
+                position: "relative",
+                overflow: "hidden",
+              }}>
+                {/* Icon dietro semi-trasparente */}
+                <div style={{
+                  position: "absolute", right: "-4px", bottom: "-6px",
+                  fontSize: "28px", opacity: 0.12,
+                  textShadow: `0 0 8px ${s.color}`,
+                  pointerEvents: "none",
+                }}>{s.icon}</div>
+                <div style={{
+                  color: s.color, fontSize: "8px",
+                  letterSpacing: "1.5px", fontWeight: "bold",
+                  marginBottom: "2px", position: "relative",
+                }}>
+                  {s.icon} {s.label}
+                </div>
+                <div style={{
+                  color: s.color, fontSize: "14px", fontWeight: "bold",
+                  fontFamily: FONT, position: "relative",
+                  textShadow: `0 0 6px ${s.color}55`,
+                }}>
+                  {s.val}
+                </div>
               </div>
             ))}
           </div>
-          <div style={{display:"flex", gap:"10px", justifyContent:"center", flexWrap:"wrap"}}>
-            <Btn variant="gold" onClick={() => { setScreen("title"); }}>
-              Riprova
+
+          <div style={{display: "flex", gap: "10px", justifyContent: "center", flexWrap: "wrap"}}>
+            <Btn variant="gold" onClick={() => { setScreen("title"); }} style={{letterSpacing: "2px"}}>
+              ↻ RIPROVA
             </Btn>
-            <Btn onClick={() => setShowTrophies(true)} style={{fontSize:"11px", borderColor:C.gold, color:C.gold}}>
-              🏆 Trofei
+            <Btn onClick={() => setShowTrophies(true)} style={{fontSize: "11px", borderColor: C.gold, color: C.gold, letterSpacing: "1px"}}>
+              🏆 TROFEI
             </Btn>
           </div>
         </div>

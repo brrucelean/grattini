@@ -111,9 +111,12 @@ export function ScratchCell({ cell, idx, onScratch, finished, isWinSymbol, isPar
   return (
     <div style={{
       width:"100%", aspectRatio:"1.3", position:"relative",
-      border:`2px solid ${cell.scratched ? borderColor : unrevealedBorder}`,
+      border:`2px solid ${cell.scratched && isBloody ? "#ff2030" : (cell.scratched ? borderColor : unrevealedBorder)}`,
       borderRadius:"0", overflow:"hidden",
       background: cell.scratched ? bg : "#111",
+      boxShadow: cell.scratched && isBloody
+        ? "inset 0 0 14px #ff000088, 0 0 10px #ff000055"
+        : "none",
       transition: "none",
     }}>
       {/* Symbol — visible only after reveal */}
@@ -143,28 +146,45 @@ export function ScratchCell({ cell, idx, onScratch, finished, isWinSymbol, isPar
           preserveAspectRatio="none"
           style={{
             position:"absolute", inset:0, width:"100%", height:"100%",
-            pointerEvents:"none", mixBlendMode:"multiply",
+            pointerEvents:"none",
+            filter: "drop-shadow(0 0 2px #ff0000aa) drop-shadow(0 1px 1px #00000099)",
           }}
         >
+          {/* Macchie grandi — rosso brillante con bordo scuro per definizione */}
           {bloodSplatter.current.blobs.map((b, i) => (
-            <ellipse
-              key={`b${i}`}
-              cx={b.cx} cy={b.cy} rx={b.rx} ry={b.ry}
-              fill="#a00010"
-              opacity={b.op}
-              transform={`rotate(${b.rot} ${b.cx} ${b.cy})`}
-            />
+            <g key={`b${i}`} transform={`rotate(${b.rot} ${b.cx} ${b.cy})`}>
+              <ellipse
+                cx={b.cx} cy={b.cy} rx={b.rx} ry={b.ry}
+                fill="#ff1020"
+                opacity={Math.min(1, b.op + 0.1)}
+              />
+              {/* Highlight al centro per effetto bagnato/fresco */}
+              <ellipse
+                cx={b.cx - b.rx * 0.25} cy={b.cy - b.ry * 0.3}
+                rx={b.rx * 0.3} ry={b.ry * 0.35}
+                fill="#ff6060"
+                opacity="0.55"
+              />
+            </g>
           ))}
+          {/* Gocce che colano — rosso scuro ma saturo */}
           {bloodSplatter.current.drips.map((d, i) => (
-            <rect
-              key={`d${i}`}
-              x={d.x - 1} y={d.y} width="2.2" height={d.h}
-              fill="#7a0008" opacity="0.7"
-            />
+            <g key={`d${i}`}>
+              <rect
+                x={d.x - 1.2} y={d.y} width="2.6" height={d.h}
+                fill="#dd0010" opacity="0.92"
+              />
+              {/* Goccia a fondo colata */}
+              <circle cx={d.x} cy={d.y + d.h} r="1.4" fill="#ff1020" opacity="0.95" />
+            </g>
           ))}
-          {/* Piccoli schizzi puntiformi */}
+          {/* Piccoli schizzi puntiformi — rosso brillante */}
           {bloodSplatter.current.blobs.slice(0, 3).map((b, i) => (
-            <circle key={`s${i}`} cx={b.cx + 8 + i * 3} cy={b.cy - 6 - i * 2} r="0.9" fill="#8a0010" opacity="0.8" />
+            <circle key={`s${i}`} cx={b.cx + 8 + i * 3} cy={b.cy - 6 - i * 2} r="1.1" fill="#ff2030" opacity="0.95" />
+          ))}
+          {/* Micro-spruzzi extra per aumentare densità visiva */}
+          {bloodSplatter.current.blobs.slice(0, 4).map((b, i) => (
+            <circle key={`ms${i}`} cx={b.cx - 6 - i * 2} cy={b.cy + 4 + i * 2} r="0.7" fill="#ff4050" opacity="0.85" />
           ))}
         </svg>
       )}

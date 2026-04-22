@@ -95,6 +95,6 @@ export const GRATTATORE_DEFS = {
                     effect:"healAll", maxUses:1 },
   monetaCinese:   { name:"Moneta Cinese", desc:"x5 vincita ASSICURATA + teletrasporto in Cina! 🇨🇳 (1 uso)", cost:0, rarity:"rarissimo", emoji:"🀄",
                     effect:"x5teleport", maxUses:1 },
-  guantoBoss:     { name:"Guanto da BOSS", desc:"Protegge le unghie dal prossimo combattimento (1 uso)", cost:0, rarity:"rarissimo", emoji:"🧤",
-                    effect:"bossShield", maxUses:1 },
+  guantoBoss:     { name:"Guanto da BOSS", desc:"SOLO BOSS: protegge TUTTE le dita per l'intera boss-fight (niente danni alle unghie). Si sgretola a fine fight → avanzi di bioma.", cost:0, rarity:"rarissimo", emoji:"🧤",
+                    effect:"bossShield", maxUses:1, bossOnly:true },
 };

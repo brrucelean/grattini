@@ -662,10 +662,10 @@ export function useEventHandlers({
         if (!def || player.money < 60) { setScreen("map"); break; }
         const newGrat = { id: "guantoBoss", name: def.name, emoji: def.emoji, effect: def.effect, usesLeft: def.maxUses };
         updatePlayer(p => ({...p, money: p.money - 60, grattatori: [...p.grattatori, newGrat]}));
-        addLog(`🧤 Hai comprato il ${def.name}! Protezione garantita al prossimo boss.`, C.gold);
+        addLog(`🧤 Hai comprato il ${def.name}! Protezione garantita contro il boss del bioma.`, C.gold);
         setItemFoundModal({
           emoji: def.emoji, name: def.name,
-          desc: `${def.desc}\nPagato €60 al Guantaio.`,
+          desc: `${def.desc}\n\nPagato €60 al Guantaio.\n\n⚠️ Attivo SOLO contro il BOSS — su miniboss/ladri/poliziotti non fa nulla (resta in mano).`,
           subtitle: "Guanto acquistato",
         });
         setScreen("map"); break;
@@ -683,7 +683,7 @@ export function useEventHandlers({
         addLog(`🦴 Hai ceduto un'unghia + €20. Il Guantaio ti consegna il ${def.name}.`, C.cyan);
         setItemFoundModal({
           emoji: def.emoji, name: def.name,
-          desc: `${def.desc}\nPagato con 1 unghia + €20.`,
+          desc: `${def.desc}\n\nPagato con 1 unghia + €20.\n\n⚠️ Attivo SOLO contro il BOSS — su miniboss/ladri/poliziotti non fa nulla (resta in mano).`,
           subtitle: "Baratto col Guantaio",
         });
         setScreen("map"); break;

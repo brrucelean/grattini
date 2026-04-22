@@ -459,6 +459,25 @@ export const SPR_BIG = {
     "        ▐█  █▌",
     "       ───  ───",
   ],
+  // ─── GUANTAIO: uomo vestito da guanto ─────────────────────
+  // Le dita del guanto sporgono dalla testa, il volto è sul
+  // palmo, grembiule "GUANTI" sul torso. Mascotte artigiana.
+  guantaio: [
+    "      ╭─╮╭─╮╭─╮",
+    "      │▓││▓││▓│",
+    "    ╭─┴─┴┴─┴┴─┴─╮",
+    "   ╭┤▓▓▓▓▓▓▓▓▓▓▓├╮",
+    "   │▓  (•)  (•) ▓│",
+    "   │▓     ∩     ▓│",
+    "   │▓   ╰───╯   ▓│",
+    "   ╰─┬─────────┬─╯",
+    "     ╰┬───────┬╯",
+    "    ┌─┴───────┴─┐",
+    "    │ ★ GUANTI ★│",
+    "    │  § € §    │",
+    "    └──┬─────┬──┘",
+    "       █     █",
+  ],
 };
 
 // ─── SPR_COLOR: sprite multicolore [testo, colore][] per riga ──
@@ -586,6 +605,8 @@ export const NPC_PALETTE = {
   macellaio:  [C.red, C.orange, C.text],
   vecchio:    ["#ffcc00", "#aa8844", "#665522"],
   maestroTe:  ["#ff3333", C.gold, C.green],
+  // Guantaio: toni pelle conciata — cuoio tan + gold + ombra scura
+  guantaio:   ["#d4a574", C.gold, "#8b5a2b"],
 };
 
 export const TICKER_COLORS = [C.gold, C.cyan, C.pink, C.green, C.orange, C.magenta, "#ff4466", "#44ffcc"];

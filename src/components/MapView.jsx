@@ -83,6 +83,24 @@ export function MapView({ map, currentRow, visitedNodes, onSelectNode, reachable
     { icon:"★", label:"ELITE",       color:C.orange },
   ];
 
+  // Corner brackets — elemento Vintage ricorrente
+  const cornerBrackets = (color, size = 12, inset = -2, borderW = 2, shadow = true) => {
+    const common = {
+      position:"absolute", width:`${size}px`, height:`${size}px`,
+      borderColor: color, borderStyle:"solid",
+      filter: shadow ? `drop-shadow(0 0 4px ${color}aa)` : "none",
+      pointerEvents:"none",
+    };
+    return (
+      <>
+        <div style={{...common, top:inset,    left:inset,    borderWidth:`${borderW}px 0 0 ${borderW}px`}}/>
+        <div style={{...common, top:inset,    right:inset,   borderWidth:`${borderW}px ${borderW}px 0 0`}}/>
+        <div style={{...common, bottom:inset, left:inset,    borderWidth:`0 0 ${borderW}px ${borderW}px`}}/>
+        <div style={{...common, bottom:inset, right:inset,   borderWidth:`0 ${borderW}px ${borderW}px 0`}}/>
+      </>
+    );
+  };
+
   return (
     <div style={{
       margin:"6px auto",
@@ -94,6 +112,7 @@ export function MapView({ map, currentRow, visitedNodes, onSelectNode, reachable
       position:"relative",
       boxShadow:`0 0 24px ${biomeColor}33, inset 0 0 40px ${biomeColor}11`,
     }}>
+      {cornerBrackets(biomeColor, 14, -1, 2, true)}
       {/* ── HEADER — pattern Vintage con stemma bioma + chips legenda + progress ── */}
       <div style={{
         position:"sticky", top:0, zIndex:10,
@@ -113,31 +132,63 @@ export function MapView({ map, currentRow, visitedNodes, onSelectNode, reachable
             mixBlendMode:"screen",
           }}/>
           <div style={{display:"flex", alignItems:"center", gap:"10px", position:"relative", zIndex:2}}>
-            {/* Stemma bioma */}
+            {/* Stemma bioma con corner brackets */}
             <div style={{
-              width:"38px", height:"38px", flexShrink:0,
+              width:"42px", height:"42px", flexShrink:0, position:"relative",
               border:`2px solid ${biomeColor}`,
               background:`radial-gradient(circle, ${biomeColor}33, ${biomeColor}08)`,
               boxShadow:`0 0 12px ${biomeColor}88, inset 0 0 8px ${biomeColor}44`,
               display:"flex", alignItems:"center", justifyContent:"center",
-              fontSize:"20px",
+              fontSize:"22px",
               filter:`drop-shadow(0 0 6px ${biomeColor})`,
-            }}>{biomeGlyph}</div>
+            }}>
+              {cornerBrackets(biomeColor, 6, -3, 1.5, false)}
+              <span>{biomeGlyph}</span>
+            </div>
             <div>
+              {/* Solid badge ★ BIOMA N/4 ★ */}
+              <div style={{
+                display:"inline-block",
+                background: biomeColor,
+                color:"#000",
+                fontFamily:FONT, fontWeight:"bold",
+                fontSize:"8px", letterSpacing:"2px",
+                padding:"2px 7px",
+                boxShadow:`0 0 8px ${biomeColor}aa`,
+                marginBottom:"3px",
+              }}>
+                ★ BIOMA {currentBiome + 1}/4 ★
+              </div>
+              {/* Titolo neon */}
               <div style={{color: biomeColor, fontFamily:FONT, fontWeight:"bold", fontSize:"16px", letterSpacing:"3px", textShadow:`0 0 10px ${biomeColor}99, 0 0 20px ${biomeColor}44`, lineHeight:1}}>
                 ⬡ {biomeName.toUpperCase()} ⬡
               </div>
-              <div style={{color:`${biomeColor}aa`, fontSize:"8px", letterSpacing:"2px", marginTop:"3px"}}>
-                BIOMA {currentBiome + 1}/4 · BOSS: <span style={{color:C.red, fontWeight:"bold"}}>{biomeBoss.toUpperCase()}</span>
+              {/* Boss badge rosso solido */}
+              <div style={{marginTop:"4px", display:"flex", alignItems:"center", gap:"6px"}}>
+                <span style={{
+                  display:"inline-block",
+                  background: C.red,
+                  color:"#fff",
+                  fontFamily:FONT, fontWeight:"bold",
+                  fontSize:"7px", letterSpacing:"1.5px",
+                  padding:"1px 6px",
+                  boxShadow:`0 0 6px ${C.red}aa`,
+                }}>
+                  ★ BOSS ★
+                </span>
+                <span style={{color:C.red, fontSize:"9px", fontWeight:"bold", letterSpacing:"1px", textShadow:`0 0 4px ${C.red}88`}}>
+                  {biomeBoss.toUpperCase()}
+                </span>
               </div>
             </div>
           </div>
-          {/* Progress row → boss */}
-          <div style={{position:"relative", zIndex:2, textAlign:"right", flexShrink:0}}>
-            <div style={{color:C.dim, fontSize:"8px", letterSpacing:"2px", marginBottom:"2px"}}>
+          {/* Progress row → boss con corner brackets */}
+          <div style={{position:"relative", zIndex:2, textAlign:"right", flexShrink:0, padding:"4px 8px"}}>
+            {cornerBrackets(biomeColor, 7, 0, 1.5, false)}
+            <div style={{color:C.dim, fontSize:"8px", letterSpacing:"2px", marginBottom:"3px"}}>
               RIGA <span style={{color:biomeColor, fontWeight:"bold"}}>{progressRow}</span>/{totalRows}
             </div>
-            <div style={{width:"120px", height:"5px", background:"#1a1a22", border:`1px solid ${biomeColor}44`, position:"relative"}}>
+            <div style={{width:"120px", height:"6px", background:"#1a1a22", border:`1px solid ${biomeColor}66`, position:"relative"}}>
               <div style={{
                 height:"100%", width:`${progressPct}%`,
                 background:`linear-gradient(90deg, ${biomeColor}, ${C.red})`,
@@ -145,13 +196,38 @@ export function MapView({ map, currentRow, visitedNodes, onSelectNode, reachable
                 transition:"width 0.4s",
               }}/>
             </div>
-            <div style={{color:C.red, fontSize:"8px", letterSpacing:"1px", marginTop:"2px", opacity:0.8}}>
+            <div style={{color:C.red, fontSize:"8px", letterSpacing:"2px", marginTop:"3px", opacity:0.9, fontWeight:"bold"}}>
               → BOSS
             </div>
           </div>
         </div>
-        {/* Chips legenda */}
-        <div style={{display:"flex", gap:"6px", justifyContent:"center", flexWrap:"wrap"}}>
+        {/* Descrizione bioma — blockquote ❝ ❞ */}
+        {biomeDesc && (
+          <div style={{
+            position:"relative", zIndex:2,
+            color:`${biomeColor}cc`, fontSize:"9px", fontStyle:"italic",
+            letterSpacing:"1px", textAlign:"center",
+            marginBottom:"6px", padding:"0 16px",
+            textShadow:`0 0 4px ${biomeColor}44`,
+            fontFamily:FONT,
+          }}>
+            ❝ {biomeDesc} ❞
+          </div>
+        )}
+        {/* Chips legenda con header ★ LEGENDA ★ */}
+        <div style={{position:"relative", zIndex:2, display:"flex", alignItems:"center", gap:"8px", justifyContent:"center", flexWrap:"wrap"}}>
+          <span style={{
+            display:"inline-block",
+            background: "#000",
+            color: biomeColor,
+            border:`1px solid ${biomeColor}88`,
+            fontFamily:FONT, fontWeight:"bold",
+            fontSize:"7px", letterSpacing:"2px",
+            padding:"2px 6px",
+            textShadow:`0 0 4px ${biomeColor}88`,
+          }}>
+            ★ LEGENDA ★
+          </span>
           {LEGEND_CHIPS.map(chip => (
             <span key={chip.label} style={{
               display:"inline-flex", alignItems:"center", gap:"3px",
