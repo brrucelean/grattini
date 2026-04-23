@@ -395,14 +395,16 @@ export default function Grattini() {
       display:"flex", alignItems:"center", justifyContent:"center",
       overflow:"hidden",
     }}>
-    {/* ── FRAME 16:9 — riempie fino al rapporto 16:9, poi letterbox ── */}
+    {/* ── FRAME 16:9 — letterbox bidirezionale: limita ENTRAMBE le dimensioni ── */}
     <div style={{...S.container, cursor: globalNailCursor,
       width: "min(100vw, calc(100vh * 16 / 9))",
-      height: "100vh",
+      height: "min(100vh, calc(100vw * 9 / 16))",
       animation: screenShake ? "screenShake 0.3s ease-in-out" : "none",
       filter: neonDim < 1 ? `saturate(${neonDim}) brightness(${0.6 + neonDim * 0.4})` : "none",
       transition: "filter 1.5s ease",
       background: bioPal.bg,
+      overflow:"hidden",
+      display:"flex", flexDirection:"column",
     }}>
       <style>{`
         @keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0; } }

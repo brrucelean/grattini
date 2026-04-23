@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { C, FONT } from "../data/theme.js";
 import { NAIL_INFO, NAIL_ORDER } from "../data/nails.js";
 import { ITEM_DEFS, RELIC_DEFS } from "../data/items.js";
@@ -38,6 +38,16 @@ function StatusChip({ color, children, danger = false, active = false, onClick, 
 export function HUD({ player, onOpenInventory, inventoryOpen = false, moneyBling = 0, currentBiome = 0 }) {
   const aliveNails = player.nails.filter(n => n.state !== "morta").length;
   const [vol, setVol] = useState(AudioEngine.getVolume());
+  // ── Responsive: traccia larghezza viewport per nascondere elementi non-critici
+  //   quando il canvas 16:9 diventa stretto (es. schermi piccoli / finestre ridotte)
+  const [vw, setVw] = useState(typeof window !== "undefined" ? window.innerWidth : 1600);
+  useEffect(() => {
+    const onR = () => setVw(window.innerWidth);
+    window.addEventListener("resize", onR);
+    return () => window.removeEventListener("resize", onR);
+  }, []);
+  const compact = vw < 900;   // sotto 900px nascondi ticker
+  const ultraCompact = vw < 700; // sotto 700px restringe il volume slider
   const handleVol = (e) => {
     const v = parseFloat(e.target.value);
     setVol(v);
@@ -50,8 +60,9 @@ export function HUD({ player, onOpenInventory, inventoryOpen = false, moneyBling
   );
   return (
     <div style={{...S.panel, display:"flex", justifyContent:"space-between", alignItems:"center",
-      flexWrap:"wrap", gap:"8px", padding:"8px 14px", background:"#0d0d18", borderColor:C.dim,
-      maxWidth:"100%", width:"calc(100% - 16px)", margin:"4px 8px",
+      flexWrap:"wrap", gap:"6px", padding:"8px 12px", background:"#0d0d18", borderColor:C.dim,
+      maxWidth:"calc(100% - 16px)", width:"calc(100% - 16px)", margin:"4px 8px",
+      boxSizing:"border-box", overflow:"hidden", minWidth:0,
       position:"relative",
       boxShadow:`0 0 10px ${C.gold}12, inset 0 0 16px #00000088`,
     }}>
@@ -74,7 +85,7 @@ export function HUD({ player, onOpenInventory, inventoryOpen = false, moneyBling
         );
       })}
       {/* ── SINISTRA: soldi + grattini ── */}
-      <div style={{display:"flex", alignItems:"center", gap:"8px", flexShrink:0}}>
+      <div style={{display:"flex", alignItems:"center", gap:"8px", flexShrink:0, minWidth:0}}>
         <Tooltip text={`🤑 i tuoi SUDATISSIMI soldi!! spendili bene o piangi`}>
           <span key={moneyBling} style={{
             display:"inline-flex", alignItems:"center", gap:"4px",
@@ -165,10 +176,10 @@ export function HUD({ player, onOpenInventory, inventoryOpen = false, moneyBling
           </StatusChip>
         </Tooltip>
       ))}
-      {/* ── CENTRO: news ticker ── */}
-      <NewsTicker currentBiome={currentBiome} />
+      {/* ── CENTRO: news ticker (nascosto quando lo spazio manca) ── */}
+      {!compact && <NewsTicker currentBiome={currentBiome} />}
       {/* ── DESTRA: vite + volume ── */}
-      <div style={{display:"flex", alignItems:"center", gap:"10px", flexShrink:0}}>
+      <div style={{display:"flex", alignItems:"center", gap:"8px", flexShrink:0, minWidth:0, flexWrap:"wrap", justifyContent:"flex-end"}}>
         <Tooltip text={`💀 unghie ancora vive su 5 — se arrivano a 0 sei MORTO poverino`}>
           <span style={{
             display:"inline-flex", alignItems:"center", gap:"5px",
@@ -209,7 +220,7 @@ export function HUD({ player, onOpenInventory, inventoryOpen = false, moneyBling
               type="range" min="0" max="1" step="0.05" value={vol}
               onChange={handleVol}
               style={{
-                width:"60px", height:"4px", cursor:"pointer", accentColor: C.gold,
+                width: ultraCompact ? "36px" : "60px", height:"4px", cursor:"pointer", accentColor: C.gold,
                 background:"transparent",
               }}
             />
