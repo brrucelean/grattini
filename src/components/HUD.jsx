@@ -16,18 +16,59 @@ export function HUD({ player, onOpenInventory, inventoryOpen = false, moneyBling
     AudioEngine.setVolume(v);
   };
   const muted = vol === 0;
+  // Divider Vintage fra gruppi del HUD
+  const Sep = () => (
+    <span style={{color:C.dim+"66", fontSize:"10px", userSelect:"none", margin:"0 2px"}}>│</span>
+  );
   return (
     <div style={{...S.panel, display:"flex", justifyContent:"space-between", alignItems:"center",
-      flexWrap:"wrap", gap:"8px", padding:"8px 12px", background:"#0d0d18", borderColor:C.dim,
-      maxWidth:"100%", width:"calc(100% - 16px)", margin:"4px 8px"}}>
+      flexWrap:"wrap", gap:"8px", padding:"8px 14px", background:"#0d0d18", borderColor:C.dim,
+      maxWidth:"100%", width:"calc(100% - 16px)", margin:"4px 8px",
+      position:"relative",
+      boxShadow:`0 0 10px ${C.gold}12, inset 0 0 16px #00000088`,
+    }}>
+      {/* ── Corner brackets Vintage (discreti) ── */}
+      {["tl","tr","bl","br"].map(pos => {
+        const [v,h] = pos.split("");
+        return (
+          <span key={pos} style={{
+            position:"absolute",
+            [v==="t"?"top":"bottom"]:"-2px",
+            [h==="l"?"left":"right"]:"-2px",
+            width:"10px", height:"10px",
+            borderTop: v==="t" ? `1px solid ${C.gold}88` : "none",
+            borderBottom: v==="b" ? `1px solid ${C.gold}88` : "none",
+            borderLeft: h==="l" ? `1px solid ${C.gold}88` : "none",
+            borderRight: h==="r" ? `1px solid ${C.gold}88` : "none",
+            boxShadow:`0 0 4px ${C.gold}66`,
+            pointerEvents:"none",
+          }}/>
+        );
+      })}
       {/* ── SINISTRA: soldi + grattini ── */}
-      <div style={{display:"flex", alignItems:"center", gap:"10px", flexShrink:0}}>
+      <div style={{display:"flex", alignItems:"center", gap:"8px", flexShrink:0}}>
         <Tooltip text={`🤑 i tuoi SUDATISSIMI soldi!! spendili bene o piangi`}>
-          <span key={moneyBling} style={{color:C.gold, fontWeight:"bold", cursor:"default", display:"inline-block",
-            animation: moneyBling > 0 ? "moneyBling 0.6s ease-out" : "none"}}>💰 €{player.money}</span>
+          <span key={moneyBling} style={{
+            display:"inline-flex", alignItems:"center", gap:"4px",
+            background:`linear-gradient(180deg, ${C.gold}22, ${C.gold}08)`,
+            border:`1px solid ${C.gold}aa`,
+            color:C.gold, fontWeight:"bold",
+            padding:"2px 8px",
+            letterSpacing:"1px",
+            boxShadow:`0 0 8px ${C.gold}55, inset 0 0 6px ${C.gold}14`,
+            textShadow:`0 0 6px ${C.gold}88`,
+            cursor:"default",
+            animation: moneyBling > 0 ? "moneyBling 0.6s ease-out" : "none",
+          }}>💰 €{player.money}</span>
         </Tooltip>
         <Tooltip text={`🎫 grattini tuoi — comprati al tabaccaio`}>
-          <span style={{color:C.cyan, cursor:"default"}}>🎫 {player.scratchCards.filter(c => c.owned).length}</span>
+          <span style={{
+            display:"inline-flex", alignItems:"center", gap:"3px",
+            color:C.cyan, cursor:"default",
+            border:`1px solid ${C.cyan}66`,
+            padding:"2px 7px",
+            boxShadow:`inset 0 0 6px ${C.cyan}10`,
+          }}>🎫 <b>{player.scratchCards.filter(c => c.owned).length}</b></span>
         </Tooltip>
       </div>
       {player.items.includes("cappelloSbirro") && (
@@ -102,7 +143,34 @@ export function HUD({ player, onOpenInventory, inventoryOpen = false, moneyBling
       {/* ── DESTRA: vite + volume ── */}
       <div style={{display:"flex", alignItems:"center", gap:"10px", flexShrink:0}}>
         <Tooltip text={`💀 unghie ancora vive su 5 — se arrivano a 0 sei MORTO poverino`}>
-          <span style={{color:C.dim, cursor:"default"}}>Vite: {aliveNails}/5</span>
+          <span style={{
+            display:"inline-flex", alignItems:"center", gap:"5px",
+            border:`1px solid ${aliveNails <= 1 ? C.red : aliveNails <= 2 ? C.orange : C.green}88`,
+            padding:"2px 7px", cursor:"default",
+            background: aliveNails <= 1 ? "#1a0005" : "transparent",
+            boxShadow: aliveNails <= 1 ? `0 0 6px ${C.red}66, inset 0 0 4px ${C.red}22` : "none",
+            animation: aliveNails <= 1 ? "pulse 1s infinite" : "none",
+          }}>
+            <span style={{color:C.dim, fontSize:"9px", letterSpacing:"1px"}}>VITE</span>
+            {/* Pip bar */}
+            <span style={{display:"inline-flex", gap:"2px"}}>
+              {[0,1,2,3,4].map(i => {
+                const filled = i < aliveNails;
+                const col = aliveNails <= 1 ? C.red : aliveNails <= 2 ? C.orange : C.green;
+                return (
+                  <span key={i} style={{
+                    display:"inline-block", width:"6px", height:"9px",
+                    background: filled ? col : "#111",
+                    border: `1px solid ${filled ? col+"cc" : "#2a2a2a"}`,
+                    boxShadow: filled ? `0 0 3px ${col}88` : "none",
+                  }}/>
+                );
+              })}
+            </span>
+            <span style={{color: aliveNails <= 1 ? C.red : aliveNails <= 2 ? C.orange : C.green, fontSize:"10px", fontWeight:"bold"}}>
+              {aliveNails}/5
+            </span>
+          </span>
         </Tooltip>
         <Tooltip text={`🔊 volume musicale — alzalo e GODITI l'8-bit bro`}>
           <span style={{display:"flex", alignItems:"center", gap:"4px"}}>

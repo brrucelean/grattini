@@ -20,8 +20,19 @@ export function NailSidebar({ nails, activeNail, onSelectNail, locked=false, gra
   const SPECIAL_TIER_MAP = { polliceVerde: "kawaii", unghiaNera: "marcia" };
   return (
     <div style={{display:"flex", flexDirection:"column", gap:"5px", alignItems:"stretch"}}>
-      <div style={{color: locked ? C.orange+"99" : C.dim, fontSize:"9px", textAlign:"center", letterSpacing:"1px", marginBottom:"2px", opacity:0.7}}>
-        {locked ? "🔒 BLOCCATA" : "🖐 UNGHIE"}
+      {/* Heading Vintage: solid badge col. accent */}
+      <div style={{textAlign:"center", marginBottom:"4px"}}>
+        <div style={{
+          display:"inline-block",
+          background: locked ? C.orange : C.gold,
+          color:"#000",
+          fontSize:"8px", fontWeight:"bold",
+          letterSpacing:"2px",
+          padding:"2px 8px",
+          boxShadow: `0 0 6px ${locked ? C.orange : C.gold}99`,
+        }}>
+          {locked ? "★ 🔒 BLOCCATA ★" : "★ 🖐 UNGHIE ★"}
+        </div>
       </div>
       {nails.map((n, i) => {
         const info = NAIL_INFO[n.state];
@@ -187,8 +198,17 @@ export function NailSidebar({ nails, activeNail, onSelectNail, locked=false, gra
         const uses = g.usesLeft || 0;
         return (
           <>
-            <div style={{color:C.dim, fontSize:"9px", textAlign:"center", letterSpacing:"1px", marginTop:"4px", marginBottom:"2px", opacity:0.5, borderTop:`1px solid #1a1a2e`, paddingTop:"4px"}}>
-              🔧 GRATTATORE
+            <div style={{textAlign:"center", marginTop:"6px", marginBottom:"3px", borderTop:`1px solid #1a1a2e`, paddingTop:"6px"}}>
+              <div style={{
+                display:"inline-block",
+                background: C.cyan, color:"#000",
+                fontSize:"8px", fontWeight:"bold",
+                letterSpacing:"2px",
+                padding:"2px 8px",
+                boxShadow:`0 0 6px ${C.cyan}99`,
+              }}>
+                ★ 🔧 GRATTATORE ★
+              </div>
             </div>
             <Tooltip text={`${g.emoji} ${g.name}\n${g.desc}\n${uses > 10 ? uses : uses + "/" + (g.maxUses||uses)} usi rimasti`} color={C.cyan}>
             <div style={{
