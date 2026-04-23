@@ -2045,6 +2045,7 @@ export default function Grattini() {
             addLog("💀 Hai trovato una trappola! Perdi tutto e un'unghia!", C.red);
             setLabirintoState(null);
             setSpecialCardRef(null);
+            setScratchingCard(null);
             if (currentNode) setScreen("preScratch"); else setScreen("map");
             return;
           }
@@ -2055,6 +2056,7 @@ export default function Grattini() {
             addLog(`🏆 SEI USCITO! Jackpot €${JACKPOT_PRIZE} + €${ls.prize} = €${totalPrize}!`, C.gold);
             setLabirintoState(null);
             setSpecialCardRef(null);
+            setScratchingCard(null);
             if (currentNode) setScreen("preScratch"); else setScreen("map");
             return;
           }
@@ -2079,6 +2081,7 @@ export default function Grattini() {
           addLog(`🏃 Hai incassato €${ls.prize} scappando dal labirinto!`, C.gold);
           setLabirintoState(null);
           setSpecialCardRef(null);
+          setScratchingCard(null);
           if (currentNode) setScreen("preScratch"); else setScreen("map");
         };
 
@@ -2123,7 +2126,7 @@ export default function Grattini() {
                     🏃 Incassa e scappa (€{ls.prize})
                   </Btn>
                 )}
-                <Btn variant="danger" onClick={() => { setLabirintoState(null); setSpecialCardRef(null); if(currentNode)setScreen("preScratch");else setScreen("map"); }}>
+                <Btn variant="danger" onClick={() => { setLabirintoState(null); setSpecialCardRef(null); setScratchingCard(null); if(currentNode)setScreen("preScratch");else setScreen("map"); }}>
                   ✗ Abbandona (€0)
                 </Btn>
               </div>
@@ -2165,7 +2168,7 @@ export default function Grattini() {
               const megaPrize = newPrize * MEGA_MULT;
               updatePlayer(p => ({...p, money: p.money + megaPrize}));
               addLog(`🎆 MEGA COMBO x${MEGA_MULT}! +€${megaPrize}!`, C.gold);
-              setCombinaState(null); setSpecialCardRef(null);
+              setCombinaState(null); setSpecialCardRef(null); setScratchingCard(null);
               if(currentNode)setScreen("preScratch");else setScreen("map");
               return;
             }
@@ -2182,7 +2185,7 @@ export default function Grattini() {
             } else {
               addLog("Nessuna combo trovata...", C.dim);
             }
-            setCombinaState(null); setSpecialCardRef(null);
+            setCombinaState(null); setSpecialCardRef(null); setScratchingCard(null);
             if(currentNode)setScreen("preScratch");else setScreen("map");
             return;
           }
@@ -2232,7 +2235,7 @@ export default function Grattini() {
               </div>
               <Btn variant="danger" onClick={() => {
                 if (cs.prize > 0) { updatePlayer(p => ({...p, money: p.money + cs.prize})); addLog(`Incassato €${cs.prize} abbandonando.`, C.dim); }
-                setCombinaState(null); setSpecialCardRef(null);
+                setCombinaState(null); setSpecialCardRef(null); setScratchingCard(null);
                 if(currentNode)setScreen("preScratch");else setScreen("map");
               }}>
                 ✗ Abbandona {cs.prize > 0 ? `(incassa €${cs.prize})` : "(€0)"}
@@ -2266,7 +2269,7 @@ export default function Grattini() {
             // Bomba!
             handleNailDamage();
             addLog("💣 BOMBA! Perdi tutto e un'unghia!", C.red);
-            setTesoroState(null); setSpecialCardRef(null);
+            setTesoroState(null); setSpecialCardRef(null); setScratchingCard(null);
             if(currentNode)setScreen("preScratch");else setScreen("map");
             return;
           }
@@ -2282,7 +2285,7 @@ export default function Grattini() {
               const total = JACKPOT_PRIZE;
               updatePlayer(p => ({...p, money: p.money + total}));
               addLog(`🗺️ JACKPOT! Trovato tutto! +€${total}!`, C.gold);
-              setTesoroState(null); setSpecialCardRef(null);
+              setTesoroState(null); setSpecialCardRef(null); setScratchingCard(null);
               if(currentNode)setScreen("preScratch");else setScreen("map");
               return;
             }
@@ -2328,14 +2331,14 @@ export default function Grattini() {
                   <Btn variant="gold" onClick={() => {
                     updatePlayer(p => ({...p, money: p.money + ts.prize}));
                     addLog(`💰 Incassato €${ts.prize} con ${ts.foundTreasures} tesori trovati.`, C.gold);
-                    setTesoroState(null); setSpecialCardRef(null);
+                    setTesoroState(null); setSpecialCardRef(null); setScratchingCard(null);
                     if(currentNode)setScreen("preScratch");else setScreen("map");
                   }}>
                     💰 Incassa €{ts.prize}
                   </Btn>
                 )}
                 <Btn variant="danger" onClick={() => {
-                  setTesoroState(null); setSpecialCardRef(null);
+                  setTesoroState(null); setSpecialCardRef(null); setScratchingCard(null);
                   if(currentNode)setScreen("preScratch");else setScreen("map");
                 }}>
                   ✗ Abbandona (€0)
