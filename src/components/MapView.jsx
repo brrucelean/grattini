@@ -10,9 +10,9 @@ export function MapView({ map, currentRow, visitedNodes, onSelectNode, reachable
   // Con 11 righe e viewport 900px: rowH ≈ (900-240)/11 ≈ 60. Clamp [48, 72].
   const rowsCount = map.rows.length || 1;
   const availH = Math.max(360, (typeof window !== "undefined" ? window.innerHeight : 900) - 240);
-  const ROW_H = Math.max(48, Math.min(72, Math.floor(availH / rowsCount)));
-  const W = 1080;   // larghezza canvas — riempie il pannello widened (max-width 1200)
-  const NW = 68, NH = 48; // nodi leggermente più piccoli per compensare ROW_H ridotto
+  const ROW_H = Math.max(50, Math.min(64, Math.floor(availH / rowsCount)));
+  const W = 860;   // larghezza canvas — compatta, nodi vicini e ordinati (panel è wrapper 1100)
+  const NW = 72, NH = 52;
   const totalH = rowsCount * ROW_H;
 
   // Glitter particles — stabili (non ricalcolate a ogni render)

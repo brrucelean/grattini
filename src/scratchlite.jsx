@@ -1701,7 +1701,7 @@ export default function Grattini() {
 
       {/* ═══ MAP ═══ */}
       {screen === "map" && player && map && (
-        <div style={{maxWidth:"1200px", width:"100%"}}>
+        <div style={{maxWidth:"1000px", width:"100%"}}>
           <MapView
             map={map}
             currentRow={currentRow}
