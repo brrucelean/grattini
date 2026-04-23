@@ -1,7 +1,5 @@
 import { useState, useEffect } from "react";
-import { C, FONT } from "../data/theme.js";
-import { NAIL_INFO, NAIL_ORDER } from "../data/nails.js";
-import { ITEM_DEFS, RELIC_DEFS } from "../data/items.js";
+import { C } from "../data/theme.js";
 import { AudioEngine } from "../audio.js";
 import { S } from "../utils/styles.js";
 import { Tooltip } from "./Tooltip.jsx";

@@ -1,5 +1,5 @@
 import { C, MAX_ITEMS } from "../data/theme.js";
-import { CARD_TYPES, CARD_BALANCE } from "../data/cards.js";
+import { CARD_TYPES } from "../data/cards.js";
 import { ITEM_DEFS, GRATTATORE_DEFS } from "../data/items.js";
 import { generateCard } from "../utils/card.js";
 import { hasRelic } from "../utils/hasRelic.js";

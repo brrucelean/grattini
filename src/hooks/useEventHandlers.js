@@ -1,6 +1,6 @@
 import { C, MAX_ITEMS } from "../data/theme.js";
 import { ITEM_DEFS, MACELLAIO_IMPLANTS, RELIC_DEFS, GRATTATORE_DEFS } from "../data/items.js";
-import { CARD_TYPES, CARD_BALANCE } from "../data/cards.js";
+import { CARD_TYPES } from "../data/cards.js";
 import { degradeNailObj, healNail, findWorstNailIdx, findWorstAliveIdx } from "../utils/nail.js";
 import { rng, roll, pick } from "../utils/random.js";
 import { generateCard } from "../utils/card.js";

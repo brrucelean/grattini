@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from "react";
-import { C, FONT } from "../data/theme.js";
+import { useEffect, useRef } from "react";
+import { C } from "../data/theme.js";
 import { S } from "../utils/styles.js";
 
 export function LogPanel({ log }) {

@@ -20,7 +20,8 @@ export function estimateCardEV(cardTypeId, playerState = {}) {
 }
 
 // Simulazione EV — usabile in console dev: window.simEV("maledetto", 10000)
-if (typeof window !== "undefined") {
+// Esposto solo in dev mode (Vite tree-shakes questo blocco in build production)
+if (import.meta.env?.DEV && typeof window !== "undefined") {
   window.simEV = (cardTypeId, runs = 10000) => {
     let total = 0;
     const ct = CARD_TYPES.find(t => t.id === cardTypeId);
@@ -30,6 +31,7 @@ if (typeof window !== "undefined") {
       total += (c.isWinner ? c.prize : 0) - ct.cost;
     }
     const ev = total / runs;
+    // eslint-disable-next-line no-console
     console.log(`simEV(${cardTypeId}, ${runs}): EV = ${ev.toFixed(2)} | EV% = ${((ev/ct.cost)*100).toFixed(1)}%`);
     return ev;
   };
