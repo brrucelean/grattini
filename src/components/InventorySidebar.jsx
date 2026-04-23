@@ -5,17 +5,44 @@ export function InventorySidebar({ items, grattatori, equippedGrattatore, onUseI
   const hasAnything = items.length > 0 || grattatori.length > 0;
   return (
     <div style={{height:"100%", overflowY:"auto", padding:"6px 4px", display:"flex", flexDirection:"column", gap:"3px"}}>
-      <div style={{color:C.dim, fontSize:"9px", letterSpacing:"1px", marginBottom:"4px", textAlign:"center", opacity:0.7, borderBottom:`1px solid #1a1a2e`, paddingBottom:"4px", flexShrink:0}}>
-        🎒 ZAINO
+      {/* Heading Vintage: solid badge */}
+      <div style={{textAlign:"center", marginBottom:"6px", paddingBottom:"4px", borderBottom:`1px solid #1a1a2e`, flexShrink:0}}>
+        <div style={{
+          display:"inline-block",
+          background: C.magenta, color:"#000",
+          fontSize:"8px", fontWeight:"bold",
+          letterSpacing:"2px",
+          padding:"2px 8px",
+          boxShadow:`0 0 6px ${C.magenta}99`,
+        }}>
+          ★ 🎒 ZAINO ★
+        </div>
       </div>
       {!hasAnything && (
-        <div style={{color:C.dim, fontSize:"9px", textAlign:"center", opacity:0.4, marginTop:"10px", lineHeight:"1.5"}}>
-          zaino<br/>vuoto
+        <div style={{
+          color:C.dim, fontSize:"9px", textAlign:"center", opacity:0.5,
+          marginTop:"14px", lineHeight:"1.5",
+          border:`1px dashed ${C.dim}44`,
+          padding:"10px 6px",
+          fontStyle:"italic",
+        }}>
+          ❝ zaino<br/>vuoto ❞
         </div>
       )}
       {grattatori.length > 0 && (
         <>
-          <div style={{color:C.cyan, fontSize:"8px", letterSpacing:"1px", opacity:0.7, marginBottom:"2px"}}>🔧 GRATTATORI</div>
+          <div style={{textAlign:"center", marginBottom:"4px"}}>
+            <div style={{
+              display:"inline-block",
+              background: C.cyan, color:"#000",
+              fontSize:"7px", fontWeight:"bold",
+              letterSpacing:"1.5px",
+              padding:"1px 6px",
+              boxShadow:`0 0 4px ${C.cyan}88`,
+            }}>
+              ★ 🔧 GRATTATORI ★
+            </div>
+          </div>
           {grattatori.map((g, idx) => {
             const isEquipped = equippedGrattatore?.inventoryIdx === idx;
             return (
@@ -41,7 +68,18 @@ export function InventorySidebar({ items, grattatori, equippedGrattatore, onUseI
       )}
       {items.length > 0 && (
         <>
-          <div style={{color:C.gold, fontSize:"8px", letterSpacing:"1px", opacity:0.7, marginTop: grattatori.length > 0 ? "6px" : 0, marginBottom:"2px"}}>💊 CONSUMABILI</div>
+          <div style={{textAlign:"center", marginTop: grattatori.length > 0 ? "8px" : 0, marginBottom:"4px"}}>
+            <div style={{
+              display:"inline-block",
+              background: C.gold, color:"#000",
+              fontSize:"7px", fontWeight:"bold",
+              letterSpacing:"1.5px",
+              padding:"1px 6px",
+              boxShadow:`0 0 4px ${C.gold}88`,
+            }}>
+              ★ 💊 CONSUMABILI ★
+            </div>
+          </div>
           {items.map((itemId, idx) => {
             const item = ITEM_DEFS[itemId];
             if (!item) return null;

@@ -3,6 +3,26 @@ import { C, FONT } from "../data/theme.js";
 import { NPC_ART, SPR_BIG, SPR_COLOR } from "../data/art.js";
 import { AudioEngine } from "../audio.js";
 
+// ─── Vintage corner brackets ────────────────────────────────────
+function VintageCorners({ color, size = 11, inset = -2 }) {
+  return ["tl","tr","bl","br"].map(pos => {
+    const [v, h] = pos.split("");
+    return (
+      <span key={pos} style={{
+        position:"absolute",
+        [v==="t"?"top":"bottom"]: inset, [h==="l"?"left":"right"]: inset,
+        width:`${size}px`, height:`${size}px`,
+        borderTop: v==="t" ? `2px solid ${color}` : "none",
+        borderBottom: v==="b" ? `2px solid ${color}` : "none",
+        borderLeft: h==="l" ? `2px solid ${color}` : "none",
+        borderRight: h==="r" ? `2px solid ${color}` : "none",
+        boxShadow:`0 0 6px ${color}66`,
+        pointerEvents:"none",
+      }}/>
+    );
+  });
+}
+
 export function DialogueBox({ npc, name, color, text, footer }) {
   const [displayed, setDisplayed] = useState("");
   const [done, setDone] = useState(false);
@@ -26,25 +46,29 @@ export function DialogueBox({ npc, name, color, text, footer }) {
   return (
     <div onClick={skip} style={{
       display:"flex", gap:"0", cursor:"pointer",
-      border:`2px solid ${color}55`,
-      boxShadow:`0 0 30px ${color}18, inset 0 0 60px ${color}06`,
+      border:`2px solid ${color}66`,
+      boxShadow:`0 0 30px ${color}22, inset 0 0 60px ${color}08`,
       background:"#04040e",
       animation:"dialogueIn 0.3s ease-out",
       minHeight:"200px",
+      position:"relative",
     }}>
+      <VintageCorners color={color} size={13} inset={-3} />
       {/* Ritratto ASCII sinistro */}
       <div style={{
         flexShrink:0, width:"160px",
-        borderRight:`1px solid ${color}33`,
+        borderRight:`1px solid ${color}44`,
         background:`linear-gradient(180deg, ${color}08 0%, transparent 100%)`,
         display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center",
         padding:"12px 8px",
       }}>
+        {/* Nameplate solid sopra il portrait */}
         <div style={{
-          color: color, fontSize:"9px", fontWeight:"bold", letterSpacing:"3px",
-          marginBottom:"8px", textShadow:`0 0 8px ${color}`,
-          textAlign:"center",
-        }}>[ {name.toUpperCase()} ]</div>
+          display:"inline-block", background: color, color:"#000",
+          fontSize:"8px", fontWeight:"bold", letterSpacing:"2.5px",
+          padding:"2px 7px", marginBottom:"10px",
+          boxShadow:`0 0 8px ${color}aa`,
+        }}>★ {name.toUpperCase()} ★</div>
         {portrait && (
           <pre style={{
             color: color+"cc", fontSize:"9.5px", lineHeight:"1.35", margin:0,
@@ -52,6 +76,10 @@ export function DialogueBox({ npc, name, color, text, footer }) {
             textShadow:`0 0 6px ${color}55`,
           }}>{portrait.join("\n")}</pre>
         )}
+        <div style={{
+          marginTop:"6px", fontSize:"8px", color: color+"99",
+          letterSpacing:"2px",
+        }}>─ RITRATTO ─</div>
       </div>
       {/* Testo dialogo destro */}
       <div style={{
@@ -59,29 +87,31 @@ export function DialogueBox({ npc, name, color, text, footer }) {
         display:"flex", flexDirection:"column", justifyContent:"flex-start",
       }}>
         <div style={{
-          color: color, fontSize:"11px", fontWeight:"bold", letterSpacing:"3px",
-          marginBottom:"14px", textShadow:`0 0 10px ${color}88`,
-          borderBottom:`1px solid ${color}22`, paddingBottom:"8px",
-          flexShrink:0,
-        }}>◈ {name}</div>
+          color: color, fontSize:"13px", fontWeight:"bold", letterSpacing:"3px",
+          marginBottom:"14px",
+          textShadow:`0 0 10px ${color}, 0 0 18px ${color}55`,
+          borderBottom:`1px solid ${color}33`, paddingBottom:"8px",
+          flexShrink:0, fontFamily:FONT,
+        }}>⬡ {name} ⬡</div>
         {/* Ghost testo pieno — riserva spazio, evita reflow durante typewriter */}
         <div style={{position:"relative", flex:1}}>
           <div style={{
             visibility:"hidden",
             fontSize:"13px", lineHeight:"1.9", fontStyle:"italic", whiteSpace:"pre-wrap",
-          }}>"{text}"</div>
+          }}>❝{text}❞</div>
           <div style={{
             position:"absolute", top:0, left:0, right:0,
             color:"#e0e0e0", fontSize:"13px", lineHeight:"1.9",
             fontStyle:"italic", whiteSpace:"pre-wrap",
             textShadow:`0 0 3px ${color}22`,
           }}>
-            "{displayed}
+            <span style={{color, opacity:0.75, marginRight:"2px"}}>❝</span>
+            {displayed}
             {!done && <span style={{
               color: color,
               animation:"dialogueCursor 0.5s step-start infinite",
             }}>▌</span>}
-            {done && `"`}
+            {done && <span style={{color, opacity:0.75, marginLeft:"2px"}}>❞</span>}
           </div>
         </div>
         {done && footer && (
@@ -147,19 +177,24 @@ export function CarmeloLogBox({ npc, name, color, messages, footer, height="170p
   return (
     <div onClick={skip} style={{
       display:"flex", cursor:"pointer",
-      border:`2px solid ${color}55`,
-      boxShadow:`0 0 30px ${color}18, inset 0 0 60px ${color}06`,
+      border:`2px solid ${color}66`,
+      boxShadow:`0 0 30px ${color}22, inset 0 0 60px ${color}08`,
       background:"#04040e", animation:"dialogueIn 0.3s ease-out", height, flexShrink:0,
+      position:"relative",
     }}>
+      <VintageCorners color={color} size={13} inset={-3} />
       <div style={{
-        flexShrink:0, width:"160px", borderRight:`1px solid ${color}33`,
+        flexShrink:0, width:"160px", borderRight:`1px solid ${color}44`,
         background:`linear-gradient(180deg, ${color}08 0%, transparent 100%)`,
         display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center",
         padding:"12px 8px", overflow:"hidden",
       }}>
-        <div style={{color, fontSize:"9px", fontWeight:"bold", letterSpacing:"3px",
-          marginBottom:"8px", textShadow:`0 0 8px ${color}`, textAlign:"center",
-        }}>[ {name.toUpperCase()} ]</div>
+        <div style={{
+          display:"inline-block", background: color, color:"#000",
+          fontSize:"8px", fontWeight:"bold", letterSpacing:"2.5px",
+          padding:"2px 7px", marginBottom:"10px",
+          boxShadow:`0 0 8px ${color}aa`,
+        }}>★ {name.toUpperCase()} ★</div>
         {portrait && (
           <pre style={{color:color+"cc", fontSize:"9.5px", lineHeight:"1.35", margin:0,
             fontFamily:FONT, textShadow:`0 0 6px ${color}55`,
@@ -167,10 +202,12 @@ export function CarmeloLogBox({ npc, name, color, messages, footer, height="170p
         )}
       </div>
       <div style={{flex:1, padding:"20px 24px", display:"flex", flexDirection:"column", minHeight:0}}>
-        <div style={{color, fontSize:"11px", fontWeight:"bold", letterSpacing:"3px",
-          marginBottom:"14px", textShadow:`0 0 10px ${color}88`,
-          borderBottom:`1px solid ${color}22`, paddingBottom:"8px", flexShrink:0,
-        }}>◈ {name}</div>
+        <div style={{color, fontSize:"13px", fontWeight:"bold", letterSpacing:"3px",
+          marginBottom:"14px",
+          textShadow:`0 0 10px ${color}, 0 0 18px ${color}55`,
+          borderBottom:`1px solid ${color}33`, paddingBottom:"8px", flexShrink:0,
+          fontFamily:FONT,
+        }}>⬡ {name} ⬡</div>
         <div ref={scrollRef} style={{
           flex:1, overflowY:"auto", minHeight:0,
           scrollbarWidth:"thin", scrollbarColor:`${color}33 transparent`,

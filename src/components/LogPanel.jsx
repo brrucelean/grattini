@@ -24,8 +24,17 @@ export function LogSidebar({ log }) {
       height:"100%", overflowY:"auto", padding:"6px 4px",
       display:"flex", flexDirection:"column", gap:"0",
     }}>
-      <div style={{color:C.dim, fontSize:"9px", letterSpacing:"1px", marginBottom:"6px", textAlign:"center", opacity:0.7, borderBottom:`1px solid #1a1a2e`, paddingBottom:"4px"}}>
-        📋 LOG
+      <div style={{textAlign:"center", marginBottom:"6px", paddingBottom:"4px", borderBottom:`1px solid #1a1a2e`}}>
+        <div style={{
+          display:"inline-block",
+          background: C.cyan, color:"#000",
+          fontSize:"8px", fontWeight:"bold",
+          letterSpacing:"2px",
+          padding:"2px 8px",
+          boxShadow:`0 0 6px ${C.cyan}99`,
+        }}>
+          ★ 📋 LOG ★
+        </div>
       </div>
       {log.slice(-40).map((l, i) => (
         <div key={i} style={{

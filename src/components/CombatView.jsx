@@ -1161,11 +1161,30 @@ export function CombatView({ enemy, player, onEnd, onNailDamage, onCellScratch, 
       {/* ── REGOLE ── */}
       {phase === "rules" && (
         <div>
-          <div style={{color:C.red, fontWeight:"bold", fontSize:"18px", marginBottom:"4px"}}>
-            ⚔ GRATTA & LOTTA ⚔
+          {/* Vintage header neon */}
+          <div style={{textAlign:"center", marginBottom:"10px"}}>
+            <div style={{
+              display:"inline-block",
+              background: enemy.isBoss ? C.red : C.orange, color:"#000",
+              fontSize:"10px", fontWeight:"bold", letterSpacing:"3px",
+              padding:"3px 14px", marginBottom:"8px",
+              boxShadow:`0 0 10px ${enemy.isBoss ? C.red : C.orange}aa`,
+            }}>
+              ★ {enemy.isBoss ? "BOSS FIGHT" : enemy.isMiniboss ? "MINI BOSS" : "SFIDA"} ★
+            </div>
+            <div style={{
+              color:C.red, fontWeight:"bold", fontSize:"20px",
+              letterSpacing:"3px", fontFamily:FONT,
+              textShadow:`0 0 12px ${C.red}, 0 0 24px ${C.red}55`,
+            }}>
+              ⚔ GRATTA & LOTTA ⚔
+            </div>
           </div>
-          <div style={{color:C.orange, fontSize:"15px", marginBottom:"12px"}}>
-            {enemyIcon} {enemy.name} ti sfida!
+          <div style={{
+            color:C.orange, fontSize:"15px", marginBottom:"14px",
+            textShadow:`0 0 6px ${C.orange}66`,
+          }}>
+            {enemyIcon} <b>{enemy.name}</b> ti sfida!
           </div>
           <div style={{...S.panel, textAlign:"left", background:"#050510", borderColor:C.dim+"66", padding:"12px"}}>
             <div style={{color:C.cyan, fontWeight:"bold", marginBottom:"10px", fontSize:"13px"}}>📜 Come funziona:</div>
@@ -1292,8 +1311,24 @@ export function CombatView({ enemy, player, onEnd, onNailDamage, onCellScratch, 
       {/* ── GRATTA 3 DA 9 → COMBATTI ── */}
       {phase === "select" && (
         <div>
-          <div style={{color:C.red, fontWeight:"bold", fontSize:"13px", marginBottom:"4px"}}>
-            ⚔ Round {round}/{maxRounds} — Gratta le carte!
+          {/* Vintage round indicator */}
+          <div style={{textAlign:"center", marginBottom:"6px"}}>
+            <div style={{
+              display:"inline-block",
+              background: C.red, color:"#000",
+              fontSize:"10px", fontWeight:"bold", letterSpacing:"3px",
+              padding:"2px 12px",
+              boxShadow:`0 0 8px ${C.red}99`,
+            }}>
+              ★ ROUND {round}/{maxRounds} ★
+            </div>
+            <div style={{
+              color:C.red, fontWeight:"bold", fontSize:"13px",
+              marginTop:"4px", letterSpacing:"1px",
+              textShadow:`0 0 6px ${C.red}88`,
+            }}>
+              ⚔ GRATTA LE CARTE ⚔
+            </div>
           </div>
           <div style={{color:C.dim, fontSize:"11px", marginBottom:"12px"}}>
             <span style={{color:C.gold}}>9 carte</span> nascoste — grattane{" "}
