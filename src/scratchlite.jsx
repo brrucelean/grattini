@@ -3669,11 +3669,6 @@ export default function Grattini() {
 
       </div>{/* fine 3-column */}
 
-      {/* ── FOOTER VERSION ── */}
-      <div style={{width:"100%", textAlign:"center", padding:"2px 0", flexShrink:0}}>
-        <span style={{color:"#222", fontSize:"9px"}}>GRATTINI Beta 3 · 3 Biomi · v0.3</span>
-      </div>
-
       {/* ── LOG STRIP (bottom) ── */}
       {player && !["title","tutorialNails"].includes(screen) && log.length > 0 && (
         <div style={{
