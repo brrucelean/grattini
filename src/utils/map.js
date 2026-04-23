@@ -75,7 +75,10 @@ export function generateMap(biomeIdx = 0) {
   //  · NO_ADJACENT_SAME: nella stessa riga, due nodi vicini non possono avere lo stesso tipo
   const UNIQUE_PER_ROW = new Set([
     "evento","stregone","miniboss","chirurgo","spacciatore","ladro",
-    "poliziotto","anziana","bambino","streamer","macellaio","maestroTe","sacerdote"
+    "poliziotto","anziana","bambino","streamer","macellaio","maestroTe","sacerdote",
+    // anche i "comuni safe" devono essere unici in riga — senza questo si
+    // ottengono 2 tabaccai o 2 mendicanti adiacenti nella stessa row
+    "tabaccaio","locanda","mendicante",
   ]);
   // Gap minimo tra occorrenze su righe vicine (verticale/diagonale).
   // spacciatore/ladro/poliziotto hanno gap 2 per evitare che si ammassino su 3+
@@ -85,6 +88,9 @@ export function generateMap(biomeIdx = 0) {
     miniboss: 2, chirurgo: 2, macellaio: 2,
     spacciatore: 2, ladro: 2, poliziotto: 2,
     anziana: 2, bambino: 2, streamer: 2, sacerdote: 2,
+    // gap 2 per i "comuni safe": basta 1 riga di pausa tra 2 mendicanti/tabaccai/locande
+    // (evita stack verticali tipo 3 mendicanti sulla stessa colonna destra)
+    tabaccaio: 2, locanda: 2, mendicante: 2,
   };
   const lastSeenRow = {};
 
@@ -137,18 +143,49 @@ export function generateMap(biomeIdx = 0) {
   }
 
   // ── Garantisci almeno 2 tabaccai, 2 locande, 1 sacerdote ────
+  // IMPORTANTE: rispetta MIN_ROW_GAP anche quando si forzano le quote, per
+  // evitare di ri-introdurre cluster (es. 2 tabaccai su righe adiacenti).
   const midRows = rows.slice(1, LAYER_XS.length - 1).flat();
+  const rowsOfType = (type) => {
+    const set = new Set();
+    midRows.forEach(n => { if (n.type === type) set.add(n.row); });
+    return set;
+  };
+  const respectsGap = (type, row) => {
+    const gap = MIN_ROW_GAP[type] || 0;
+    if (!gap) return true;
+    for (const r of rowsOfType(type)) {
+      if (Math.abs(row - r) < gap) return false;
+    }
+    return true;
+  };
   const ensureMin = (type, min, exclude=[]) => {
-    const count = midRows.filter(n => n.type === type).length;
-    if (count < min) {
-      const cands = midRows.filter(n => !exclude.includes(n.type) && n.type !== type && n.type !== "boss" && n.type !== "start");
-      for (let i = 0; i < min - count && i < cands.length; i++) cands[i].type = type;
+    const countRows = () => rowsOfType(type).size;
+    if (countRows() >= min) return;
+    // candidati: nodi di un tipo "sostituibile" (non escluso, non unico già altrove)
+    // ordinati per row più lontana dalle occorrenze esistenti, così si sparpagliano
+    const cands = midRows.filter(n =>
+      !exclude.includes(n.type) && n.type !== type &&
+      n.type !== "boss" && n.type !== "start" &&
+      // non toccare NPC rari / elite / segreti / vecchio
+      !["poliziotto","anziana","bambino","streamer","macellaio","maestroTe","miniboss","guantaio"].includes(n.type) &&
+      !n.elite && !n.secret && !n._isVecchio
+    );
+    // prima prova con gap rispettato
+    for (const c of cands) {
+      if (countRows() >= min) break;
+      if (respectsGap(type, c.row)) c.type = type;
+    }
+    // fallback: se ancora sotto quota, ignora il gap (meglio avere il tipo che non averlo)
+    for (const c of cands) {
+      if (countRows() >= min) break;
+      if (c.type !== type) c.type = type;
     }
   };
   ensureMin("tabaccaio", 2, ["locanda"]);
   ensureMin("locanda", 2, ["tabaccaio"]);
   if (!midRows.some(n => n.type === "sacerdote")) {
-    const cand = midRows.find(n => n.x > 0.6 && n.type !== "tabaccaio" && n.type !== "locanda");
+    const cand = midRows.find(n => n.x > 0.6 && n.type !== "tabaccaio" && n.type !== "locanda" && !["poliziotto","anziana","bambino","streamer","miniboss","guantaio"].includes(n.type));
     if (cand) cand.type = "sacerdote";
   }
 
