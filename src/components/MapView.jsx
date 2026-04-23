@@ -5,10 +5,15 @@ import { BIOMES } from "../data/biomes.js";
 import { Tooltip } from "./Tooltip.jsx";
 
 export function MapView({ map, currentRow, visitedNodes, onSelectNode, reachableNodes, currentBiome = 0, playerFortuna = 0 }) {
-  const W = 760;    // larghezza canvas — più largo per riempire il 16:9
-  const ROW_H = 72; // spaziatura verticale
-  const NW = 72, NH = 52; // nodi più grandi — più leggibili
-  const totalH = map.rows.length * ROW_H;
+  // ── Canvas responsivo: ROW_H scala con numero righe per NON scrollare ──
+  // Stima spazio disponibile per il canvas: viewport - header(150) - hud(50) - padding(40)
+  // Con 11 righe e viewport 900px: rowH ≈ (900-240)/11 ≈ 60. Clamp [48, 72].
+  const rowsCount = map.rows.length || 1;
+  const availH = Math.max(360, (typeof window !== "undefined" ? window.innerHeight : 900) - 240);
+  const ROW_H = Math.max(48, Math.min(72, Math.floor(availH / rowsCount)));
+  const W = 1080;   // larghezza canvas — riempie il pannello widened (max-width 1200)
+  const NW = 68, NH = 48; // nodi leggermente più piccoli per compensare ROW_H ridotto
+  const totalH = rowsCount * ROW_H;
 
   // Glitter particles — stabili (non ricalcolate a ogni render)
   const glitter = useMemo(() => {
@@ -104,8 +109,7 @@ export function MapView({ map, currentRow, visitedNodes, onSelectNode, reachable
   return (
     <div style={{
       margin:"6px auto",
-      overflowX:"hidden", overflowY:"auto",
-      maxHeight:"calc(100vh - 110px)",
+      overflow:"hidden",
       border:`2px solid ${biomeColor}`,
       borderRadius:"0",
       background:"#05050f",
@@ -245,8 +249,14 @@ export function MapView({ map, currentRow, visitedNodes, onSelectNode, reachable
         </div>
       </div>
 
-      {/* ── CANVAS ── */}
-      <div style={{position:"relative", width:`${W}px`, height:`${totalH}px`, margin:"0 auto", overflow:"hidden"}}>
+      {/* ── CANVAS ── (responsive: se il pannello è più stretto di W, scala proporzionalmente) */}
+      <div style={{
+        position:"relative",
+        width:`${W}px`, maxWidth:"100%",
+        height:`${totalH}px`,
+        margin:"0 auto",
+        overflow:"hidden",
+      }}>
 
         {/* SFONDO GLITTER ANIMATO */}
         <svg style={{position:"absolute", top:0, left:0, width:"100%", height:"100%", pointerEvents:"none"}} aria-hidden>
