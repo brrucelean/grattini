@@ -807,40 +807,6 @@ export function ScratchCardView({ card, onDone, nailState, nailImplant=null, for
           {!busted && runningSum > (card.bancoTotal||0) && <span style={{color:C.green, fontSize:"11px"}}>✓ stai vincendo</span>}
         </div>
       )}
-      {/* INCASSA anticipato se stai già battendo il banco */}
-      {card.mechanic === "setteemezzo" && !finished && !winFound && !busted
-        && scratched > 0 && scratched < totalCells
-        && runningSum > (card.bancoTotal||0) && runningSum <= 7.5 && (
-        <div style={{marginBottom:"10px", display:"flex", justifyContent:"center"}}>
-          <button
-            onClick={() => handleFinish(true)}
-            style={{
-              background: C.green,
-              color: "#000",
-              border: `2px solid ${C.green}`,
-              padding: "10px 22px",
-              fontFamily: "inherit",
-              fontSize: "14px",
-              fontWeight: "bold",
-              letterSpacing: "1.5px",
-              textTransform: "uppercase",
-              cursor: "pointer",
-              boxShadow: `0 0 18px ${C.green}99, 0 0 36px ${C.green}44`,
-              animation: "pulse 1.4s ease-in-out infinite",
-            }}
-            onMouseEnter={e => {
-              e.currentTarget.style.boxShadow = `0 0 24px ${C.green}, 0 0 48px ${C.green}77`;
-              e.currentTarget.style.transform = "scale(1.03)";
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.boxShadow = `0 0 18px ${C.green}99, 0 0 36px ${C.green}44`;
-              e.currentTarget.style.transform = "scale(1)";
-            }}
-          >
-            ✓ INCASSA LA VINCITA — {runningSum.toFixed(1)} vs {card.bancoTotal?.toFixed(1)}
-          </button>
-        </div>
-      )}
 
       {/* ── Trap hint ── */}
       {card.mechanic === "trap" && !finished && (
@@ -1198,7 +1164,7 @@ export function ScratchCardView({ card, onDone, nailState, nailImplant=null, for
         );
       })()}
 
-      {/* NOT YET WON - abandon */}
+      {/* NOT YET WON - abandon (o INCASSA per setteemezzo quando stai vincendo) */}
       {!winFound && !finished && !showNoWin && scratched > 0
         && !(
           !nailAdviceDismissed && !showFirstWarning
@@ -1206,9 +1172,41 @@ export function ScratchCardView({ card, onDone, nailState, nailImplant=null, for
           && Object.values(revealedCounts).some(v => v >= 2)
         ) && (
         <div style={{display:"flex", justifyContent:"center", gap:"8px"}}>
-          <Btn variant="danger" onClick={() => handleFinish(false)} style={{fontSize:"11px"}}>
-            ✗ Abbandona
-          </Btn>
+          {card.mechanic === "setteemezzo" && !busted
+            && scratched < totalCells
+            && runningSum > (card.bancoTotal||0) && runningSum <= 7.5 ? (
+            <button
+              onClick={() => handleFinish(true)}
+              style={{
+                background: C.green,
+                color: "#000",
+                border: `2px solid ${C.green}`,
+                padding: "10px 22px",
+                fontFamily: "inherit",
+                fontSize: "14px",
+                fontWeight: "bold",
+                letterSpacing: "1.5px",
+                textTransform: "uppercase",
+                cursor: "pointer",
+                boxShadow: `0 0 18px ${C.green}99, 0 0 36px ${C.green}44`,
+                animation: "pulse 1.4s ease-in-out infinite",
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.boxShadow = `0 0 24px ${C.green}, 0 0 48px ${C.green}77`;
+                e.currentTarget.style.transform = "scale(1.03)";
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.boxShadow = `0 0 18px ${C.green}99, 0 0 36px ${C.green}44`;
+                e.currentTarget.style.transform = "scale(1)";
+              }}
+            >
+              ✓ INCASSA LA VINCITA — {runningSum.toFixed(1)} vs {card.bancoTotal?.toFixed(1)}
+            </button>
+          ) : (
+            <Btn variant="danger" onClick={() => handleFinish(false)} style={{fontSize:"11px"}}>
+              ✗ Abbandona
+            </Btn>
+          )}
         </div>
       )}
 
