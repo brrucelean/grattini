@@ -811,10 +811,34 @@ export function ScratchCardView({ card, onDone, nailState, nailImplant=null, for
       {card.mechanic === "setteemezzo" && !finished && !winFound && !busted
         && scratched > 0 && scratched < totalCells
         && runningSum > (card.bancoTotal||0) && runningSum <= 7.5 && (
-        <div style={{marginBottom:"8px"}}>
-          <Btn variant="gold" onClick={() => handleFinish(true)} style={{fontSize:"12px", padding:"5px 16px"}}>
-            🃏 INCASSA ORA ({runningSum.toFixed(1)} vs {card.bancoTotal?.toFixed(1)}) — rischi ancora?
-          </Btn>
+        <div style={{marginBottom:"10px", display:"flex", justifyContent:"center"}}>
+          <button
+            onClick={() => handleFinish(true)}
+            style={{
+              background: C.green,
+              color: "#000",
+              border: `2px solid ${C.green}`,
+              padding: "10px 22px",
+              fontFamily: "inherit",
+              fontSize: "14px",
+              fontWeight: "bold",
+              letterSpacing: "1.5px",
+              textTransform: "uppercase",
+              cursor: "pointer",
+              boxShadow: `0 0 18px ${C.green}99, 0 0 36px ${C.green}44`,
+              animation: "pulse 1.4s ease-in-out infinite",
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.boxShadow = `0 0 24px ${C.green}, 0 0 48px ${C.green}77`;
+              e.currentTarget.style.transform = "scale(1.03)";
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.boxShadow = `0 0 18px ${C.green}99, 0 0 36px ${C.green}44`;
+              e.currentTarget.style.transform = "scale(1)";
+            }}
+          >
+            ✓ INCASSA LA VINCITA — {runningSum.toFixed(1)} vs {card.bancoTotal?.toFixed(1)}
+          </button>
         </div>
       )}
 
