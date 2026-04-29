@@ -138,14 +138,19 @@ export function HUD({ player, onOpenInventory, inventoryOpen = false, moneyBling
           </StatusChip>
         </Tooltip>
       )}
-      {player.fortune > 0 && (
-        <Tooltip text={`🍀 FORTUNA +${player.fortune} — aumenta le probabilità di vincita (${player.fortuneTurns} turni rimasti)`}>
-          <StatusChip color={C.green} active>
-            🍀 +{player.fortune}
-            <span style={{fontSize:"8px", opacity:0.65, marginLeft:"2px"}}>({player.fortuneTurns}t)</span>
-          </StatusChip>
-        </Tooltip>
-      )}
+      {player.fortune > 0 && (() => {
+        const effective = Math.min(player.fortune, 5);
+        const bonus = effective * 6;
+        const capped = player.fortune > 5;
+        return (
+          <Tooltip text={`🍀 FORTUNA +${player.fortune} — +${bonus}% probabilità vincita${capped ? " (cap a +5)" : ""} · ${player.fortuneTurns} turni rimasti`}>
+            <StatusChip color={C.green} active>
+              🍀 +{player.fortune}
+              <span style={{fontSize:"8px", opacity:0.65, marginLeft:"2px"}}>({player.fortuneTurns}t)</span>
+            </StatusChip>
+          </Tooltip>
+        );
+      })()}
       {player.tumore && (
         <Tooltip text={`💀 TUMORE AI POLMONI — -5 Fortuna permanente. Troppo fumo.`}>
           <StatusChip color={C.red} danger pulse pulseSpeed="1.5s">

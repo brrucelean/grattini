@@ -13,7 +13,7 @@ export function estimateCardEV(cardTypeId, playerState = {}) {
   const ct = CARD_TYPES.find(t => t.id === cardTypeId);
   if (!cb || !ct) return null;
   const fortune = playerState.fortune || 0;
-  const winP = Math.min(cb.winChance + Math.min(fortune, 3) * 0.05, 0.95); // cap fortune bonus
+  const winP = Math.min(cb.winChance + Math.min(Math.max(fortune, 0), 5) * 0.06, 0.95); // cap fortune bonus
   const avgPrize = (cb.prizeMin + cb.prizeMax) / 2;
   const ev = winP * avgPrize - ct.cost;
   return { winP: Math.round(winP * 100), ev: Math.round(ev * 10) / 10 };
@@ -55,7 +55,7 @@ export function generateCard(typeId, fortune=0, relicBonus=0, forceWin=false) {
   const cb = CARD_BALANCE[type.id];
   const baseWinChance = cb?.winChance ?? 0.18;
   // forceWin = vincita garantita (usata da impianti come Unghia Sacra/Neonato/Marcia/Baddie)
-  const isWinner = forceWin || roll(baseWinChance + Math.min(fortune, 3) * 0.05 + relicBonus);
+  const isWinner = forceWin || roll(baseWinChance + Math.min(Math.max(fortune, 0), 5) * 0.06 + relicBonus);
   // EV-calibrated prize roll — usa prizeMin/prizeMax di CARD_BALANCE (single source of truth).
   // Fallback a type.cost/type.maxPrize per eventuali carte senza balance entry.
   const pMin = cb?.prizeMin ?? type.cost;
