@@ -1711,7 +1711,7 @@ export default function Grattini() {
             reachableNodes={getReachableNodes()}
             onSelectNode={selectNode}
             currentBiome={currentBiome}
-            playerFortuna={player.fortuna || 0}
+            playerFortuna={effectiveFortune || player.fortune || 0}
           />
 
           {/* Quick inventory */}
