@@ -627,10 +627,10 @@ export default function Grattini() {
               const relicMax = Object.keys(RELIC_DEFS).length;
               const vintageCount = vintageCollected.length;
               const cards = [
-                { onClick: () => setShowTrophies(true), accent: C.gold, emoji: "🏆", label: "TROFEI", count: trophyCount, max: trophyMax, shimmer: trophyCount > 0 },
-                { onClick: () => setShowReliquie(true), accent: "#c060ff", emoji: "🏺", label: "RELIQUIE", count: relicCount, max: relicMax, shimmer: relicCount > 0 },
-                { onClick: () => setShowVintage(true), accent: "#ffaa88", emoji: "🎨", label: "VINTAGE", count: vintageCount, max: 5, shimmer: vintageCount > 0 },
-                { onClick: () => setShowAllTimeStats(true), accent: C.cyan, emoji: "📊", label: "STATS", count: null, max: null, shimmer: true },
+                { onClick: () => setShowTrophies(true), accent: C.gold, emoji: "🏆", label: "TROFEI", count: trophyCount, max: trophyMax, shimmer: true, hasProgress: trophyCount > 0 },
+                { onClick: () => setShowReliquie(true), accent: "#c060ff", emoji: "🏺", label: "RELIQUIE", count: relicCount, max: relicMax, shimmer: true, hasProgress: relicCount > 0 },
+                { onClick: () => setShowVintage(true), accent: "#ffaa88", emoji: "🎨", label: "VINTAGE", count: vintageCount, max: 5, shimmer: true, hasProgress: vintageCount > 0 },
+                { onClick: () => setShowAllTimeStats(true), accent: C.cyan, emoji: "📊", label: "STATS", count: null, max: null, shimmer: true, hasProgress: true },
               ];
               return cards.map((c, ci) => {
                 const pct = c.max ? (c.count / c.max) : 1;
@@ -682,7 +682,7 @@ export default function Grattini() {
                       <div style={{
                         fontSize:"32px", position:"relative", zIndex:2,
                         textShadow:`0 0 16px ${c.accent}`,
-                        filter: c.shimmer ? "none" : "grayscale(0.4) brightness(0.85)",
+                        filter: c.hasProgress ? "none" : "grayscale(0.4) brightness(0.85)",
                       }}>{c.emoji}</div>
                       {/* Foil shimmer diagonale animato (solo se ha progresso) */}
                       {c.shimmer && (
