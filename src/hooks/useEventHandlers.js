@@ -242,15 +242,108 @@ export function useEventHandlers({
         break;
       }
       case "acceptEvent": {
-        if (roll(0.5)) {
-          updatePlayer(p => ({...p, fortune: p.fortune + 1, fortuneTurns: 3}));
-          addLog("Le stelle ti sorridono! +FORTUNA per 3 turni!", C.magenta);
-          setItemFoundModal({ emoji: "⭐", name: "Fortuna!", desc: "+FORTUNA per 3 turni — le prossime carte ti sorridono di più.", subtitle: "Evento" });
-        } else {
-          const bonus = Math.round(5 + rng() * 20);
-          updatePlayer(p => ({...p, money: p.money + bonus}));
-          addLog(`Hai trovato €${bonus}!`, C.gold);
-          setItemFoundModal({ emoji: "💰", name: `€${bonus}`, desc: "Soldi trovati per strada. Nessuna domanda.", subtitle: "Evento" });
+        // ── 8 esiti misteriosi distinti (peso uniforme) ────────────
+        const outcomes = [
+          "blessing", "ratto", "specchio", "vortice",
+          "carta", "patto", "luna", "scintille",
+        ];
+        const outcome = pick(outcomes);
+
+        if (outcome === "blessing") {
+          // ⭐ Benedizione classica
+          updatePlayer(p => ({...p, fortune: p.fortune + 2, fortuneTurns: Math.max(p.fortuneTurns, 4)}));
+          addLog("⭐ Una luce calda ti avvolge. Le stelle sorridono. +2 FORTUNA per 4 turni.", C.magenta);
+          setItemFoundModal({ emoji: "⭐", name: "Benedizione Stellata", desc: "+2 FORTUNA per 4 turni. Le prossime carte ti sorridono di più.", subtitle: "Evento Misterioso" });
+        } else if (outcome === "ratto") {
+          // 🐀 Ratto Profeta — soldi piccoli ma sicuri + log narrativo
+          const tip = Math.round(8 + rng() * 18);
+          updatePlayer(p => ({...p, money: p.money + tip}));
+          addLog(`🐀 Un ratto bianco esce dal tombino, ti guarda fisso e sputa €${tip} ai tuoi piedi. Poi sparisce.`, C.gold);
+          setItemFoundModal({ emoji: "🐀", name: `Il Ratto Profeta`, desc: `"Tieni, umano." Ti lascia €${tip} e sussurra qualcosa sui numeri del lotto prima di sparire nella fogna.`, subtitle: "Evento Misterioso" });
+        } else if (outcome === "specchio") {
+          // 🪞 Specchio incrinato — cura tutte le unghie peggiori di "graffiata"
+          let healed = 0;
+          updatePlayer(p => {
+            const nails = p.nails.map(n => {
+              if (n.state === "sanguinante" || n.state === "marcia") {
+                healed++;
+                return {...n, state: healNail(n.state, "graffiata")};
+              }
+              return n;
+            });
+            return {...p, nails};
+          });
+          if (healed > 0) {
+            addLog(`🪞 Specchio incrinato sul muro. Il tuo riflesso sanguina al posto tuo. ${healed} unghia/e curata/e.`, C.cyan);
+            setItemFoundModal({ emoji: "🪞", name: "Specchio del Sacrificio", desc: `Il tuo riflesso assorbe il dolore. ${healed} unghia/e tornano graffiate. Lo specchio ora ha una crepa rossa.`, subtitle: "Evento Misterioso" });
+          } else {
+            // fallback: niente da curare → piccolo bonus monete
+            const fallback = Math.round(10 + rng() * 15);
+            updatePlayer(p => ({...p, money: p.money + fallback}));
+            addLog(`🪞 Lo specchio non aveva nulla da curare. Ti lascia €${fallback} come scusa.`, C.gold);
+            setItemFoundModal({ emoji: "🪞", name: "Specchio Confuso", desc: `Niente da curare. Lo specchio si arrende e ti regala €${fallback}.`, subtitle: "Evento Misterioso" });
+          }
+        } else if (outcome === "vortice") {
+          // 🌀 Vortice temporale — raddoppia fortuneTurns esistenti, o piccola fortuna se 0
+          if (player.fortuneTurns > 0) {
+            updatePlayer(p => ({...p, fortuneTurns: p.fortuneTurns * 2}));
+            addLog(`🌀 Vortice temporale! La fortuna ti dura il doppio (${player.fortuneTurns} → ${player.fortuneTurns*2} turni).`, C.cyan);
+            setItemFoundModal({ emoji: "🌀", name: "Vortice Temporale", desc: `Il tempo si piega. I turni di FORTUNA rimanenti raddoppiano: ${player.fortuneTurns} → ${player.fortuneTurns*2}.`, subtitle: "Evento Misterioso" });
+          } else {
+            updatePlayer(p => ({...p, fortune: p.fortune + 1, fortuneTurns: 6}));
+            addLog("🌀 Vortice temporale! +1 FORTUNA per 6 turni (più lungo del solito).", C.cyan);
+            setItemFoundModal({ emoji: "🌀", name: "Vortice Temporale", desc: "+1 FORTUNA per 6 turni — più lungo del normale. Il tempo è bizzarro qui.", subtitle: "Evento Misterioso" });
+          }
+        } else if (outcome === "carta") {
+          // 🎴 Carta fantasma — regala un gratta tier 1-2 gratis
+          const candidates = CARD_TYPES.filter(c => c.cost > 0 && c.cost <= 5);
+          const chosen = pick(candidates);
+          if (chosen) {
+            const newCard = {...generateCard(chosen.id, effectiveFortune || 0, 0), owned: true};
+            updatePlayer(p => ({...p, scratchCards: [...p.scratchCards, newCard]}));
+            addLog(`🎴 Un vecchio appare dal nulla, ti mette in mano "${chosen.name}" e svanisce.`, C.magenta);
+            setItemFoundModal({ emoji: chosen.emoji || "🎴", name: chosen.name, desc: `Un grattino fantasma — gratuito. "${chosen.desc}"`, subtitle: "Carta Misteriosa" });
+          } else {
+            updatePlayer(p => ({...p, money: p.money + 20}));
+            addLog("🎴 Una mano invisibile ti lascia €20 in tasca.", C.gold);
+          }
+        } else if (outcome === "patto") {
+          // 💀 Patto col diavolo — €50 ma -1 unghia degradata
+          const aliveIdx = player.nails.findIndex(n => n.state !== "morta");
+          if (aliveIdx >= 0) {
+            updatePlayer(p => {
+              const nails = [...p.nails];
+              nails[aliveIdx] = degradeNailObj(nails[aliveIdx]);
+              return {...p, nails, money: p.money + 50};
+            });
+            addLog("💀 Una mano gelata ti stringe il dito. Un'unghia si scurisce — ma trovi €50 nel taschino.", C.red);
+            setItemFoundModal({ emoji: "💀", name: "Patto della Periferia", desc: "+€50 in cambio di un'unghia degradata. Non hai firmato niente. Non ti serve firmare.", subtitle: "Evento Misterioso" });
+          } else {
+            // fallback se solo morta: solo €
+            updatePlayer(p => ({...p, money: p.money + 25}));
+            addLog("💀 La mano gelata ti tocca ma le tue unghie sono già morte. Solo €25.", C.gold);
+          }
+        } else if (outcome === "luna") {
+          // 🌙 Benedizione Lunare — +3 Fortuna 8 turni (forte)
+          updatePlayer(p => ({...p, fortune: p.fortune + 3, fortuneTurns: Math.max(p.fortuneTurns, 8)}));
+          addLog("🌙 La luna piena ti fissa. Senti il sangue caldo nelle dita. +3 FORTUNA per 8 turni.", C.magenta);
+          setItemFoundModal({ emoji: "🌙", name: "Benedizione Lunare", desc: "+3 FORTUNA per 8 turni. La luna ti ha scelto, stanotte.", subtitle: "Evento Misterioso" });
+        } else if (outcome === "scintille") {
+          // ✨ Esplosione di scintille — +1 uso a TUTTI i grattatori
+          if (player.grattatori && player.grattatori.length > 0) {
+            updatePlayer(p => ({
+              ...p,
+              grattatori: p.grattatori.map(g => ({...g, usesLeft: g.usesLeft + 2})),
+            }));
+            addLog(`✨ Una pioggia di scintille ravviva i tuoi ${player.grattatori.length} grattatori. +2 usi ciascuno!`, C.cyan);
+            setItemFoundModal({ emoji: "✨", name: "Pioggia di Scintille", desc: `+2 usi a tutti i tuoi grattatori (${player.grattatori.length}). I metalli brillano come nuovi.`, subtitle: "Evento Misterioso" });
+          } else {
+            // fallback se non hai grattatori: piccolo bonus monete
+            const tip = Math.round(15 + rng() * 25);
+            updatePlayer(p => ({...p, money: p.money + tip}));
+            addLog(`✨ Le scintille cercano un grattatore. Non ne trovi. Si trasformano in €${tip}.`, C.gold);
+            setItemFoundModal({ emoji: "✨", name: "Scintille Vagabonde", desc: `Niente grattatori da ricaricare. Le scintille diventano €${tip}.`, subtitle: "Evento Misterioso" });
+          }
         }
         setScreen("map"); break;
       }

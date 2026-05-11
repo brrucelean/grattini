@@ -263,27 +263,6 @@ export function generateMap(biomeIdx = 0) {
     });
   }
 
-  // ── SHORTCUT: 2 connessioni che saltano 1 riga ──────────────
-  // Collega alcuni nodi 2 righe avanti (scorciatoia rischiosa)
-  let shortcutCount = 0;
-  for (let r = 1; r < rows.length - 3 && shortcutCount < 2; r++) {
-    for (const node of rows[r]) {
-      if (node.type !== "boss" && node.type !== "start" && node.x < 0.2 && roll(0.35) && shortcutCount < 2) {
-        const skipRow = rows[r + 2];
-        if (skipRow) {
-          const target = skipRow.reduce((best, n) =>
-            Math.abs(n.x - node.x) < Math.abs(best.x - node.x) ? n : best
-          );
-          if (!connections[node.id].includes(target.id)) {
-            connections[node.id].push(target.id);
-            node.hasShortcut = true;
-            shortcutCount++;
-          }
-        }
-      }
-    }
-  }
-
   return { rows, connections };
 }
 
