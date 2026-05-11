@@ -189,6 +189,22 @@ export function generateMap(biomeIdx = 0) {
     if (cand) cand.type = "sacerdote";
   }
 
+  // ── PRIMA SCELTA: garantisci sempre almeno 1 tabaccaio in rows[1] ─
+  // Il giocatore parte senza soldi e con poche carte: deve sempre poter
+  // andare a comprare materiale fin dal primo step.
+  const firstRow = rows[1] || [];
+  if (firstRow.length > 0 && !firstRow.some(n => n.type === "tabaccaio")) {
+    // candidato sostituibile: niente NPC rari/elite/segreti/boss
+    const cand = firstRow.find(n =>
+      n.type !== "boss" && n.type !== "start" && n.type !== "tabaccaio" &&
+      !["poliziotto","anziana","bambino","streamer","macellaio","maestroTe","miniboss","guantaio"].includes(n.type) &&
+      !n.elite && !n.secret && !n._isVecchio
+    ) || firstRow.find(n =>
+      n.type !== "boss" && n.type !== "start" && !n.elite && !n.secret && !n._isVecchio
+    );
+    if (cand) cand.type = "tabaccaio";
+  }
+
   // ── Nodi SEGRETI: 2 per mappa, visibili solo con Fortuna ────
   const secretCandidates = rows.slice(2, 8).flat().filter(n =>
     n.type !== "boss" && n.type !== "start" && n.x < 0.15
