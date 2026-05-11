@@ -45,6 +45,12 @@ export function NailSidebar({ nails, activeNail, onSelectNail, locked=false, gra
         const pipState = SPECIAL_TIER_MAP[n.state] || n.state;
         const tierIdx = TIER_ORDER.indexOf(pipState); // -1 if morta, 0-4 otherwise
         const aliveTiers = isDead ? 0 : tierIdx + 1; // 1-5 pips filled
+        // Smalto: colpi protetti → riempi pip vuoti dei tier con rosa (kawaii),
+        // poi se ne avanzano aggiungili come pip extra dopo (come cremaHP).
+        const smaltoCount = isDead ? 0 : (n.smalto || 0);
+        const emptyTiers = Math.max(0, TIER_ORDER.length - aliveTiers);
+        const smaltoInTiers = Math.min(emptyTiers, smaltoCount);
+        const smaltoExtra = Math.max(0, smaltoCount - smaltoInTiers);
         // Scratch damage bar within current tier (3 ticks)
         const dmgFilled = isDead ? 0 : n.scratchCount;
         const accent = visual?.accent;
@@ -140,6 +146,19 @@ export function NailSidebar({ nails, activeNail, onSelectNail, locked=false, gra
                           <span style={{display:"flex", gap:"2px", marginTop:"3px", alignItems:"center"}}>
                             {TIER_ORDER.map((tier, ti) => {
                               const filled = ti < aliveTiers;
+                              // Pip vuoto coperto da smalto → riempi di rosa kawaii
+                              const isSmaltoPip = !filled && ti < aliveTiers + smaltoInTiers;
+                              if (isSmaltoPip) {
+                                return (
+                                  <span key={ti} style={{
+                                    display:"inline-block", width:"9px", height:"5px",
+                                    background: C.pink,
+                                    border: `1px solid ${C.pink}aa`,
+                                    boxShadow: isActive ? `0 0 4px ${C.pink}aa` : `0 0 2px ${C.pink}66`,
+                                    flexShrink:0,
+                                  }}/>
+                                );
+                              }
                               const pipCol = filled ? TIER_COLORS[tier] : "#222";
                               return (
                                 <span key={ti} style={{
@@ -151,6 +170,16 @@ export function NailSidebar({ nails, activeNail, onSelectNail, locked=false, gra
                                 }}/>
                               );
                             })}
+                            {/* Smalto extra: pip rosa dopo i 5 tier (se smalto > tier vuoti) */}
+                            {Array(smaltoExtra).fill(0).map((_,si) => (
+                              <span key={"s"+si} style={{
+                                display:"inline-block", width:"9px", height:"5px",
+                                background: C.pink,
+                                border: `1px solid ${C.pink}aa`,
+                                boxShadow: isActive ? `0 0 4px ${C.pink}aa` : `0 0 2px ${C.pink}66`,
+                                flexShrink:0,
+                              }}/>
+                            ))}
                             {/* CremaHP white pips (extra buffer beyond kawaii) */}
                             {Array(n.cremaHP||0).fill(0).map((_,ci) => (
                               <span key={"c"+ci} style={{

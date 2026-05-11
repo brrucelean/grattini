@@ -79,13 +79,12 @@ export function MapView({ map, currentRow, visitedNodes, onSelectNode, reachable
   const BIOME_GLYPH = ["🏭", "🎰", "🍕", "🏮"];
   const biomeGlyph = BIOME_GLYPH[currentBiome] || "🏭";
 
-  // Chips legenda — design Vintage/foil, più prominenti
+  // Chips legenda — colori allineati a quelli effettivi dei nodi (vedi borderCol più sotto)
   const LEGEND_CHIPS = [
-    { icon:"◈", label:"PERICOLO",    color:C.red },
-    { icon:"◈", label:"SICURO",      color:C.green },
-    { icon:"⚡", label:"SCORCIATOIA", color:C.magenta },
-    { icon:"🔮", label:"SEGRETO",     color:"#cc99ff" },
-    { icon:"★", label:"ELITE",       color:C.orange },
+    { icon:"◈", label:"PERICOLO", color:"#ff4444" }, // = nodo danger attivo
+    { icon:"◈", label:"SICURO",   color:"#44dd88" }, // = nodo safe attivo
+    { icon:"🔮", label:"SEGRETO",  color:"#cc99ff" }, // = bordo nodo segreto sbloccato
+    { icon:"★", label:"ELITE",    color:C.orange },  // = nodo elite
   ];
 
   // Corner brackets — elemento Vintage ricorrente
@@ -379,11 +378,12 @@ export function MapView({ map, currentRow, visitedNodes, onSelectNode, reachable
           const dangerNode = DANGER_TYPES.has(node.type);
           const safeNode   = SAFE_TYPES.has(node.type);
 
-          // Colori nodo
-          const borderWidth = isBoss || isElite ? 2 : isActive ? 1.5 : 1;
+          // Colori nodo (vedi LEGEND_CHIPS — devono restare allineati)
+          const borderWidth = isBoss || isElite || (isActive && secretUnlocked) ? 2 : isActive ? 1.5 : 1;
           const borderCol = visited     ? "#1a1a28"
             : isBoss      ? "#ff2244"
             : isElite     ? C.orange
+            : isActive && secretUnlocked ? "#cc99ff"     // 🔮 segreto sbloccato → viola
             : isActive && dangerNode ? "#ff4444"
             : isActive && safeNode   ? "#44dd88"
             : isActive    ? C.gold
@@ -392,6 +392,7 @@ export function MapView({ map, currentRow, visitedNodes, onSelectNode, reachable
           const bgCol = visited        ? "#080808"
             : isBoss               ? "#1a0000"
             : isElite              ? "#1a0e00"
+            : isActive && secretUnlocked ? "#150a1a"     // 🔮 sfondo viola scuro
             : isActive && dangerNode ? "#180000"
             : isActive && safeNode   ? "#001800"
             : isActive             ? "#0a0a14"
