@@ -1,27 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { C, FONT } from "../data/theme.js";
 import { S } from "../utils/styles.js";
-
-// ─── Corner brackets helper ────────────────────────────────────
-function CornerBrackets({ color, size = 14, inset = 10, borderW = 2, shadow = true }) {
-  return ["tl","tr","bl","br"].map(pos => {
-    const [v, h] = pos.split("");
-    return (
-      <div key={pos} style={{
-        position: "absolute",
-        [v === "t" ? "top" : "bottom"]: `${inset}px`,
-        [h === "l" ? "left" : "right"]: `${inset}px`,
-        width: `${size}px`, height: `${size}px`,
-        borderTop: v === "t" ? `${borderW}px solid ${color}` : "none",
-        borderBottom: v === "b" ? `${borderW}px solid ${color}` : "none",
-        borderLeft: h === "l" ? `${borderW}px solid ${color}` : "none",
-        borderRight: h === "r" ? `${borderW}px solid ${color}` : "none",
-        boxShadow: shadow ? `0 0 8px ${color}88` : "none",
-        pointerEvents: "none",
-      }}/>
-    );
-  });
-}
+import { CornerBrackets } from "./Vintage.jsx";
 
 // ─── DOPPIO O NULLA COMPONENT ──────────────────────────────────
 export function DoppioONullaView({ prize, onDecline, onResult }) {
@@ -121,7 +101,7 @@ export function DoppioONullaView({ prize, onDecline, onResult }) {
       textAlign: "center",
       paddingTop: "18px", paddingBottom: "14px",
     }}>
-      <CornerBrackets color={accent} />
+      <CornerBrackets color={accent} size={14} inset={10} thickness={2} glow />
 
       {/* ═══ HEADER ═══ */}
       <div style={{

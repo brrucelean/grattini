@@ -2,26 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { C, FONT } from "../data/theme.js";
 import { NPC_ART, SPR_BIG, SPR_COLOR } from "../data/art.js";
 import { AudioEngine } from "../audio.js";
-
-// ─── Vintage corner brackets ────────────────────────────────────
-function VintageCorners({ color, size = 11, inset = -2 }) {
-  return ["tl","tr","bl","br"].map(pos => {
-    const [v, h] = pos.split("");
-    return (
-      <span key={pos} style={{
-        position:"absolute",
-        [v==="t"?"top":"bottom"]: inset, [h==="l"?"left":"right"]: inset,
-        width:`${size}px`, height:`${size}px`,
-        borderTop: v==="t" ? `2px solid ${color}` : "none",
-        borderBottom: v==="b" ? `2px solid ${color}` : "none",
-        borderLeft: h==="l" ? `2px solid ${color}` : "none",
-        borderRight: h==="r" ? `2px solid ${color}` : "none",
-        boxShadow:`0 0 6px ${color}66`,
-        pointerEvents:"none",
-      }}/>
-    );
-  });
-}
+import { CornerBrackets } from "./Vintage.jsx";
 
 export function DialogueBox({ npc, name, color, text, footer }) {
   const [displayed, setDisplayed] = useState("");
@@ -53,7 +34,7 @@ export function DialogueBox({ npc, name, color, text, footer }) {
       minHeight:"200px",
       position:"relative",
     }}>
-      <VintageCorners color={color} size={13} inset={-3} />
+      <CornerBrackets color={color} size={13} inset={-3} thickness={2} glow />
       {/* Ritratto ASCII sinistro */}
       <div style={{
         flexShrink:0, width:"160px",
@@ -182,7 +163,7 @@ export function CarmeloLogBox({ npc, name, color, messages, footer, height="170p
       background:"#04040e", animation:"dialogueIn 0.3s ease-out", height, flexShrink:0,
       position:"relative",
     }}>
-      <VintageCorners color={color} size={13} inset={-3} />
+      <CornerBrackets color={color} size={13} inset={-3} thickness={2} glow />
       <div style={{
         flexShrink:0, width:"160px", borderRight:`1px solid ${color}44`,
         background:`linear-gradient(180deg, ${color}08 0%, transparent 100%)`,

@@ -4,6 +4,7 @@ import { NAIL_INFO, NAIL_ORDER } from "../data/nails.js";
 import { GRATTATORE_DEFS, ALL_IMPLANTS_META, CHIRURGO_IMPLANT_IDS } from "../data/items.js";
 import { makeNailCursor, NAIL_CURSOR, getNailVisual } from "../utils/nail.js";
 import { Tooltip } from "./Tooltip.jsx";
+import { VintageBadge } from "./Vintage.jsx";
 
 // Chirurgo implants: slot totali e colore per tipo
 const CHIRURGO_SLOTS = {
@@ -20,19 +21,11 @@ export function NailSidebar({ nails, activeNail, onSelectNail, locked=false, gra
   const SPECIAL_TIER_MAP = { polliceVerde: "kawaii", unghiaNera: "marcia" };
   return (
     <div style={{display:"flex", flexDirection:"column", gap:"5px", alignItems:"stretch"}}>
-      {/* Heading Vintage: solid badge col. accent */}
+      {/* Heading Vintage */}
       <div style={{textAlign:"center", marginBottom:"4px"}}>
-        <div style={{
-          display:"inline-block",
-          background: locked ? C.orange : C.gold,
-          color:"#000",
-          fontSize:"8px", fontWeight:"bold",
-          letterSpacing:"2px",
-          padding:"2px 8px",
-          boxShadow: `0 0 6px ${locked ? C.orange : C.gold}99`,
-        }}>
-          {locked ? "★ 🔒 BLOCCATA ★" : "★ 🖐 UNGHIE ★"}
-        </div>
+        <VintageBadge color={locked ? C.orange : C.gold} size="md">
+          {locked ? "🔒 BLOCCATA" : "🖐 UNGHIE"}
+        </VintageBadge>
       </div>
       {nails.map((n, i) => {
         const info = NAIL_INFO[n.state];
@@ -228,16 +221,7 @@ export function NailSidebar({ nails, activeNail, onSelectNail, locked=false, gra
         return (
           <>
             <div style={{textAlign:"center", marginTop:"6px", marginBottom:"3px", borderTop:`1px solid #1a1a2e`, paddingTop:"6px"}}>
-              <div style={{
-                display:"inline-block",
-                background: C.cyan, color:"#000",
-                fontSize:"8px", fontWeight:"bold",
-                letterSpacing:"2px",
-                padding:"2px 8px",
-                boxShadow:`0 0 6px ${C.cyan}99`,
-              }}>
-                ★ 🔧 GRATTATORE ★
-              </div>
+              <VintageBadge color={C.cyan} size="md">🔧 GRATTATORE</VintageBadge>
             </div>
             <Tooltip text={`${g.emoji} ${g.name}\n${g.desc}\n${uses > 10 ? uses : uses + "/" + (g.maxUses||uses)} usi rimasti`} color={C.cyan}>
             <div style={{

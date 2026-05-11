@@ -82,8 +82,9 @@ export function MapView({ map, currentRow, visitedNodes, onSelectNode, reachable
   // Chips legenda — colori allineati a quelli effettivi dei nodi (vedi borderCol più sotto)
   const LEGEND_CHIPS = [
     { icon:"◈", label:"PERICOLO", color:"#ff4444" }, // = nodo danger attivo
+    { icon:"◈", label:"NEUTRO",   color:C.gold    }, // = nodo evento/streamer/anziana/ecc
     { icon:"◈", label:"SICURO",   color:"#44dd88" }, // = nodo safe attivo
-    { icon:"🔮", label:"SEGRETO",  color:"#cc99ff" }, // = bordo nodo segreto sbloccato
+    { icon:"🔮", label:"SEGRETO",  color:"#cc99ff" }, // = nodo segreto sbloccato
     { icon:"★", label:"ELITE",    color:C.orange },  // = nodo elite
   ];
 
