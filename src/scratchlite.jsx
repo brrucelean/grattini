@@ -48,7 +48,7 @@ import { ShopView } from "./components/ShopView.jsx";
 import { LocandaView } from "./components/LocandaView.jsx";
 import { EventView } from "./components/EventView.jsx";
 // ═══════════════════════════════════════════════════════════════
-//  G R A T T I N I  —  Beta 2
+//  G R A T T I N I  —  Beta 5
 //  A roguelike scratch card game with ASCII aesthetics
 // ═══════════════════════════════════════════════════════════════
 
@@ -2635,7 +2635,7 @@ export default function Grattini() {
               ))}
             </div>
             <div style={{color:C.dim, marginBottom:"12px", fontSize:"11px"}}>
-              BETA 4 — Hai completato tutti i biomi!
+              BETA 5 — Hai completato tutti i biomi!
             </div>
             <div style={{display:"flex", gap:"10px", justifyContent:"center", flexWrap:"wrap"}}>
               <Btn variant="gold" onClick={() => setScreen("title")} style={{fontSize:"16px", padding:"12px 32px"}}>

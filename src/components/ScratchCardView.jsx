@@ -9,7 +9,7 @@ import { S } from "../utils/styles.js";
 import { Btn } from "./Btn.jsx";
 import { ScratchCell } from "./ScratchCell.jsx";
 
-// ─── SCRATCH CARD COMPONENT (Beta 2: per-cell nail damage + early stop) ───
+// ─── SCRATCH CARD COMPONENT (per-cell nail damage + early stop) ───
 export function ScratchCardView({ card, onDone, nailState, nailImplant=null, fortune, grattaMania, equippedGrattatore, onCellScratch, onNailDamage=null, onItemFound=null, showFirstWarning, ambidestri=false, onCardActivate=null, lastWonPrize=0, extraTiles=[], onExtraTileUsed=null, relicEffects=[], onAdviceShown=null }) {
   const cardId = useRef(card.name + card.prize + card.symbols?.join(""));
   const [cells, setCells] = useState(card.cells.map(c => ({...c})));
