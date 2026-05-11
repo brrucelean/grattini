@@ -579,7 +579,7 @@ export function useEventHandlers({
         const lore = loreTexts[Math.floor(Math.random() * loreTexts.length)];
         addLog(`🐲 ${lore}`, "#ff3333");
         showItemFound("🐲", "Sapienza del Drago", lore, "Maestro del Tè");
-        AudioEngine.play("china");
+        AudioEngine.china();
         break;
       }
       case "learnAmbidestri": {

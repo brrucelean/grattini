@@ -495,7 +495,7 @@ export function useNodeHandlers({
           setVisitedNodes([]);
           addLog(`🌍 Benvenuto a ${BIOMES[nextBiome].name}! "${BIOMES[nextBiome].desc}"`, BIOMES[nextBiome].color);
           if (nextBiome === 3) {
-            AudioEngine.play("china");
+            AudioEngine.china();
             addLog("🏮 Lanterne rosse illuminano il cammino...", "#ff3333");
             addLog("🐲 Un ruggito lontano scuote l'aria.", "#ffcc00");
           }

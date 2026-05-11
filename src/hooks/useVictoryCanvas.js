@@ -58,7 +58,7 @@ export function useVictoryCanvas({ screen }) {
     if (transp / (canvas.width * canvas.height) > 0.52) {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       setVictoryRevealed(true);
-      AudioEngine.play("boss");
+      AudioEngine.bossEntrance();
     }
   }, [victoryRevealed]);
 

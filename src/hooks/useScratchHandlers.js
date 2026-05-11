@@ -203,7 +203,7 @@ export function useScratchHandlers({
       // Grattatore x5teleport (Moneta Cinese): teleport al Quartiere Cinese (bioma 3)
       if (player?.equippedGrattatore?.effect === "x5teleport" && currentBiome !== 3) {
         addLog(`🀄 MONETA CINESE! Vincita x5!`, C.gold);
-        AudioEngine.play("china");
+        AudioEngine.china();
         setTimeout(() => {
           setMap(generateMap(3));
           setCurrentRow(0);

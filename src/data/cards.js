@@ -98,6 +98,11 @@ export const CARD_TYPES = [
 //   • Pre-rebalance: 67% run perdenti · 26% bancarotta · RTP globale 78%
 //   • Post-rebalance: simulato ~45% run profittevoli · <12% bancarotta · RTP ~93%
 // prizeMin/prizeMax calibrati per RTP target mantenendo la gerarchia tier.
+//
+// FORTUNA Beta 5 — il bonus chance è stato alzato a +6%/punto, cap +5 (era +5%/punto cap +3).
+// Verifica con `node scripts/check-balance.mjs`: tutte le carte diventano EV+ con Fortuna 5,
+// ma raggiungere/mantenere F5 richiede eventi rari + reliquie + cedola — è una "lucky window"
+// temporanea, non lo stato normale.
 export const CARD_BALANCE = {
   fortunaFlash:    { winChance: 0.32, evTarget:  0.00, prizeMin: 1,   prizeMax: 3,    tier: 1 },
   setteEMezzo:     { winChance: 0.34, evTarget:  0.00, prizeMin: 2,   prizeMax: 4,    tier: 1 },

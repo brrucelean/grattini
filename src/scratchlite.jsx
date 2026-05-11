@@ -498,7 +498,7 @@ export default function Grattini() {
       )}
 
       {/* ── HUD PERSISTENTE (tutte le screen tranne title e tutorial) ── */}
-      {player && !["title","tutorialNails"].includes(screen) && (
+      {player && !["title","tutorialNails","tutorialMap"].includes(screen) && (
         <div style={{width:"100%", flexShrink:0, paddingTop:"6px"}}>
           <HUD player={player} onOpenInventory={() => setShowInventoryPanel(v => !v)} inventoryOpen={showInventoryPanel} moneyBling={moneyBling} currentBiome={currentBiome} />
         </div>
@@ -508,7 +508,7 @@ export default function Grattini() {
       <div style={{flex:1, width:"100%", display:"flex", overflow:"hidden", minHeight:0}}>
 
       {/* ── SIDEBAR SINISTRA: unghie ── */}
-      {player && !["title","tutorialNails"].includes(screen) && (
+      {player && !["title","tutorialNails","tutorialMap"].includes(screen) && (
         <div style={{
           width:"160px", flexShrink:0,
           borderRight:"1px solid #12121e",
@@ -528,7 +528,7 @@ export default function Grattini() {
       }}>
 
       {/* ═══ TITLE SCREEN ═══ */}
-      {["title","tutorialNails"].includes(screen) && (
+      {["title","tutorialNails","tutorialMap"].includes(screen) && (
         <div style={{
           position:"absolute", inset:0, pointerEvents:"none", zIndex:0, overflow:"hidden",
         }}>
@@ -818,8 +818,85 @@ export default function Grattini() {
               </div>
             </div>
 
+            <Btn variant="gold" onClick={() => setScreen("tutorialMap")} style={{fontSize:"14px", padding:"10px 32px"}}>
+              Ho capito — avanti →
+            </Btn>
+          </div>
+        </div>
+      )}
+
+      {/* ═══ TUTORIAL MAPPA ═══ */}
+      {screen === "tutorialMap" && (
+        <div style={{maxWidth:"640px", width:"100%", textAlign:"center", margin:"auto", position:"relative", zIndex:1}}>
+          <div style={{...S.panel, background:"#0a0a18", border:`2px solid ${C.gold}`}}>
+            <div style={{...S.h2, color:C.gold, marginBottom:"6px"}}>🗺 La Mappa di Tabacchitalia</div>
+            <div style={{color:C.dim, fontSize:"11px", letterSpacing:"2px", marginBottom:"18px"}}>TUTORIAL — come si naviga</div>
+
+            {/* Nodi principali */}
+            <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:"8px", marginBottom:"14px", textAlign:"left"}}>
+              {[
+                { icon:"🏪", label:"Tabaccaio", color:C.gold, desc:"Compri biglietti, oggetti, grattatori." },
+                { icon:"🛏", label:"Locanda", color:C.green, desc:"Curi unghie e riposi." },
+                { icon:"❓", label:"Evento", color:C.cyan, desc:"Misteri. Scelte. Imprevedibili." },
+                { icon:"👊", label:"Mini Boss", color:C.orange, desc:"Sfida a grattare. Rischia un'unghia." },
+                { icon:"🚔", label:"Polizia", color:C.red, desc:"Pagi multa o usi astuzia." },
+                { icon:"💀", label:"Boss", color:"#ff2244", desc:"Fine del bioma. Preparati." },
+              ].map(({icon, label, color, desc}) => (
+                <div key={label} style={{
+                  background:"#111122", border:`1px solid ${color}44`,
+                  padding:"8px 10px", display:"flex", alignItems:"flex-start", gap:"8px",
+                }}>
+                  <div style={{fontSize:"18px", lineHeight:1, marginTop:"1px"}}>{icon}</div>
+                  <div>
+                    <div style={{color, fontSize:"12px", fontWeight:"bold"}}>{label}</div>
+                    <div style={{color:C.dim, fontSize:"10px", lineHeight:"1.4"}}>{desc}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Fortuna */}
+            <div style={{
+              background:"#0d0a1a", border:`1px solid ${C.magenta}66`,
+              padding:"10px 14px", marginBottom:"10px", textAlign:"left",
+            }}>
+              <div style={{color:C.magenta, fontSize:"11px", fontWeight:"bold", marginBottom:"6px"}}>🍀 FORTUNA</div>
+              <div style={{color:C.text, fontSize:"11px", lineHeight:"1.7"}}>
+                Bonus temporaneo (+6% chance vincita per punto, cap +5).<br/>
+                Con <strong style={{color:C.magenta}}>Fortuna ≥ 2</strong> sblocchi i <strong>🔮 nodi segreti</strong> sulla mappa — eventi rari con ricompense uniche.
+              </div>
+            </div>
+
+            {/* Elite & secret */}
+            <div style={{
+              background:"#0d0800", border:`1px solid ${C.orange}55`,
+              padding:"10px 14px", marginBottom:"10px", textAlign:"left",
+            }}>
+              <div style={{color:C.orange, fontSize:"11px", fontWeight:"bold", marginBottom:"6px"}}>★ ELITE & 🔒 SEGRETI</div>
+              <div style={{color:C.text, fontSize:"11px", lineHeight:"1.7"}}>
+                I nodi con <strong style={{color:C.orange}}>★ rosso</strong> sono Elite: rischio raddoppiato, premi raddoppiati.<br/>
+                I nodi con <strong>🔒</strong> richiedono Fortuna ≥ 2 per essere visti — appariranno come 🔮 e ti regaleranno qualcosa di raro.
+              </div>
+            </div>
+
+            {/* Grattatori & reliquie */}
+            <div style={{
+              background:"#080812", border:`1px solid ${C.cyan}44`,
+              padding:"10px 14px", marginBottom:"18px", textAlign:"left",
+            }}>
+              <div style={{color:C.cyan, fontSize:"11px", fontWeight:"bold", marginBottom:"6px"}}>🔧 GRATTATORI & 🏺 RELIQUIE</div>
+              <div style={{color:C.text, fontSize:"11px", lineHeight:"1.7"}}>
+                <strong>Grattatori</strong>: oggetti equipaggiabili che proteggono l'unghia o moltiplicano premi. Hanno usi limitati.<br/>
+                <strong>Reliquie</strong>: effetto permanente per tutta la run. Le trovi negli eventi.
+              </div>
+            </div>
+
+            <div style={{color:C.dim, fontSize:"10px", marginBottom:"14px", letterSpacing:"1px"}}>
+              Passa il mouse su qualsiasi icona nel gioco per il tooltip esplicativo.
+            </div>
+
             <Btn variant="gold" onClick={() => setScreen("introScratch")} style={{fontSize:"14px", padding:"10px 32px"}}>
-              Ho capito — iniziamo! →
+              Pronto — vai dal Nonno Carmelo →
             </Btn>
           </div>
         </div>
@@ -3686,7 +3763,7 @@ export default function Grattini() {
       </div>{/* fine 3-column */}
 
       {/* ── LOG STRIP (bottom) ── */}
-      {player && !["title","tutorialNails"].includes(screen) && log.length > 0 && (
+      {player && !["title","tutorialNails","tutorialMap"].includes(screen) && log.length > 0 && (
         <div style={{
           width:"100%", flexShrink:0,
           borderTop:"1px solid #12121e",
