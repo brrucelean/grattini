@@ -475,7 +475,7 @@ export function useEventHandlers({
         addLog("👵✨ \"Che la Madonna ti accompagni, figliolo.\" Un calore antico ti invade il dito. UNGHIA SACRA impiantata!", C.gold);
         setItemFoundModal({
           emoji:"✨", name:"Unghia Sacra",
-          desc:"La tua unghia attiva è diventata SACRA.\nLa prossima grattata = vincita GARANTITA × 5.\nDopo, torna Sana.",
+          desc:"La tua unghia attiva è diventata SACRA.\nLa prossima grattata = vincita GARANTITA × 3.\nDopo, torna Sana.",
           subtitle:"Benedizione dell'Anziana",
           buttonLabel:"Grazie nonna 🙏",
         });

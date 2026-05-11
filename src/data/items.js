@@ -4,8 +4,8 @@
 export const ITEM_DEFS = {
   cerotto:     { name:"Cerotto", desc:"Cura 1 unghia di 1 stato (scegli quale)", cost:3, rarity:"comune", emoji:"🩹", nailEquip:true },
   disinfettante:{ name:"Disinfettante", desc:"Cura 1 unghia di 2 stati (scegli quale)", cost:8, rarity:"comune", emoji:"💧", nailEquip:true },
-  sigaretta:     { name:"Sigaretta", desc:"+1 Fortuna (3 turni). Dopo 2 grattate l'unghia attiva diventa 🖤 UNGHIA NERA (×0.4, rischio annullo)", cost:4, rarity:"comune", emoji:"🚬", global:true },
-  sigarettaErba: { name:"Sigaretta con Erba", desc:"+2 Fortuna (4 turni) + cura unghia attiva. Dopo 4 grattate l'unghia attiva diventa 🌿 POLLICE VERDE (×2.5 premi)", cost:8, rarity:"media", emoji:"🌿", global:true },
+  sigaretta:     { name:"Sigaretta", desc:"+1 Fortuna (4 turni). Dopo 3 grattate l'unghia attiva diventa 🖤 UNGHIA NERA (×0.4, rischio annullo)", cost:5, rarity:"comune", emoji:"🚬", global:true },
+  sigarettaErba: { name:"Sigaretta con Erba", desc:"+2 Fortuna (4 turni) + cura unghia attiva. Dopo 4 grattate l'unghia attiva diventa 🌿 POLLICE VERDE (×2.5 premi)", cost:15, rarity:"media", emoji:"🌿", global:true },
   cremaRinforzante:{ name:"Crema Rinforzante", desc:"+1 HP bianco sull'unghia (assorbe 3 danni)", cost:10, rarity:"media", emoji:"🧴", nailEquip:true, cremaEquip:true },
   cappelloSbirro:{ name:"Cappello Sbirro", desc:"Ignora poliziotto 1 volta (attira ladri e spacciatori!)", cost:15, rarity:"rara", emoji:"🎩", global:true },
   sieroRicrescita:{ name:"Siero Ricrescita", desc:"Ricresce 1 unghia morta → Sana", cost:25, rarity:"rara", emoji:"💉", nailEquip:true },
@@ -16,7 +16,7 @@ export const ITEM_DEFS = {
   manoProtesica:{ name:"Mano Protesica", desc:"Cura TUTTE le unghie vive → Sane", cost:100, rarity:"rara", emoji:"🦾", global:true },
   tesseraVIP:  { name:"Tessera VIP", desc:"Sblocca zona VIP nel tabaccaio", cost:30, rarity:"rara", emoji:"🎫", global:true },
   // Sprint 5: item retro — "rivista scandalosa" da sottobanco del tabaccaio
-  giornalettoPorno:{ name:"Giornaletto", desc:"Rivista scandalosa dai primi anni '90. +3 Fortuna per 6 grattate. Attenzione: se un Poliziotto ti becca con questo... figuraccia + €15 di multa.", cost:8, rarity:"media", emoji:"📖", global:true },
+  giornalettoPorno:{ name:"Giornaletto", desc:"Rivista scandalosa dai primi anni '90. +3 Fortuna per 6 grattate. Attenzione: se un Poliziotto ti becca con questo... figuraccia + €15 di multa.", cost:15, rarity:"media", emoji:"📖", global:true },
 };
 
 // ─── IMPIANTI CHIRURGO MACELLAIO ────────────────────────────
@@ -37,15 +37,15 @@ export const MACELLAIO_IMPLANTS = [
 // ─── IMPIANTI SACRI (Anziana Maledetta) ──────────────────────
 export const ANZIANA_IMPLANTS = [
   { id:"sacra", name:"Unghia Sacra", emoji:"✨", cost:40,
-    desc:"1 grattata: vincita × 5 GARANTITA. Poi l'unghia torna Sana.",
-    rarity:"rarissima", uses:1, prizeMult:5.0, guaranteedWin:true, onExhaust:"sana" },
+    desc:"1 grattata: vincita × 3 GARANTITA. Poi l'unghia torna Sana.",
+    rarity:"rarissima", uses:1, prizeMult:3.0, guaranteedWin:true, onExhaust:"sana" },
 ];
 
 // ─── IMPIANTI CHIRURGO OSCURO (già esistenti) ────────────────
 // Unghie artificiali: NON sanguinano, non degradano. Hanno slot fissi;
 // a esaurimento slot l'unghia si spezza (muore).
 export const CHIRURGO_OSCURO_IMPLANTS = [
-  { id:"plastica", name:"Unghia di Plastica", emoji:"🧪", cost:10, desc:"2 grattate al 50% del premio. Non sanguina.", rarity:"comune", uses:2, prizeMult:0.5 },
+  { id:"plastica", name:"Unghia di Plastica", emoji:"🧪", cost:6, desc:"3 grattate al 50% del premio. Non sanguina.", rarity:"comune", uses:3, prizeMult:0.5 },
   { id:"ferro",    name:"Unghia di Ferro",    emoji:"⚙️", cost:25, desc:"4 grattate al 100% del premio. Non sanguina. Attira ladri.", rarity:"media", uses:4, prizeMult:1.0 },
   { id:"oro",      name:"Unghia d'Oro",       emoji:"🥇", cost:50, desc:"5 grattate al 150% del premio. Non sanguina. ALTO PERICOLO LADRI.", rarity:"rara", uses:5, prizeMult:1.5 },
 ];
@@ -73,21 +73,21 @@ export const RELIC_DEFS = {
 // Si usano AL POSTO dell'unghia per grattare. Proteggono le unghie
 // e danno effetti speciali. Ogni grattatore ha N usi (biglietti).
 export const GRATTATORE_DEFS = {
-  bottone:        { name:"Bottone", desc:"+10% premio su 1 grattata", cost:5, rarity:"comune", emoji:"🔘",
-                    effect:"bonusChance", value:0.1, maxUses:1 },
+  bottone:        { name:"Bottone", desc:"+20% premio su 1 grattata", cost:5, rarity:"comune", emoji:"🔘",
+                    effect:"bonusChance", value:0.2, maxUses:1 },
   bullone:        { name:"Bullone", desc:"80% chance di ignorare il malus del grattino (1 uso)", cost:7, rarity:"comune", emoji:"🔩",
                     effect:"ignoreMalus", maxUses:1 },
-  unghiaFinta:    { name:"Unghia Finta", desc:"Protegge l'unghia per 3 grattate (niente danni)", cost:12, rarity:"media", emoji:"💅",
+  unghiaFinta:    { name:"Unghia Finta", desc:"Protegge l'unghia per 3 grattate (niente danni)", cost:10, rarity:"media", emoji:"💅",
                     effect:"protectNail", maxUses:3 },
   plettro:        { name:"Plettro", desc:"x2 premio + silenzioso (ladri non ti vedono)", cost:35, rarity:"rara", emoji:"🎸",
                     effect:"doublePrize", maxUses:1, silent:true },
   moneta_argento: { name:"Moneta d'Argento", desc:"x2 premio per 2 grattate", cost:20, rarity:"rara", emoji:"🥈",
                     effect:"doublePrize", maxUses:2 },
-  moneta_oro:     { name:"Moneta d'Oro", desc:"x4 premio sulla prossima grattata!", cost:40, rarity:"rara", emoji:"🥇",
+  moneta_oro:     { name:"Moneta d'Oro", desc:"x4 premio sulla prossima grattata!", cost:55, rarity:"rara", emoji:"🥇",
                     effect:"quadPrize", maxUses:1 },
-  discoRotto:     { name:"Disco Rotto", desc:"Gratta 2 celle per click (1 uso)", cost:18, rarity:"rara", emoji:"💿",
+  discoRotto:     { name:"Disco Rotto", desc:"Gratta 2 celle per click (1 uso)", cost:22, rarity:"rara", emoji:"💿",
                     effect:"doubleCell", maxUses:1 },
-  chiaveOttone:   { name:"Chiave d'Ottone", desc:"Rivela 2 celle nascoste su grattini tier 3+ (1 uso)", cost:22, rarity:"rara", emoji:"🔑",
+  chiaveOttone:   { name:"Chiave d'Ottone", desc:"Rivela 2 celle nascoste su grattini tier 3+ (1 uso)", cost:18, rarity:"rara", emoji:"🔑",
                     effect:"revealPath", maxUses:1 },
   portaChiavi:    { name:"Porta-Chiavi SCRATCH-LITE", desc:"Leggendario! Si rompe solo dopo 3 perdite consecutive", cost:2000, rarity:"rarissimo", emoji:"🔐",
                     effect:"portaChiavi", maxUses:99 },

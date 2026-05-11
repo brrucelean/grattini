@@ -75,9 +75,9 @@ export function useItemHandlers({ player, updatePlayer, addLog }) {
   const handleSmoke = useCallback((itemType) => {
     const isCanna = itemType === "sigarettaErba";
     const fortBonus = isCanna ? 2 : 1;
-    const fortTurns = isCanna ? 4 : 3;
+    const fortTurns = isCanna ? 4 : 4; // Beta 5 rebalance: sigaretta 3->4 turni
     // Sprint 2: ticks risk/reward — sigaretta rapida e rischiosa, erba lenta ma benefica
-    const tickCount = isCanna ? 4 : 2;
+    const tickCount = isCanna ? 4 : 3; // Beta 5 rebalance: sigaretta 2->3 grattate prima del malus
     setSmokeChoiceModal(null);
     setShowSmokeEffect(true);
     setTimeout(() => setShowSmokeEffect(false), 2500);

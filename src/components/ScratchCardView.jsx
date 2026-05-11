@@ -166,8 +166,8 @@ export function ScratchCardView({ card, onDone, nailState, nailImplant=null, for
         plastica: 0.5, ferro: 1.0, oro: 1.5,
         // Macellaio (spec): vincite garantite, prezzo al moltiplicatore
         neonato: 0.5, marcione: 0.5, baddie: 1.0,
-        // Anziana (spec): unghia sacra = x5 garantito, 1 uso
-        sacra: 5.0,
+        // Anziana (spec): unghia sacra = x3 garantito, 1 uso (Beta 5 nerf: era x5)
+        sacra: 3.0,
       }[nailImplant] ?? 1.0;
       prize = Math.round(prize * implantMult);
       fullPrize = Math.round(fullPrize * implantMult);
