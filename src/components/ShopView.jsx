@@ -365,7 +365,7 @@ export function ShopView({ player, onBuyCard, onBuyItem, onBuyGrattatore, onLeav
           return (
             <ProductTile
               key={c.id}
-              emoji="🎫"
+              emoji={c.emoji || "🎫"}
               name={c.name}
               subtitle={accent.label}
               cost={c.cost}
@@ -451,7 +451,7 @@ export function ShopView({ player, onBuyCard, onBuyItem, onBuyGrattatore, onLeav
               return (
                 <ProductTile
                   key={c.id}
-                  emoji="🎫"
+                  emoji={c.emoji || "🎫"}
                   name={c.name}
                   subtitle="VIP"
                   cost={c.cost}
