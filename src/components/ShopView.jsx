@@ -261,12 +261,37 @@ export function ShopView({ player, onBuyCard, onBuyItem, onBuyGrattatore, onLeav
   // Dedup: aggiungiamo solo le carte non già presenti nel base pool
   const seenIds = new Set(baseCards.map(c => c?.id).filter(Boolean));
   const shopCards = [...baseCards, ...biomePromo.filter(c => !seenIds.has(c.id))];
+  // ─── STOCK ROTATIVO per visita allo shop ──────────────────────
+  // Rarity = probabilità di apparire sullo scaffale (seed deterministico
+  // per nodo, così la stessa visita mostra lo stesso stock — niente reroll
+  // al re-render). I comuni ci sono sempre, media/rara/leggendaria seguono
+  // delle quote.
+  const stockSeed = (currentBiome * 1000) + (currentRow * 31) + (player.scratchCards.length * 7);
+  // PRNG mulberry32 deterministico
+  const prng = (() => {
+    let a = stockSeed | 0;
+    return () => {
+      a |= 0; a = a + 0x6D2B79F5 | 0;
+      let t = a; t = Math.imul(t ^ t >>> 15, t | 1);
+      t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  })();
+  // Subset di un array con probabilità p per ogni elemento (almeno 1 garantito se p>0)
+  const subset = (arr, p) => {
+    if (arr.length === 0) return arr;
+    const out = arr.filter(() => prng() < p);
+    return out.length > 0 ? out : [arr[Math.floor(prng() * arr.length)]];
+  };
+  // Comuni: sempre presenti
   const shopItems = ["cerotto","disinfettante","sigaretta","smalto"];
-  const rareItems = player.money >= 20 ? ["cremaRinforzante","cappelloSbirro"] : [];
-  const sottoBanco = player.money >= 8 ? ["giornalettoPorno"] : [];
   const shopGrattatori = ["bottone","bullone","unghiaFinta"];
-  const rareGrattatori = player.money >= 15 ? ["plettro","moneta_argento","discoRotto"] : [];
-  const legendaryGrattatori = player.money >= 40 ? ["moneta_oro"] : [];
+  // Medi/rari: subset rotativo (~70% chance ognuno → stock variabile)
+  const rareItems = player.money >= 20 ? subset(["cremaRinforzante","cappelloSbirro"], 0.7) : [];
+  const sottoBanco = player.money >= 8 ? subset(["giornalettoPorno"], 0.6) : [];
+  const rareGrattatori = player.money >= 15 ? subset(["plettro","moneta_argento","discoRotto"], 0.65) : [];
+  // Leggendari: probabilità più bassa (~40%) → davvero rari da incontrare
+  const legendaryGrattatori = player.money >= 40 ? subset(["moneta_oro"], 0.4) : [];
   const vipGrattatori = (currentBiome >= 2 && player.money >= 2000) ? ["portaChiavi"] : [];
   const vipItems = player.hasVIP ? ["sieroRicrescita","gettoneLavaggio","manoProtesica"] : [];
   const vipCards = player.hasVIP ? [

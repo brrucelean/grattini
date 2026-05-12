@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { C } from "../data/theme.js";
 import { AudioEngine } from "../audio.js";
 import { S } from "../utils/styles.js";
+import { fmtMoney } from "../utils/money.js";
 import { Tooltip } from "./Tooltip.jsx";
 import { NewsTicker } from "./NewsTicker.jsx";
 
@@ -96,7 +97,7 @@ export function HUD({ player, onOpenInventory, inventoryOpen = false, moneyBling
             textShadow:`0 0 6px ${C.gold}88`,
             cursor:"default",
             animation: moneyBling > 0 ? "moneyBling 0.6s ease-out" : "none",
-          }}>💰 €{player.money}</span>
+          }}>💰 €{fmtMoney(player.money)}</span>
         </Tooltip>
         <Tooltip text={`🎫 grattini tuoi — comprati al tabaccaio`}>
           <span style={{

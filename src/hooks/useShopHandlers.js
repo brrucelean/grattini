@@ -3,6 +3,7 @@ import { CARD_TYPES } from "../data/cards.js";
 import { ITEM_DEFS, GRATTATORE_DEFS } from "../data/items.js";
 import { BIOME_MODIFIERS } from "../data/biomes.js";
 import { generateCard } from "../utils/card.js";
+import { roundMoney } from "../utils/money.js";
 import { hasRelic } from "../utils/hasRelic.js";
 
 export function useShopHandlers({ player, updatePlayer, addLog, setGameStats, setCardSelectMode, setScreen, setReturnScreen, effectiveFortune, unlockAchievement, setItemFoundModal, currentBiome = 0 }) {
@@ -16,11 +17,11 @@ export function useShopHandlers({ player, updatePlayer, addLog, setGameStats, se
     if (player.money < finalCost) return;
     const riggedBonus = (cardId === "doppioOnulla" && hasRelic(player, "riggedDice")) ? 0.15 : 0;
     const card = {...generateCard(cardId, effectiveFortune, riggedBonus), owned: true};
-    updatePlayer(p => ({...p, money: p.money - finalCost, scratchCards: [...p.scratchCards, card]}));
+    updatePlayer(p => ({...p, money: roundMoney(p.money - finalCost), scratchCards: [...p.scratchCards, card]}));
     setGameStats(s => ({...s, moneySpent: (s.moneySpent || 0) + finalCost}));
     addLog(`Comprato: ${type.name} (€${finalCost}${discount > 0 ? ` [-${Math.round(discount*100)}%]` : ""})`, C.green);
     if (setItemFoundModal) setItemFoundModal({
-      emoji: "🎟️", name: type.name,
+      emoji: type.emoji || "🎟️", name: type.name,
       desc: `${type.desc}\nPagato €${finalCost}${discount > 0 ? ` (sconto -${Math.round(discount*100)}%)` : ""} · Max vincita: €${type.maxPrize}`,
       subtitle: "Acquistato dal Tabaccaio",
     });
@@ -39,7 +40,7 @@ export function useShopHandlers({ player, updatePlayer, addLog, setGameStats, se
     const finalCost = Math.max(1, Math.round(item.cost * (1 - discount)));
     if (player.money < finalCost) return;
     if (player.items.length >= MAX_ITEMS) { addLog("Zaino pieno! Usa o butta un oggetto.", C.red); return; }
-    updatePlayer(p => ({...p, money: p.money - finalCost, items: [...p.items, itemId]}));
+    updatePlayer(p => ({...p, money: roundMoney(p.money - finalCost), items: [...p.items, itemId]}));
     setGameStats(s => ({...s, moneySpent: (s.moneySpent || 0) + finalCost}));
     addLog(`Comprato: ${item.emoji} ${item.name} (€${finalCost}${discount>0?` [-${Math.round(discount*100)}%]`:""})`, C.green);
     if (setItemFoundModal) setItemFoundModal({
@@ -56,7 +57,7 @@ export function useShopHandlers({ player, updatePlayer, addLog, setGameStats, se
     const finalCost = Math.max(1, Math.round(def.cost * (1 - discount)));
     if (player.money < finalCost) return;
     const newGrat = { id: gratId, name: def.name, emoji: def.emoji, effect: def.effect, value: def.value, usesLeft: def.maxUses };
-    updatePlayer(p => ({...p, money: p.money - finalCost, grattatori: [...p.grattatori, newGrat]}));
+    updatePlayer(p => ({...p, money: roundMoney(p.money - finalCost), grattatori: [...p.grattatori, newGrat]}));
     addLog(`Comprato grattatore: ${def.emoji} ${def.name} (€${finalCost}${discount > 0 ? ` [-${Math.round(discount*100)}%]` : ""})`, C.cyan);
     if (setItemFoundModal) setItemFoundModal({
       emoji: def.emoji, name: def.name,

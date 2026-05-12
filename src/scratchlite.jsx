@@ -868,7 +868,7 @@ export default function Grattini() {
                         setReturnScreen("introScratch");
                         setHoveredIntroIdx(-1);
                       }}>
-                        🎫 {card.name}
+                        {card.emoji || "🎫"} {card.name}
                         <span style={{display:"block", fontSize:"10px"}}>
                           <span style={{color:C.red, textDecoration:"line-through"}}>€{card.cost}</span>
                           {" "}
@@ -1177,7 +1177,7 @@ export default function Grattini() {
                 const meta = TIER_META[tier];
                 const accent = meta.accent;
                 const tierLabel = meta.label;
-                const cardEmoji = meta.emoji;
+                const cardEmoji = card.emoji || meta.emoji;
                 const mechBadge = MECH_BADGE[card.mechanic];
                 return (
                   <div key={idx} onClick={() => handleSelectCard(idx)} style={{

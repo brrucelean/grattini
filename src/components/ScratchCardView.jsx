@@ -606,7 +606,7 @@ export function ScratchCardView({ card, onDone, nailState, nailImplant=null, for
           letterSpacing: "2px", marginBottom: "4px",
           boxShadow: `0 0 8px ${accent}aa`,
         }}>
-          ★ {tierMeta.emoji} {tierMeta.label} ★
+          ★ {card.emoji || tierMeta.emoji} {tierMeta.label} ★
         </div>
 
         {/* Name */}

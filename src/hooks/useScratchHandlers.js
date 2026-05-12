@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import { C, MAX_ITEMS } from "../data/theme.js";
 import { CARD_BALANCE } from "../data/cards.js";
 import { BIOME_MODIFIERS } from "../data/biomes.js";
+import { roundMoney } from "../utils/money.js";
 import { degradeNailObj } from "../utils/nail.js";
 import { rng } from "../utils/random.js";
 import { AudioEngine } from "../audio.js";
@@ -193,11 +194,11 @@ export function useScratchHandlers({
               ]
             });
           }, 300);
-          const newMoney = p.money + finalPrize;
+          const newMoney = roundMoney(p.money + finalPrize);
           return {...p, money: newMoney, consecutiveWins: newConsec, lastWonPrize: finalPrize, _grattaManiaOffered: true};
         }
         if (streakBonus > 0) addLog(`🔥 Streak x${newConsec}! Bonus +${Math.round(streakBonus*100)}%`, C.gold);
-        const newMoney = p.money + finalPrize;
+        const newMoney = roundMoney(p.money + finalPrize);
         // Rico / Paperone achievements
         if (newMoney >= 1000) unlockAchievement("paperone");
         else if (newMoney >= 500) unlockAchievement("rico");
