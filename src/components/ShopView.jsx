@@ -234,8 +234,8 @@ export function ShopView({ player, onBuyCard, onBuyItem, onBuyGrattatore, onLeav
     }, 80);
   };
 
-  // ─── CATALOG FILTERS (logica identica alla vecchia ShopView) ────
-  const shopCards = [
+  // ─── CATALOG FILTERS — base pool + bioma-flavor cards ────
+  const baseCards = [
     CARD_TYPES[0], CARD_TYPES[1], CARD_TYPES[2],
     ...(player.money >= 5  ? [CARD_TYPES[3]] : []),
     ...(player.money >= 10 ? [CARD_TYPES[4]] : []),
@@ -245,9 +245,22 @@ export function ShopView({ player, onBuyCard, onBuyItem, onBuyGrattatore, onLeav
     ...(player.money >= 100 && currentRow >= 6 ? [CARD_TYPES[8]] : []),
     ...(player.money >= 15 ? [CARD_TYPES[9]] : []),
     ...(player.money >= 20 && player.lastWonPrize > 0 ? [CARD_TYPES[13]] : []),
-    ...(currentBiome === 3 && player.money >= 25 ? [CARD_TYPES.find(c => c.id === "mahjong")] : []).filter(Boolean),
     ...(player.money >= 20 && currentRow >= 3 ? [CARD_TYPES.find(c => c.id === "jackpotMix")] : []).filter(Boolean),
   ];
+  // Carte di flavor per bioma: ogni bioma "promuove" alcune meccaniche
+  // (la vera novità rispetto al base pool è la garanzia di vederle)
+  const biomeCardsByBiome = {
+    0: ["fortunaFlash","setteEMezzo","portaFortuna","ruota"],  // Nord: economiche
+    1: ["ruota","doppioOnulla","jackpotMix"],                  // Centro Slot: high variance
+    2: ["miliardario","tredici","mappaTesor0"],                // Napoli: premi alti
+    3: ["mahjong","turistaPerSempre","grattaCombina"],         // Cinese: già flavored
+  };
+  const biomePromo = (biomeCardsByBiome[currentBiome] || [])
+    .map(id => CARD_TYPES.find(c => c.id === id))
+    .filter(c => c && player.money >= c.cost);
+  // Dedup: aggiungiamo solo le carte non già presenti nel base pool
+  const seenIds = new Set(baseCards.map(c => c?.id).filter(Boolean));
+  const shopCards = [...baseCards, ...biomePromo.filter(c => !seenIds.has(c.id))];
   const shopItems = ["cerotto","disinfettante","sigaretta","smalto"];
   const rareItems = player.money >= 20 ? ["cremaRinforzante","cappelloSbirro"] : [];
   const sottoBanco = player.money >= 8 ? ["giornalettoPorno"] : [];

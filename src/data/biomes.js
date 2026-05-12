@@ -8,6 +8,38 @@ export const BIOMES = [
   { id: 3, name: "🇨🇳 Quartiere Cinese", boss: "Il Drago d'Oro", color: "#ff3333", desc: "你好! Lanterne rosse, incenso e grattini con ideogrammi. Qui le regole sono diverse." },
 ];
 
+// ─── BIOME MODIFIERS — effetto globale per bioma ─────────────
+// Applicati all'entrata del bioma. Cambiano il feel senza richiedere nuovo
+// gameplay code: uno è economia (shop discount), uno è meta (fortuna start),
+// uno è premi (boost vincite), uno è frequenza eventi.
+export const BIOME_MODIFIERS = {
+  0: {
+    emoji: "🌧",
+    label: "PIOGGIA BATTENTE",
+    desc: "Tutti i tabaccai sono di buon umore: prezzi scontati del 10%.",
+    shopDiscount: 0.10,
+  },
+  1: {
+    emoji: "💡",
+    label: "NEON CALDI",
+    desc: "Le luci dei casinò ti accendono: +1 Fortuna per 5 turni all'inizio del bioma.",
+    startFortune: 1,
+    startFortuneTurns: 5,
+  },
+  2: {
+    emoji: "🌋",
+    label: "VENTO DEL VESUVIO",
+    desc: "L'aria napoletana porta fortuna: +10% sulle vincite grattate.",
+    prizeBoost: 0.10,
+  },
+  3: {
+    emoji: "🏮",
+    label: "LANTERNE ROSSE",
+    desc: "Festa cinese: i nodi segreti 🔮 si sbloccano con Fortuna ≥ 1 invece di 2.",
+    secretFortuneThreshold: 1,
+  },
+};
+
 // ─── CEDOLE DEL BROKER — meta-progressione permanente ────────
 // Ogni vittoria → scegli 1 di 3 cedole. Portate alla prossima run.
 export const CEDOLE = [

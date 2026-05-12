@@ -7,7 +7,7 @@ import { generateCard } from "../utils/card.js";
 import { AudioEngine } from "../audio.js";
 
 export function useEventHandlers({
-  player, currentNode,
+  player, currentNode, currentBiome = 0, effectiveFortune = 0,
   updatePlayer, addLog, unlockAchievement, showItemFound,
   setScreen, setCombatEnemy, setGameStats, setCellaProgress,
   setItemFoundModal, setSmokeChoiceModal,
@@ -242,12 +242,13 @@ export function useEventHandlers({
         break;
       }
       case "acceptEvent": {
-        // ── 8 esiti misteriosi distinti (peso uniforme) ────────────
-        const outcomes = [
+        // ── 8 esiti generici + 1 esito bioma-specifico (peso 30% bioma) ──
+        const genericOutcomes = [
           "blessing", "ratto", "specchio", "vortice",
           "carta", "patto", "luna", "scintille",
         ];
-        const outcome = pick(outcomes);
+        const biomeOutcome = ["rolex", "tassista", "ziaCarmela", "monaco"][currentBiome] || null;
+        const outcome = biomeOutcome && roll(0.30) ? biomeOutcome : pick(genericOutcomes);
 
         if (outcome === "blessing") {
           // ⭐ Benedizione classica
@@ -344,6 +345,61 @@ export function useEventHandlers({
             addLog(`✨ Le scintille cercano un grattatore. Non ne trovi. Si trasformano in €${tip}.`, C.gold);
             setItemFoundModal({ emoji: "✨", name: "Scintille Vagabonde", desc: `Niente grattatori da ricaricare. Le scintille diventano €${tip}.`, subtitle: "Evento Misterioso" });
           }
+        } else if (outcome === "rolex") {
+          // ⌚ Bioma 0 — Il Tipo coi Rolex Falsi (periferia Nord)
+          // Ti vende €30 per una stretta di mano. Stretta = grattatore casuale comune.
+          const sgrats = ["bottone","bullone","unghiaFinta"];
+          const gratId = pick(sgrats);
+          const def = GRATTATORE_DEFS[gratId];
+          if (def && player.money >= 0) {
+            const newGrat = { id: gratId, name: def.name, emoji: def.emoji, effect: def.effect, value: def.value, usesLeft: def.maxUses };
+            updatePlayer(p => ({...p, money: p.money + 30, grattatori: [...p.grattatori, newGrat]}));
+            addLog(`⌚ Un tipo in giacca lurida ti afferra la mano: "Senti che bel Rolex?". È un fake. Ma ti lascia €30 e ${def.emoji} ${def.name}.`, C.gold);
+            setItemFoundModal({ emoji: "⌚", name: "Il Tipo coi Rolex Falsi", desc: `+€30 in tasca\n+${def.emoji} ${def.name} (grattatore)\n\n"Te lo dico io, fratè: di sti tempi solo i fake sono onesti."`, subtitle: "Periferia Nord" });
+          } else {
+            updatePlayer(p => ({...p, money: p.money + 25}));
+            addLog(`⌚ Il tipo ti molla €25 e scappa.`, C.gold);
+          }
+        } else if (outcome === "tassista") {
+          // 🚕 Bioma 1 — Tassista Romano Strozzino (Centro Slot)
+          // Doppia faccia: +€40 ma -1 stato unghia attiva (corsa veloce e spericolata)
+          updatePlayer(p => {
+            const nails = [...p.nails];
+            if (nails[p.activeNail].state !== "morta") {
+              nails[p.activeNail] = degradeNailObj(nails[p.activeNail]);
+            }
+            return {...p, nails, money: p.money + 40};
+          });
+          addLog("🚕 \"Aoh, tu de fortuna! Te porto io ai casinò, ce facciamo 'na corsa!\" +€40 — ma l'unghia attiva se ne risente.", C.orange);
+          setItemFoundModal({ emoji: "🚕", name: "Il Tassista Strozzino", desc: "+€40 (mancia per la corsa)\n-1 stato unghia attiva\n\n\"Ma che frena, anvedi che curva! Tieniti forte!\"", subtitle: "Centro Slot(Unico)" });
+        } else if (outcome === "ziaCarmela") {
+          // 🥐 Bioma 2 — Zia Carmela coi Cornetti (Grattanapoli)
+          // Cura tutte le unghie peggiori di "graffiata" + €15 in tasca (cornetto rosso fortuna)
+          let healed = 0;
+          updatePlayer(p => {
+            const nails = p.nails.map(n => {
+              if (n.state === "sanguinante" || n.state === "marcia") {
+                healed++;
+                return {...n, state: healNail(n.state, "graffiata")};
+              }
+              return n;
+            });
+            return {...p, nails, money: p.money + 15, fortune: (p.fortune||0) + 1, fortuneTurns: Math.max(p.fortuneTurns||0, 5)};
+          });
+          addLog(`🥐 Zia Carmela ti mette in mano un cornetto: "Tie', guagliò, ros' fa bbene!" ${healed > 0 ? `${healed} unghia/e curata/e ·` : ""} +€15 · +1 Fortuna 5t.`, C.gold);
+          setItemFoundModal({ emoji: "🥐", name: "Zia Carmela coi Cornetti", desc: `${healed > 0 ? `${healed} unghia/e curata/e\n` : ""}+€15 in tasca\n+1 Fortuna per 5 turni\n\n"E nun pensà a niente, guagliò. 'O cornetto fa o' miracolo."`, subtitle: "Grattanapoli" });
+        } else if (outcome === "monaco") {
+          // 🧘 Bioma 3 — Monaco Shaolin (Quartiere Cinese)
+          // Cura unghia attiva + +3 fortuna 6 turni (forte: in linea con il flavor del bioma raro)
+          updatePlayer(p => {
+            const nails = [...p.nails];
+            if (nails[p.activeNail].state !== "morta") {
+              nails[p.activeNail] = {...nails[p.activeNail], state: "sana", scratchCount: 0};
+            }
+            return {...p, nails, fortune: (p.fortune||0) + 3, fortuneTurns: Math.max(p.fortuneTurns||0, 6)};
+          });
+          addLog("🧘 Un monaco silenzioso ti tocca la mano. L'unghia attiva diventa Sana. +3 Fortuna 6 turni.", C.cyan);
+          setItemFoundModal({ emoji: "🧘", name: "Il Monaco Shaolin", desc: "Unghia attiva → Sana\n+3 Fortuna per 6 turni\n\n\"对 — il dito che gratta è il dito che ascolta.\"", subtitle: "Quartiere Cinese" });
         }
         setScreen("map"); break;
       }

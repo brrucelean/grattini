@@ -302,7 +302,7 @@ export default function Grattini() {
   // ─── HOOK: useShopHandlers ───
   const { handleBuyCard, handleBuyItem, handleBuyGrattatore, handleSlotResult, handleShopScratch } = useShopHandlers({
     player, updatePlayer, addLog, setGameStats, setCardSelectMode, setScreen, setReturnScreen, effectiveFortune, unlockAchievement,
-    setItemFoundModal,
+    setItemFoundModal, currentBiome,
   });
 
   // ─── HOOK: useScratchHandlers ───
@@ -330,7 +330,7 @@ export default function Grattini() {
 
   // ─── HOOK: useEventHandlers ───
   const { handleEventChoice } = useEventHandlers({
-    player, currentNode,
+    player, currentNode, currentBiome, effectiveFortune,
     updatePlayer, addLog, unlockAchievement, showItemFound,
     setScreen, setCombatEnemy, setGameStats, setCellaProgress,
     setItemFoundModal, setSmokeChoiceModal,

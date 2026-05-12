@@ -1,21 +1,27 @@
 import { C, MAX_ITEMS } from "../data/theme.js";
 import { CARD_TYPES } from "../data/cards.js";
 import { ITEM_DEFS, GRATTATORE_DEFS } from "../data/items.js";
+import { BIOME_MODIFIERS } from "../data/biomes.js";
 import { generateCard } from "../utils/card.js";
 import { hasRelic } from "../utils/hasRelic.js";
 
-export function useShopHandlers({ player, updatePlayer, addLog, setGameStats, setCardSelectMode, setScreen, setReturnScreen, effectiveFortune, unlockAchievement, setItemFoundModal }) {
+export function useShopHandlers({ player, updatePlayer, addLog, setGameStats, setCardSelectMode, setScreen, setReturnScreen, effectiveFortune, unlockAchievement, setItemFoundModal, currentBiome = 0 }) {
+  // Modificatore bioma: shopDiscount additivo a shopDiscountMeta
+  const biomeShopDiscount = BIOME_MODIFIERS[currentBiome]?.shopDiscount || 0;
   const handleBuyCard = (cardId) => {
     const type = CARD_TYPES.find(t => t.id === cardId);
-    if (!type || player.money < type.cost) return;
+    if (!type) return;
+    const discount = (player.shopDiscountMeta || 0) + biomeShopDiscount;
+    const finalCost = Math.max(0, Math.round(type.cost * (1 - discount) * 100) / 100);
+    if (player.money < finalCost) return;
     const riggedBonus = (cardId === "doppioOnulla" && hasRelic(player, "riggedDice")) ? 0.15 : 0;
     const card = {...generateCard(cardId, effectiveFortune, riggedBonus), owned: true};
-    updatePlayer(p => ({...p, money: p.money - type.cost, scratchCards: [...p.scratchCards, card]}));
-    setGameStats(s => ({...s, moneySpent: (s.moneySpent || 0) + type.cost}));
-    addLog(`Comprato: ${type.name} (€${type.cost})`, C.green);
+    updatePlayer(p => ({...p, money: p.money - finalCost, scratchCards: [...p.scratchCards, card]}));
+    setGameStats(s => ({...s, moneySpent: (s.moneySpent || 0) + finalCost}));
+    addLog(`Comprato: ${type.name} (€${finalCost}${discount > 0 ? ` [-${Math.round(discount*100)}%]` : ""})`, C.green);
     if (setItemFoundModal) setItemFoundModal({
       emoji: "🎟️", name: type.name,
-      desc: `${type.desc}\nCosto: €${type.cost} · Max vincita: €${type.maxPrize}`,
+      desc: `${type.desc}\nPagato €${finalCost}${discount > 0 ? ` (sconto -${Math.round(discount*100)}%)` : ""} · Max vincita: €${type.maxPrize}`,
       subtitle: "Acquistato dal Tabaccaio",
     });
   };
@@ -29,7 +35,7 @@ export function useShopHandlers({ player, updatePlayer, addLog, setGameStats, se
     }
     const item = ITEM_DEFS[itemId];
     if (!item) return;
-    const discount = player.shopDiscountMeta || 0;
+    const discount = (player.shopDiscountMeta || 0) + biomeShopDiscount;
     const finalCost = Math.max(1, Math.round(item.cost * (1 - discount)));
     if (player.money < finalCost) return;
     if (player.items.length >= MAX_ITEMS) { addLog("Zaino pieno! Usa o butta un oggetto.", C.red); return; }
@@ -45,13 +51,16 @@ export function useShopHandlers({ player, updatePlayer, addLog, setGameStats, se
 
   const handleBuyGrattatore = (gratId) => {
     const def = GRATTATORE_DEFS[gratId];
-    if (!def || player.money < def.cost) return;
+    if (!def) return;
+    const discount = (player.shopDiscountMeta || 0) + biomeShopDiscount;
+    const finalCost = Math.max(1, Math.round(def.cost * (1 - discount)));
+    if (player.money < finalCost) return;
     const newGrat = { id: gratId, name: def.name, emoji: def.emoji, effect: def.effect, value: def.value, usesLeft: def.maxUses };
-    updatePlayer(p => ({...p, money: p.money - def.cost, grattatori: [...p.grattatori, newGrat]}));
-    addLog(`Comprato grattatore: ${def.emoji} ${def.name} (€${def.cost})`, C.cyan);
+    updatePlayer(p => ({...p, money: p.money - finalCost, grattatori: [...p.grattatori, newGrat]}));
+    addLog(`Comprato grattatore: ${def.emoji} ${def.name} (€${finalCost}${discount > 0 ? ` [-${Math.round(discount*100)}%]` : ""})`, C.cyan);
     if (setItemFoundModal) setItemFoundModal({
       emoji: def.emoji, name: def.name,
-      desc: `${def.desc}\nPagato €${def.cost}.`,
+      desc: `${def.desc}\nPagato €${finalCost}${discount > 0 ? ` (sconto -${Math.round(discount*100)}%)` : ""}.`,
       subtitle: "Grattatore acquistato",
     });
   };

@@ -3,7 +3,7 @@ import { C } from "../data/theme.js";
 import { NAIL_ORDER } from "../data/nails.js";
 import { NODE_ICONS } from "../data/map.js";
 import { ITEM_DEFS, RELIC_DEFS, GRATTATORE_DEFS, MACELLAIO_IMPLANTS } from "../data/items.js";
-import { BIOMES } from "../data/biomes.js";
+import { BIOMES, BIOME_MODIFIERS } from "../data/biomes.js";
 import { CARD_TYPES, CARD_BALANCE } from "../data/cards.js";
 import { degradeNailObj, healNail } from "../utils/nail.js";
 import { rng, roll, pick } from "../utils/random.js";
@@ -494,6 +494,18 @@ export function useNodeHandlers({
           setCurrentRow(0);
           setVisitedNodes([]);
           addLog(`🌍 Benvenuto a ${BIOMES[nextBiome].name}! "${BIOMES[nextBiome].desc}"`, BIOMES[nextBiome].color);
+          // Applica modificatore globale del bioma (BIOME_MODIFIERS)
+          const mod = BIOME_MODIFIERS[nextBiome];
+          if (mod) {
+            addLog(`${mod.emoji} ${mod.label} — ${mod.desc}`, BIOMES[nextBiome].color);
+            if (mod.startFortune) {
+              updatePlayer(p => ({
+                ...p,
+                fortune: (p.fortune || 0) + mod.startFortune,
+                fortuneTurns: Math.max(p.fortuneTurns || 0, mod.startFortuneTurns || 3),
+              }));
+            }
+          }
           if (nextBiome === 3) {
             AudioEngine.china();
             addLog("🏮 Lanterne rosse illuminano il cammino...", "#ff3333");

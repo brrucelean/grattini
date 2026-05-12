@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { C, MAX_ITEMS } from "../data/theme.js";
 import { CARD_BALANCE } from "../data/cards.js";
+import { BIOME_MODIFIERS } from "../data/biomes.js";
 import { degradeNailObj } from "../utils/nail.js";
 import { rng } from "../utils/random.js";
 import { AudioEngine } from "../audio.js";
@@ -149,7 +150,15 @@ export function useScratchHandlers({
       const isStreamerLive = returnScreen === "streamerMap";
       // Bonus streamer in diretta: x1.5 sulla vincita base
       const streamerMultiplied = isStreamerLive ? Math.round(result.prize * 1.5) : result.prize;
-      const basePrize = hasClipVirale ? streamerMultiplied * 2 : streamerMultiplied;
+      const preBiomePrize = hasClipVirale ? streamerMultiplied * 2 : streamerMultiplied;
+      // Modificatore bioma 2 (Grattanapoli): +10% sulle vincite grattate
+      const biomePrizeBoost = BIOME_MODIFIERS[currentBiome]?.prizeBoost || 0;
+      const basePrize = biomePrizeBoost > 0
+        ? Math.round(preBiomePrize * (1 + biomePrizeBoost))
+        : preBiomePrize;
+      if (biomePrizeBoost > 0 && basePrize > preBiomePrize) {
+        addLog(`🌋 Vento del Vesuvio: +€${basePrize - preBiomePrize} bonus bioma!`, BIOME_MODIFIERS[currentBiome]?.emoji ? "#ff8800" : C.gold);
+      }
       if (isStreamerLive) {
         addLog(`🔥 CLIP VIRALE! La chat impazzisce! €${result.prize} → €${streamerMultiplied} (x1.5 LIVE)!`, C.gold);
         // Aggiungi clipVirale item (moltiplicatore x2 prossima vincita) se c'è spazio

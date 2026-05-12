@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { C, FONT } from "../data/theme.js";
 import { NODE_ICONS, NODE_TOOLTIPS } from "../data/map.js";
-import { BIOMES } from "../data/biomes.js";
+import { BIOMES, BIOME_MODIFIERS } from "../data/biomes.js";
 import { Tooltip } from "./Tooltip.jsx";
 
 export function MapView({ map, currentRow, visitedNodes, onSelectNode, reachableNodes, currentBiome = 0, playerFortuna = 0 }) {
@@ -218,6 +218,27 @@ export function MapView({ map, currentRow, visitedNodes, onSelectNode, reachable
             ❝ {biomeDesc} ❞
           </div>
         )}
+        {/* Modificatore bioma attivo */}
+        {BIOME_MODIFIERS[currentBiome] && (
+          <Tooltip text={BIOME_MODIFIERS[currentBiome].desc}>
+            <div style={{
+              position:"relative", zIndex:2,
+              display:"inline-flex", alignItems:"center", gap:"5px",
+              margin:"0 auto 8px auto",
+              padding:"3px 10px",
+              background: `${biomeColor}10`,
+              border: `1px solid ${biomeColor}66`,
+              fontSize:"8px", letterSpacing:"1.5px",
+              color: biomeColor,
+              textShadow:`0 0 4px ${biomeColor}88`,
+              cursor:"help",
+            }}>
+              <span style={{fontSize:"11px"}}>{BIOME_MODIFIERS[currentBiome].emoji}</span>
+              <strong>{BIOME_MODIFIERS[currentBiome].label}</strong>
+              <span style={{opacity:0.6}}>· {BIOME_MODIFIERS[currentBiome].desc.length > 50 ? BIOME_MODIFIERS[currentBiome].desc.slice(0, 50) + "…" : BIOME_MODIFIERS[currentBiome].desc}</span>
+            </div>
+          </Tooltip>
+        )}
         {/* Chips legenda con header ★ LEGENDA ★ */}
         <div style={{position:"relative", zIndex:2, display:"flex", alignItems:"center", gap:"8px", justifyContent:"center", flexWrap:"wrap"}}>
           <span style={{
@@ -372,7 +393,9 @@ export function MapView({ map, currentRow, visitedNodes, onSelectNode, reachable
           const isBoss    = node.type === "boss";
           const isSecret  = !!node.secret;
           const isElite   = !!node.elite && !visited;
-          const secretUnlocked = isSecret && playerFortuna >= 2;
+          // Modificatore bioma 3 (Cinese, Lanterne Rosse): soglia segreto abbassata
+          const secretThreshold = BIOME_MODIFIERS[currentBiome]?.secretFortuneThreshold ?? 2;
+          const secretUnlocked = isSecret && playerFortuna >= secretThreshold;
           const effectivelyHidden = isSecret && !secretUnlocked && !visited;
 
           const icon = effectivelyHidden ? "🔒" : isSecret ? "🔮" : NODE_ICONS[node.type] || "?";
@@ -411,7 +434,7 @@ export function MapView({ map, currentRow, visitedNodes, onSelectNode, reachable
             : node.type;
 
           const tooltip = effectivelyHidden
-            ? "🔒 Nodo Segreto — richiede Fortuna ≥ 2"
+            ? `🔒 Nodo Segreto — richiede Fortuna ≥ ${secretThreshold}`
             : isSecret ? "🔮 Nodo Segreto — evento raro con ricompense uniche!"
             : (isElite ? "★ ELITE — rischio e premi raddoppiati! " : "")
             + (NODE_TOOLTIPS[node.type] || node.type);
