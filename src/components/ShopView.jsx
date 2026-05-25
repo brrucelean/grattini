@@ -262,12 +262,14 @@ export function ShopView({ player, onBuyCard, onBuyItem, onBuyGrattatore, onLeav
   const seenIds = new Set(baseCards.map(c => c?.id).filter(Boolean));
   const shopCards = [...baseCards, ...biomePromo.filter(c => !seenIds.has(c.id))];
   // ─── STOCK ROTATIVO per visita allo shop ──────────────────────
-  // Rarity = probabilità di apparire sullo scaffale (seed deterministico
-  // per nodo, così la stessa visita mostra lo stesso stock — niente reroll
-  // al re-render). I comuni ci sono sempre, media/rara/leggendaria seguono
-  // delle quote.
+  // La RARITÀ si traduce in:
+  //   · comune    → 100%, sempre presente
+  //   · media     → 50% per item, MAX 2 visibili (anche con money)
+  //   · rara      → 30% per item, MAX 1 visibile
+  //   · rarissimo → 12% per visita (quasi sempre assente)
+  // Seed deterministico per nodo: la stessa visita allo shop non re-rolla
+  // ad ogni re-render, ma diversi shop nello stesso bioma sì.
   const stockSeed = (currentBiome * 1000) + (currentRow * 31) + (player.scratchCards.length * 7);
-  // PRNG mulberry32 deterministico
   const prng = (() => {
     let a = stockSeed | 0;
     return () => {
@@ -277,21 +279,27 @@ export function ShopView({ player, onBuyCard, onBuyItem, onBuyGrattatore, onLeav
       return ((t ^ t >>> 14) >>> 0) / 4294967296;
     };
   })();
-  // Subset di un array con probabilità p per ogni elemento (almeno 1 garantito se p>0)
-  const subset = (arr, p) => {
+  // Filtro probabilistico + clamp del massimo numero di slot
+  const stock = (arr, p, maxSlots) => {
     if (arr.length === 0) return arr;
-    const out = arr.filter(() => prng() < p);
-    return out.length > 0 ? out : [arr[Math.floor(prng() * arr.length)]];
+    const shuffled = [...arr].sort(() => prng() - 0.5);
+    const picked = shuffled.filter(() => prng() < p);
+    return picked.slice(0, maxSlots);
   };
-  // Comuni: sempre presenti
-  const shopItems = ["cerotto","disinfettante","sigaretta","smalto"];
-  const shopGrattatori = ["bottone","bullone","unghiaFinta"];
-  // Medi/rari: subset rotativo (~70% chance ognuno → stock variabile)
-  const rareItems = player.money >= 20 ? subset(["cremaRinforzante","cappelloSbirro"], 0.7) : [];
-  const sottoBanco = player.money >= 8 ? subset(["giornalettoPorno"], 0.6) : [];
-  const rareGrattatori = player.money >= 15 ? subset(["plettro","moneta_argento","discoRotto"], 0.65) : [];
-  // Leggendari: probabilità più bassa (~40%) → davvero rari da incontrare
-  const legendaryGrattatori = player.money >= 40 ? subset(["moneta_oro"], 0.4) : [];
+  // ── COMUNI: sempre presenti (rarity="comune" in items.js) ──
+  const shopItems = ["cerotto","disinfettante","sigaretta"];
+  const shopGrattatori = ["bottone","bullone"];
+  // ── MEDI: max 2 slot · prob 50% ──
+  const mediumItemsPool = ["sigarettaErba","cremaRinforzante"].filter(() => true);
+  const mediumItems = player.money >= 8 ? stock(mediumItemsPool, 0.50, 2) : [];
+  const mediumGrattatori = player.money >= 10 ? stock(["unghiaFinta"], 0.55, 1) : [];
+  // ── SOTTO-BANCO (giornaletto): proibito → ~30% (era 60%) ──
+  const sottoBanco = player.money >= 15 ? stock(["giornalettoPorno"], 0.30, 1) : [];
+  // ── RARI: max 1 slot · prob 30% per item ──
+  const rareItems = player.money >= 15 ? stock(["cappelloSbirro","smalto"], 0.30, 1) : [];
+  const rareGrattatori = player.money >= 15 ? stock(["plettro","moneta_argento","discoRotto","chiaveOttone"], 0.30, 1) : [];
+  // ── LEGGENDARI/RARISSIMI: ~12% per visita ──
+  const legendaryGrattatori = player.money >= 40 ? stock(["moneta_oro"], 0.12, 1) : [];
   const vipGrattatori = (currentBiome >= 2 && player.money >= 2000) ? ["portaChiavi"] : [];
   const vipItems = player.hasVIP ? ["sieroRicrescita","gettoneLavaggio","manoProtesica"] : [];
   const vipCards = player.hasVIP ? [
@@ -310,7 +318,7 @@ export function ShopView({ player, onBuyCard, onBuyItem, onBuyGrattatore, onLeav
     return "comune";
   };
 
-  const allGrattatoriIds = [...shopGrattatori, ...rareGrattatori, ...legendaryGrattatori, ...vipGrattatori];
+  const allGrattatoriIds = [...shopGrattatori, ...mediumGrattatori, ...rareGrattatori, ...legendaryGrattatori, ...vipGrattatori];
 
   return (
     <div style={{...S.panel, margin: "10px auto", maxWidth: "900px", background: "#05050b", border: `2px solid ${C.gold}66`, boxShadow: `0 0 22px ${C.gold}22, inset 0 0 30px ${C.gold}08`}}>
@@ -432,11 +440,11 @@ export function ShopView({ player, onBuyCard, onBuyItem, onBuyGrattatore, onLeav
       </div>
 
       {/* ═══ CONSUMABILI ═══ */}
-      {[...shopItems, ...rareItems, ...sottoBanco].length > 0 && (
+      {[...shopItems, ...mediumItems, ...rareItems, ...sottoBanco].length > 0 && (
         <>
-          <SectionHeader icon="💊" label="Consumabili" count={[...shopItems, ...rareItems, ...sottoBanco].length} accent={C.green} subtitle="cura, bluff, sotto-banco" />
+          <SectionHeader icon="💊" label="Consumabili" count={[...shopItems, ...mediumItems, ...rareItems, ...sottoBanco].length} accent={C.green} subtitle="cura, bluff, sotto-banco" />
           <div style={{display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "18px"}}>
-            {[...shopItems, ...rareItems, ...sottoBanco].map(id => {
+            {[...shopItems, ...mediumItems, ...rareItems, ...sottoBanco].map(id => {
               const item = ITEM_DEFS[id];
               if (!item) return null;
               const accent = rarityAccent(item.rarity);
